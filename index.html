@@ -115,9 +115,10 @@
         </main>
     </div>
 
-    <!-- SCRIPT BLINDADO V2 -->
+    <!-- SCRIPT BLINDADO V3 (CORREÇÃO DEFINITIVA) -->
     <script type="module">
-        import { createDirectus, authentication, rest, readItems, createItem } from 'https://esm.sh/@directus/sdk@13.0.0';
+        // Adicionei 'readMe' na importação
+        import { createDirectus, authentication, rest, readItems, createItem, readMe } from 'https://esm.sh/@directus/sdk@13.0.0';
 
         const API_URL = 'https://elobrindes-painel.onrender.com';
         const client = createDirectus(API_URL).with(authentication()).with(rest());
@@ -126,6 +127,7 @@
         window.client = client;
         window.readItems = readItems;
         window.createItem = createItem;
+        window.currentOrgId = null; // Variável para guardar o ID da empresa
 
         // --- LOGIN ---
         document.getElementById('form-login').addEventListener('submit', async (e) => {
@@ -140,6 +142,12 @@
 
             try {
                 await client.login(email, password);
+                
+                // --- PULO DO GATO: PEGAR A EMPRESA DO USUÁRIO ---
+                const user = await client.request(readMe({ fields: ['organization_id'] }));
+                window.currentOrgId = user.organization_id;
+                console.log("Empresa detectada:", window.currentOrgId);
+
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.remove('hidden');
                 window.router('estoque');
@@ -183,11 +191,10 @@
 
         window.prefillOrder = function(id, name) {
             window.router('pedir');
-            // Pequeno delay para dar tempo do select carregar
             setTimeout(() => { alert(`Produto: ${name}. Selecione-o na lista.`); }, 500);
         }
 
-        // --- PEDIDO (CORRIGIDO) ---
+        // --- PEDIDO (AGORA COM ORGANIZATION_ID) ---
         async function loadDependencies() {
             try {
                 const [ends, prods] = await Promise.all([
@@ -206,13 +213,14 @@
             btn.disabled = true; btn.innerHTML = 'Enviando...';
 
             try {
-                // payload limpo
+                // payload limpo com ORGANIZATION_ID explícito
                 const payload = {
                     tipo: 'SOLICITACAO_ENVIO',
                     status: 'pendente',
                     quantidade: parseInt(document.getElementById('pedido-qtd').value),
                     observacoes: `Data: ${document.getElementById('pedido-data').value}`,
-                    endereco_id: document.getElementById('pedido-endereco').value // AGORA SIM!
+                    endereco_id: document.getElementById('pedido-endereco').value,
+                    organization_id: window.currentOrgId // AQUI ESTÁ A CORREÇÃO
                 };
 
                 await client.request(createItem('solicitacoes', payload));
