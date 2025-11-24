@@ -33,6 +33,10 @@
         body { font-family: 'Inter', sans-serif; background-color: #1A0505; color: #E5E7EB; }
         .loader { border: 4px solid #2D1A1A; border-top: 4px solid #8B0000; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Chatbot Styles */
+        .chat-container { transition: all 0.3s ease; z-index: 50; }
+        .chat-messages { scrollbar-width: thin; scrollbar-color: #8B0000 #2D1A1A; }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden">
@@ -41,6 +45,9 @@
     <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-brand-dark">
         <div class="bg-brand-card p-8 rounded-xl shadow-2xl border border-brand-wine w-full max-w-md mx-4">
             <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-wine text-white mb-4">
+                    <i class="ph ph-cube text-3xl"></i>
+                </div>
                 <h1 class="text-2xl font-bold text-white">Portal do Cliente</h1>
                 <p class="text-gray-400 text-sm mt-2">Elo Brindes Corporativos</p>
             </div>
@@ -64,7 +71,7 @@
     </div>
 
     <!-- ÁREA DO APLICATIVO -->
-    <div id="app-screen" class="hidden w-full h-full flex">
+    <div id="app-screen" class="hidden w-full h-full flex relative">
         <aside class="w-64 bg-black border-r border-gray-800 flex-col hidden md:flex">
             <div class="h-20 flex items-center px-6 border-b border-gray-800 font-bold text-xl">ELO<span class="text-brand-wine">PAINEL</span></div>
             <nav class="flex-1 px-4 py-6 space-y-2">
@@ -113,12 +120,35 @@
                 </div>
             </div>
         </main>
+
+        <!-- CHATBOT BUTTON -->
+        <button onclick="toggleChat()" class="fixed bottom-6 right-6 bg-brand-wine text-white p-4 rounded-full shadow-lg hover:bg-red-700 transition z-50">
+            <i class="ph ph-chat-centered-text text-2xl"></i>
+        </button>
+
+        <!-- CHATBOT WINDOW -->
+        <div id="chatbot-window" class="fixed bottom-24 right-6 w-80 md:w-96 h-[500px] bg-brand-card border border-gray-800 rounded-xl shadow-2xl hidden flex-col chat-container">
+            <div class="bg-brand-wine p-4 rounded-t-xl flex justify-between items-center">
+                <span class="font-bold text-white">EloBot Assistente</span>
+                <button onclick="toggleChat()" class="text-white hover:text-gray-200"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="flex-1 p-4 overflow-y-auto chat-messages" id="chat-messages">
+                <div class="bg-gray-800 p-3 rounded-lg mb-2 text-sm text-gray-200 max-w-[85%]">
+                    Olá! Sou a IA da Elo Brindes. Posso ajudar com dúvidas sobre estoque ou produtos.
+                </div>
+            </div>
+            <div class="p-4 border-t border-gray-800 bg-black rounded-b-xl">
+                <form id="chat-form" class="flex gap-2">
+                    <input type="text" id="chat-input" placeholder="Digite sua mensagem..." class="flex-1 bg-gray-800 border-none rounded px-3 py-2 text-sm text-white focus:ring-1 focus:ring-brand-wine">
+                    <button type="submit" class="bg-brand-wine text-white p-2 rounded hover:bg-red-700"><i class="ph ph-paper-plane-right"></i></button>
+                </form>
+            </div>
+        </div>
     </div>
 
-    <!-- SCRIPT BLINDADO V3 (CORREÇÃO DEFINITIVA) -->
+    <!-- SCRIPT PRINCIPAL (MÓDULOS) -->
     <script type="module">
-        // Adicionei 'readMe' na importação
-        import { createDirectus, authentication, rest, readItems, createItem, readMe } from 'https://esm.sh/@directus/sdk@13.0.0';
+        import { createDirectus, authentication, rest, readItems, createItem } from 'https://esm.sh/@directus/sdk@13.0.0';
 
         const API_URL = 'https://elobrindes-painel.onrender.com';
         const client = createDirectus(API_URL).with(authentication()).with(rest());
@@ -127,7 +157,6 @@
         window.client = client;
         window.readItems = readItems;
         window.createItem = createItem;
-        window.currentOrgId = null; // Variável para guardar o ID da empresa
 
         // --- LOGIN ---
         document.getElementById('form-login').addEventListener('submit', async (e) => {
@@ -142,19 +171,13 @@
 
             try {
                 await client.login(email, password);
-                
-                // --- PULO DO GATO: PEGAR A EMPRESA DO USUÁRIO ---
-                const user = await client.request(readMe({ fields: ['organization_id'] }));
-                window.currentOrgId = user.organization_id;
-                console.log("Empresa detectada:", window.currentOrgId);
-
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.remove('hidden');
                 window.router('estoque');
             } catch (error) {
                 console.error(error);
                 errorMsg.classList.remove('hidden');
-                errorMsg.textContent = "Erro no login. Verifique senha ou conexão.";
+                errorMsg.textContent = "Erro no login. Verifique senha.";
             } finally {
                 btn.disabled = false; btn.innerHTML = 'Acessar Painel';
             }
@@ -183,18 +206,13 @@
                     <div class="bg-brand-card p-4 rounded border border-gray-800">
                         <h3 class="font-bold text-white">${item.produto_id?.nome || 'Produto'}</h3>
                         <p class="text-brand-wine text-2xl font-bold mt-2">${item.quantidade_disponivel} unid.</p>
-                        <button onclick="window.prefillOrder('${item.id}', '${item.produto_id?.nome}')" class="mt-4 bg-gray-800 text-white px-3 py-1 rounded text-sm w-full hover:bg-brand-wine transition">Solicitar</button>
+                        <button onclick="window.router('pedir')" class="mt-4 bg-gray-800 text-white px-3 py-1 rounded text-sm w-full hover:bg-brand-wine transition">Solicitar</button>
                     </div>
                 `).join('');
             } catch (e) { grid.innerHTML = 'Erro ao carregar estoque.'; }
         }
 
-        window.prefillOrder = function(id, name) {
-            window.router('pedir');
-            setTimeout(() => { alert(`Produto: ${name}. Selecione-o na lista.`); }, 500);
-        }
-
-        // --- PEDIDO (AGORA COM ORGANIZATION_ID) ---
+        // --- PEDIDO (CORRIGIDO E SIMPLIFICADO) ---
         async function loadDependencies() {
             try {
                 const [ends, prods] = await Promise.all([
@@ -213,14 +231,13 @@
             btn.disabled = true; btn.innerHTML = 'Enviando...';
 
             try {
-                // payload limpo com ORGANIZATION_ID explícito
+                // O Backend (Preset) vai preencher o organization_id sozinho
                 const payload = {
                     tipo: 'SOLICITACAO_ENVIO',
                     status: 'pendente',
                     quantidade: parseInt(document.getElementById('pedido-qtd').value),
                     observacoes: `Data: ${document.getElementById('pedido-data').value}`,
-                    endereco_id: document.getElementById('pedido-endereco').value,
-                    organization_id: window.currentOrgId // AQUI ESTÁ A CORREÇÃO
+                    endereco_id: document.getElementById('pedido-endereco').value
                 };
 
                 await client.request(createItem('solicitacoes', payload));
@@ -235,26 +252,56 @@
             }
         });
 
-        // --- HISTÓRICO ---
+        // --- HISTÓRICO (DATA_CRIACAO CORRIGIDO) ---
         async function loadHistory() {
             const tbody = document.getElementById('history-table-body');
             tbody.innerHTML = '<tr><td colspan="3" class="p-4">Carregando...</td></tr>';
             try {
+                // AQUI ESTÁ A CORREÇÃO DO ERRO 403 DE LEITURA
                 const items = await client.request(readItems('solicitacoes', { 
-                    sort: ['-date_created'],
-                    fields: ['id', 'status', 'date_created', 'tipo']
+                    sort: ['-data_criacao'], 
+                    fields: ['id', 'status', 'data_criacao', 'tipo']
                 }));
+
                 if(!items.length) { tbody.innerHTML = '<tr><td colspan="3" class="p-4">Nenhum pedido.</td></tr>'; return; }
                 
                 tbody.innerHTML = items.map(i => `
                     <tr class="border-b border-gray-800">
                         <td class="p-4">#${i.id}</td>
-                        <td class="p-4">${new Date(i.date_created).toLocaleDateString()}</td>
+                        <td class="p-4">${new Date(i.data_criacao).toLocaleDateString()}</td>
                         <td class="p-4"><span class="bg-gray-700 px-2 py-1 rounded text-xs">${i.status}</span></td>
                     </tr>
                 `).join('');
-            } catch (e) { tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-red-500">Erro ao carregar.</td></tr>'; }
+            } catch (e) { 
+                console.error(e);
+                tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-red-500">Erro ao carregar lista.</td></tr>'; 
+            }
         }
+
+        // --- CHATBOT (Visual) ---
+        window.toggleChat = function() {
+            const chat = document.getElementById('chatbot-window');
+            chat.classList.toggle('hidden');
+            chat.classList.toggle('flex');
+        }
+
+        document.getElementById('chat-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const msg = input.value;
+            if(!msg) return;
+
+            const area = document.getElementById('chat-messages');
+            area.innerHTML += `<div class="bg-brand-wine p-3 rounded-lg mb-2 text-sm text-white max-w-[85%] ml-auto text-right">${msg}</div>`;
+            input.value = '';
+            area.scrollTop = area.scrollHeight;
+
+            // Simulação de resposta
+            setTimeout(() => {
+                area.innerHTML += `<div class="bg-gray-800 p-3 rounded-lg mb-2 text-sm text-gray-200 max-w-[85%]">Estou em modo visual. Em breve estarei conectado à IA!</div>`;
+                area.scrollTop = area.scrollHeight;
+            }, 1000);
+        });
     </script>
 </body>
 </html>
