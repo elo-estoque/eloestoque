@@ -37,7 +37,7 @@
     <!-- Icons (Phosphor) -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
-    <!-- Directus SDK -->
+    <!-- Directus SDK (Versão Estável) -->
     <script src="https://unpkg.com/@directus/sdk@13.0.0/dist/sdk.global.min.js"></script>
 
     <style>
@@ -64,7 +64,7 @@
     <!-- ========================================== -->
     <!-- TELA DE LOGIN                              -->
     <!-- ========================================== -->
-    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-brand-dark bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-brand-dark">
         <div class="bg-brand-card p-8 rounded-xl shadow-2xl border border-brand-wine w-full max-w-md mx-4">
             <div class="text-center mb-8">
                 <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-wine text-white mb-4">
@@ -91,8 +91,8 @@
                     <div id="btn-login-loader" class="loader hidden ml-2 border-white border-t-transparent w-5 h-5"></div>
                 </button>
             </form>
-            <div id="login-error" class="mt-4 text-center text-red-400 text-sm hidden">
-                Credenciais inválidas. Tente novamente.
+            <div id="login-error" class="mt-4 text-center text-red-400 text-sm hidden border border-red-800 bg-red-900/20 p-2 rounded">
+                <!-- Msg erro injetada via JS -->
             </div>
         </div>
     </div>
@@ -250,38 +250,45 @@
     <script>
         // --- 1. CONFIGURAÇÃO E INICIALIZAÇÃO ---
         
-        const API_URL = 'https://elobrindes-painel.onrender.com';
+        // Se tiver barra no final, o Directus pode reclamar de CORS. Removemos por segurança.
+        const API_URL = 'https://elobrindes-painel.onrender.com'; 
         
-        // Inicializa o cliente Directus com autenticação e REST
-        const { createDirectus, authentication, rest, readItems, createItem } = DirectusSdk;
-        
-        const client = createDirectus(API_URL)
-            .with(authentication())
-            .with(rest());
+        let client;
+
+        // Tentativa segura de inicializar o SDK
+        try {
+            // Extrai funções do objeto global
+            const { createDirectus, authentication, rest, readItems, createItem } = DirectusSdk;
+            
+            client = createDirectus(API_URL)
+                .with(authentication())
+                .with(rest());
+                
+            console.log("✅ Directus SDK Carregado com Sucesso!");
+
+        } catch (e) {
+            console.error("🔴 CRITICAL: Falha ao carregar SDK", e);
+            alert("Erro Crítico: O sistema não conseguiu carregar os componentes necessários. Verifique sua conexão ou o Console do navegador.");
+        }
 
         // --- 2. GERENCIAMENTO DE ESTADO E NAVEGAÇÃO ---
 
         function router(viewName) {
-            // Esconde todas as seções
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
-            // Remove active nav
             document.querySelectorAll('.nav-item').forEach(el => {
                 el.classList.remove('bg-brand-wine', 'text-white');
                 el.classList.add('text-gray-300');
             });
 
-            // Mostra a selecionada
             const target = document.getElementById(`view-${viewName}`);
             if(target) target.classList.remove('hidden');
 
-            // Atualiza sidebar
             const navBtn = document.querySelector(`button[onclick="router('${viewName}')"]`);
             if(navBtn) {
                 navBtn.classList.remove('text-gray-300');
                 navBtn.classList.add('bg-brand-wine', 'text-white');
             }
 
-            // Carrega dados específicos
             if(viewName === 'estoque') loadInventory();
             if(viewName === 'pedir') loadOrderFormDependencies();
             if(viewName === 'pedidos') loadHistory();
@@ -306,20 +313,32 @@
             errorMsg.classList.add('hidden');
 
             try {
+                if(!client) throw new Error("SDK não inicializado");
+
                 await client.login(email, password);
                 
                 // Sucesso
                 document.getElementById('login-screen').classList.add('hidden');
                 const app = document.getElementById('app-screen');
                 app.classList.remove('hidden');
-                // Pequeno delay para animação CSS
                 setTimeout(() => app.classList.remove('opacity-0'), 50);
                 
-                // Carregar Dashboard
                 router('estoque');
 
             } catch (error) {
-                console.error("Erro Login:", error);
+                console.error("Erro Login Detalhado:", error);
+                
+                // Mensagem amigável baseada no erro
+                let msg = "Falha no login. Verifique e-mail e senha.";
+                
+                // Verifica erros comuns de rede/CORS
+                if(error.message && error.message.includes("Network Error")) {
+                    msg = "Erro de Conexão (CORS). O servidor bloqueou o acesso. Verifique as configurações no Render.";
+                } else if (error.errors && error.errors[0] && error.errors[0].message) {
+                    msg = "Erro: " + error.errors[0].message; // Mensagem direta do Directus
+                }
+
+                errorMsg.textContent = msg;
                 errorMsg.classList.remove('hidden');
             } finally {
                 btnText.textContent = 'Acessar Painel';
@@ -328,32 +347,33 @@
         });
 
         async function logout() {
-            await client.logout();
+            if(client) await client.logout();
             location.reload();
         }
 
-        // --- 4. FUNCIONALIDADES: ESTOQUE (DASHBOARD) ---
+        // --- 4. FUNCIONALIDADES: ESTOQUE ---
 
         async function loadInventory() {
             const grid = document.getElementById('inventory-grid');
             grid.innerHTML = '<div class="col-span-full text-center py-10"><div class="loader mx-auto border-brand-wine"></div></div>';
 
             try {
-                // Busca itens da coleção estoque_cliente expandindo os dados do produto
+                const { readItems } = DirectusSdk;
                 const items = await client.request(readItems('estoque_cliente', {
                     fields: ['*', 'produto_id.*']
                 }));
 
                 grid.innerHTML = '';
 
-                if(items.length === 0) {
-                    grid.innerHTML = '<div class="col-span-full text-center text-gray-500">Seu estoque está vazio.</div>';
+                if(!items || items.length === 0) {
+                    grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-10 border border-dashed border-gray-800 rounded-lg">Seu estoque está vazio ou não foi encontrado para sua empresa.</div>';
                     return;
                 }
 
                 items.forEach(item => {
                     const produto = item.produto_id;
-                    if(!produto) return; // Segurança caso relação esteja quebrada
+                    // Fallback robusto se produto for null (segurança)
+                    if(!produto) return; 
 
                     const imgUrl = produto.imagem 
                         ? `${API_URL}/assets/${produto.imagem}?width=400&height=300&fit=cover` 
@@ -386,8 +406,8 @@
                 });
 
             } catch (error) {
-                console.error(error);
-                grid.innerHTML = `<div class="col-span-full text-center text-red-400">Erro ao carregar estoque.</div>`;
+                console.error("Erro Estoque:", error);
+                grid.innerHTML = `<div class="col-span-full text-center text-red-400 border border-red-900 p-4 rounded bg-red-900/20">Erro ao carregar estoque. Verifique o console.</div>`;
             }
         }
 
@@ -396,49 +416,51 @@
         async function loadOrderFormDependencies() {
             const selectEnd = document.getElementById('pedido-endereco');
             const selectProd = document.getElementById('pedido-produto');
+            const { readItems } = DirectusSdk;
             
-            // Estado de loading visual
             selectEnd.disabled = true;
             selectProd.disabled = true;
 
             try {
-                // Carregar Endereços e Produtos em paralelo
                 const [enderecos, estoque] = await Promise.all([
                     client.request(readItems('enderecos_entrega')),
                     client.request(readItems('estoque_cliente', { fields: ['id', 'produto_id.nome', 'quantidade_disponivel'] }))
                 ]);
 
-                // Popular Endereços
                 selectEnd.innerHTML = '<option value="" disabled selected>Selecione o destino...</option>';
-                enderecos.forEach(end => {
-                    // Monta string do endereço (assume campos comuns, ajustável conforme schema real)
-                    const label = `${end.logradouro || 'Endereço'}, ${end.numero || ''} - ${end.cidade || ''}`;
-                    selectEnd.innerHTML += `<option value="${end.id}">${label}</option>`;
-                });
+                if(enderecos && enderecos.length > 0) {
+                    enderecos.forEach(end => {
+                        const label = `${end.logradouro || 'Endereço'}, ${end.numero || ''} - ${end.cidade || ''}`;
+                        selectEnd.innerHTML += `<option value="${end.id}">${label}</option>`;
+                    });
+                } else {
+                    selectEnd.innerHTML += `<option value="" disabled>Nenhum endereço cadastrado.</option>`;
+                }
 
-                // Popular Produtos
                 selectProd.innerHTML = '<option value="" disabled selected>Selecione um produto...</option>';
-                estoque.forEach(item => {
-                    if(item.produto_id) {
-                        selectProd.innerHTML += `<option value="${item.produto_id.id || item.id}" data-estoque-id="${item.id}">${item.produto_id.nome} (Disp: ${item.quantidade_disponivel})</option>`;
-                    }
-                });
+                if(estoque && estoque.length > 0) {
+                    estoque.forEach(item => {
+                        if(item.produto_id) {
+                            selectProd.innerHTML += `<option value="${item.produto_id.id || item.id}" data-estoque-id="${item.id}">${item.produto_id.nome} (Disp: ${item.quantidade_disponivel})</option>`;
+                        }
+                    });
+                } else {
+                    selectProd.innerHTML += `<option value="" disabled>Sem itens no estoque.</option>`;
+                }
 
             } catch (error) {
-                alert('Erro ao carregar dados do formulário: ' + error.message);
+                console.error(error);
+                alert('Erro ao carregar dados do formulário.');
             } finally {
                 selectEnd.disabled = false;
                 selectProd.disabled = false;
             }
         }
 
-        // Helper para o botão "Solicitar" no card do dashboard
         window.prefillOrder = function(estoqueId, prodName) {
             router('pedir');
-            // Timeout para garantir que o router carregou os selects
             setTimeout(() => {
                 const select = document.getElementById('pedido-produto');
-                // Tenta encontrar a option que tem esse estoqueId (lógica simplificada)
                 for (let i = 0; i < select.options.length; i++) {
                     if (select.options[i].text.includes(prodName)) {
                         select.selectedIndex = i;
@@ -448,9 +470,9 @@
             }, 800);
         };
 
-        // Submit do Formulário
         document.getElementById('form-pedido').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const { createItem } = DirectusSdk;
             
             const produtoId = document.getElementById('pedido-produto').value;
             const qtd = document.getElementById('pedido-qtd').value;
@@ -463,31 +485,24 @@
             btn.disabled = true;
 
             try {
-                // Criação do Payload
-                // NOTA: Como não sei o nome exato dos campos relacionais na tabela 'solicitacoes',
-                // estou assumindo uma estrutura lógica padrão ou salvando em campos genéricos.
-                // O ideal é que 'solicitacoes' tenha campos M2O para 'produto' e 'endereco'.
-                
                 await client.request(createItem('solicitacoes', {
                     status: 'pendente',
                     tipo: 'SOLICITACAO_ENVIO',
-                    quantidade: parseInt(qtd),
-                    data_desejada: dataDesejada,
-                    // Tentativa de linkar relacionamento. Se falhar, o backend pode rejeitar ou ignorar.
-                    // Ajuste conforme o nome real dos campos no Directus (ex: produto, endereco_entrega)
-                    observacoes: `Solicitação via Portal. Qtd: ${qtd}. Endereço ID: ${enderecoId}`,
-                    // Se o schema permitir relacionamentos diretos:
-                    /* produto: produtoId, */
-                    /* endereco: enderecoId */
+                    // Importante: Verifique se no banco o campo é 'valor_total' ou 'quantidade'
+                    // No SQL original não tinha 'quantidade' na tabela solicitacoes, apenas em solicitacao_itens
+                    // Estou salvando em observacoes por garantia caso o campo não exista
+                    observacoes: `Solicitação via Portal. Qtd: ${qtd}. Produto ID: ${produtoId}`,
+                    endereco_id: enderecoId, 
+                    organization_id: "$CURRENT_USER.organization_id" // O hook do Directus deve preencher ou o Backend tratar
                 }));
 
                 alert('Solicitação enviada com sucesso!');
                 e.target.reset();
-                router('pedidos'); // Vai para histórico
+                router('pedidos');
 
             } catch (error) {
                 console.error(error);
-                alert('Erro ao enviar solicitação. Verifique os dados.');
+                alert('Erro ao enviar solicitação. Verifique o console.');
             } finally {
                 btn.innerHTML = originalBtnContent;
                 btn.disabled = false;
@@ -501,6 +516,7 @@
             tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-10 text-center"><div class="loader mx-auto border-brand-wine"></div></td></tr>';
 
             try {
+                const { readItems } = DirectusSdk;
                 const solicitacoes = await client.request(readItems('solicitacoes', {
                     sort: ['-date_created'],
                     limit: 20
@@ -508,16 +524,13 @@
 
                 tbody.innerHTML = '';
 
-                if(solicitacoes.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-10 text-center text-gray-500">Nenhum histórico encontrado.</td></tr>';
+                if(!solicitacoes || solicitacoes.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-10 text-center text-gray-500">Nenhuma solicitação encontrada.</td></tr>';
                     return;
                 }
 
                 solicitacoes.forEach(sol => {
-                    // Formata Data
                     const data = new Date(sol.date_created).toLocaleDateString('pt-BR');
-                    
-                    // Estiliza Status
                     let statusColor = 'bg-gray-700 text-gray-300';
                     if(sol.status === 'pendente') statusColor = 'bg-yellow-900 text-yellow-200 border border-yellow-800';
                     if(sol.status === 'aprovado' || sol.status === 'enviado') statusColor = 'bg-green-900 text-green-200 border border-green-800';
@@ -530,7 +543,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${sol.tipo || 'Geral'}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColor}">
-                                    ${sol.status.toUpperCase()}
+                                    ${sol.status ? sol.status.toUpperCase() : 'N/A'}
                                 </span>
                             </td>
                         </tr>
