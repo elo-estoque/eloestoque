@@ -91,7 +91,7 @@
                         <select id="pedido-produto" class="w-full bg-black border border-gray-700 text-white p-3 rounded"></select>
                     </div>
                     <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div><label class="block text-gray-300 mb-2">Qtd</label><input type="number" id="pedido-qtd" class="w-full bg-black border border-gray-700 text-white p-3 rounded"></div>
+                        <div><label class="block text-gray-300 mb-2">Qtd</label><input type="number" id="pedido-qtd" class="w-full bg-black border border-gray-700 text-white p-3 rounded" value="1"></div>
                         <div><label class="block text-gray-300 mb-2">Data</label><input type="date" id="pedido-data" class="w-full bg-black border border-gray-700 text-white p-3 rounded"></div>
                     </div>
                     <div class="mb-4">
@@ -102,7 +102,7 @@
                 </form>
             </div>
 
-            <!-- HISTÓRICO (CORRIGIDO) -->
+            <!-- HISTÓRICO -->
             <div id="view-pedidos" class="view-section hidden">
                 <h2 class="text-2xl font-bold text-white mb-6">Meus Pedidos</h2>
                 <div class="bg-brand-card rounded border border-gray-800 overflow-hidden">
@@ -115,14 +115,14 @@
         </main>
     </div>
 
-    <!-- SCRIPT BLINDADO -->
+    <!-- SCRIPT BLINDADO V2 -->
     <script type="module">
         import { createDirectus, authentication, rest, readItems, createItem } from 'https://esm.sh/@directus/sdk@13.0.0';
 
         const API_URL = 'https://elobrindes-painel.onrender.com';
         const client = createDirectus(API_URL).with(authentication()).with(rest());
         
-        // Globais para o HTML
+        // Globais
         window.client = client;
         window.readItems = readItems;
         window.createItem = createItem;
@@ -132,11 +132,10 @@
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const errorMsg = document.getElementById('login-error');
             const btn = e.target.querySelector('button');
+            const errorMsg = document.getElementById('login-error');
 
-            btn.disabled = true;
-            btn.innerHTML = 'Entrando...';
+            btn.disabled = true; btn.innerHTML = 'Entrando...';
             errorMsg.classList.add('hidden');
 
             try {
@@ -147,12 +146,9 @@
             } catch (error) {
                 console.error(error);
                 errorMsg.classList.remove('hidden');
-                let msg = "Erro desconhecido.";
-                if (String(error).includes("401")) msg = "E-mail ou senha incorretos.";
-                errorMsg.textContent = "Erro: " + msg;
+                errorMsg.textContent = "Erro no login. Verifique senha ou conexão.";
             } finally {
-                btn.disabled = false;
-                btn.innerHTML = 'Acessar Painel';
+                btn.disabled = false; btn.innerHTML = 'Acessar Painel';
             }
         });
 
@@ -165,10 +161,7 @@
             if(view === 'pedidos') loadHistory();
         }
 
-        window.logout = async function() {
-            await client.logout();
-            location.reload();
-        }
+        window.logout = async function() { await client.logout(); location.reload(); }
 
         // --- ESTOQUE ---
         async function loadInventory() {
@@ -176,25 +169,25 @@
             grid.innerHTML = 'Carregando...';
             try {
                 const items = await client.request(readItems('estoque_cliente', { fields: ['*', 'produto_id.*'] }));
-                
                 if(!items.length) { grid.innerHTML = 'Estoque vazio.'; return; }
                 
                 grid.innerHTML = items.map(item => `
                     <div class="bg-brand-card p-4 rounded border border-gray-800">
                         <h3 class="font-bold text-white">${item.produto_id?.nome || 'Produto'}</h3>
                         <p class="text-brand-wine text-2xl font-bold mt-2">${item.quantidade_disponivel} unid.</p>
-                        <button onclick="window.prefillOrder('${item.id}')" class="mt-4 bg-gray-800 text-white px-3 py-1 rounded text-sm w-full hover:bg-brand-wine transition">Solicitar</button>
+                        <button onclick="window.prefillOrder('${item.id}', '${item.produto_id?.nome}')" class="mt-4 bg-gray-800 text-white px-3 py-1 rounded text-sm w-full hover:bg-brand-wine transition">Solicitar</button>
                     </div>
                 `).join('');
             } catch (e) { grid.innerHTML = 'Erro ao carregar estoque.'; }
         }
 
-        window.prefillOrder = function(id) {
+        window.prefillOrder = function(id, name) {
             window.router('pedir');
-            alert('Selecione o produto no formulário.');
+            // Pequeno delay para dar tempo do select carregar
+            setTimeout(() => { alert(`Produto: ${name}. Selecione-o na lista.`); }, 500);
         }
 
-        // --- PEDIDO ---
+        // --- PEDIDO (CORRIGIDO) ---
         async function loadDependencies() {
             try {
                 const [ends, prods] = await Promise.all([
@@ -209,31 +202,40 @@
 
         document.getElementById('form-pedido').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.disabled = true; btn.innerHTML = 'Enviando...';
+
             try {
-                await client.request(createItem('solicitacoes', {
+                // payload limpo
+                const payload = {
                     tipo: 'SOLICITACAO_ENVIO',
                     status: 'pendente',
-                    // Campos básicos para garantir compatibilidade
-                    quantidade: document.getElementById('pedido-qtd').value, 
-                    observacoes: `Qtd: ${document.getElementById('pedido-qtd').value}`
-                }));
-                alert('Pedido Enviado!');
+                    quantidade: parseInt(document.getElementById('pedido-qtd').value),
+                    observacoes: `Data: ${document.getElementById('pedido-data').value}`,
+                    endereco_id: document.getElementById('pedido-endereco').value // AGORA SIM!
+                };
+
+                await client.request(createItem('solicitacoes', payload));
+                
+                alert('Pedido Enviado com Sucesso!');
                 window.router('pedidos');
-            } catch (e) { alert('Erro: ' + e.message); }
+            } catch (e) { 
+                console.error(e);
+                alert('Erro ao enviar: ' + (e.message || "Verifique permissões")); 
+            } finally {
+                btn.disabled = false; btn.innerHTML = 'Enviar Pedido';
+            }
         });
 
-        // --- HISTÓRICO (CORREÇÃO DO ERRO 403) ---
+        // --- HISTÓRICO ---
         async function loadHistory() {
             const tbody = document.getElementById('history-table-body');
             tbody.innerHTML = '<tr><td colspan="3" class="p-4">Carregando...</td></tr>';
             try {
-                // AQUI ESTÁ A CORREÇÃO: Pedimos apenas campos específicos
-                // Isso evita erro de permissão em campos ocultos
                 const items = await client.request(readItems('solicitacoes', { 
                     sort: ['-date_created'],
-                    fields: ['id', 'status', 'date_created', 'tipo'] 
+                    fields: ['id', 'status', 'date_created', 'tipo']
                 }));
-
                 if(!items.length) { tbody.innerHTML = '<tr><td colspan="3" class="p-4">Nenhum pedido.</td></tr>'; return; }
                 
                 tbody.innerHTML = items.map(i => `
@@ -243,10 +245,7 @@
                         <td class="p-4"><span class="bg-gray-700 px-2 py-1 rounded text-xs">${i.status}</span></td>
                     </tr>
                 `).join('');
-            } catch (e) { 
-                console.error(e);
-                tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-red-500">Erro de permissão ou conexão.</td></tr>'; 
-            }
+            } catch (e) { tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-red-500">Erro ao carregar.</td></tr>'; }
         }
     </script>
 </body>
