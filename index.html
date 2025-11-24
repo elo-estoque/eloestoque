@@ -112,24 +112,22 @@
         </main>
     </div>
 
-    <!-- SCRIPT TIPO MÓDULO (SOLUÇÃO DO ERRO) -->
+    <!-- MUDANÇA CRUCIAL: USANDO VERSÃO 13.0.0 FIXA -->
     <script type="module">
-        // Importando direto do Módulo (Isso resolve o "ReferenceError")
-        import { createDirectus, authentication, rest, readItems, createItem } from 'https://esm.sh/@directus/sdk';
+        // AQUI ESTÁ A CORREÇÃO: Adicionei @13.0.0 para garantir a versão correta
+        import { createDirectus, authentication, rest, readItems, createItem } from 'https://esm.sh/@directus/sdk@13.0.0';
 
         const API_URL = 'https://elobrindes-painel.onrender.com';
         
-        // Inicialização do Cliente
         const client = createDirectus(API_URL).with(authentication()).with(rest());
         
-        // Tornando acessível globalmente para os botões HTML
         window.client = client;
         window.readItems = readItems;
         window.createItem = createItem;
 
-        console.log("SDK Carregado via Módulo!");
+        console.log("SDK v13 Carregado!");
 
-        // --- LÓGICA DE LOGIN ---
+        // --- LOGIN ---
         document.getElementById('form-login').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
@@ -138,7 +136,7 @@
             const btn = e.target.querySelector('button');
 
             btn.disabled = true;
-            btn.innerHTML = 'Conectando...';
+            btn.innerHTML = 'Validando...';
             errorMsg.classList.add('hidden');
 
             try {
@@ -152,10 +150,8 @@
                 console.error(error);
                 errorMsg.classList.remove('hidden');
                 let msg = "Erro desconhecido.";
-                // Tratamento de erro seguro
-                if (error?.errors?.[0]?.message) msg = error.errors[0].message;
                 if (String(error).includes("401")) msg = "E-mail ou senha incorretos.";
-                if (String(error).includes("Network Error")) msg = "Erro de conexão (CORS).";
+                if (String(error).includes("Network Error")) msg = "Erro de conexão.";
                 
                 errorMsg.textContent = "Erro: " + msg;
             } finally {
@@ -164,7 +160,7 @@
             }
         });
 
-        // --- FUNÇÕES GLOBAIS ---
+        // --- ROTAS E FUNÇÕES ---
         window.router = function(view) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             document.getElementById(`view-${view}`).classList.remove('hidden');
@@ -181,12 +177,11 @@
         window.prefillOrder = function(id, name) {
             window.router('pedir');
             setTimeout(() => {
-                // Lógica simplificada de preenchimento
-                alert(`Produto pré-selecionado: ${name}`);
+                alert(`Produto selecionado: ${name}`);
             }, 500);
         }
 
-        // --- CARREGAMENTO DE DADOS ---
+        // --- DADOS ---
         async function loadInventory() {
             const grid = document.getElementById('inventory-grid');
             grid.innerHTML = 'Carregando...';
@@ -204,7 +199,7 @@
                 `).join('');
             } catch (e) { 
                 console.error(e);
-                grid.innerHTML = 'Erro ao carregar. Verifique o console.'; 
+                grid.innerHTML = 'Erro ao carregar. Tente recarregar a página.'; 
             }
         }
 
