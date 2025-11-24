@@ -76,11 +76,13 @@
         </aside>
 
         <main class="flex-1 bg-brand-dark p-8 overflow-y-auto">
+            <!-- ESTOQUE -->
             <div id="view-estoque" class="view-section">
                 <h2 class="text-2xl font-bold text-white mb-6">Meu Estoque</h2>
                 <div id="inventory-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">Carregando...</div>
             </div>
             
+            <!-- PEDIDO -->
             <div id="view-pedir" class="view-section hidden">
                 <h2 class="text-2xl font-bold text-white mb-6">Fazer Pedido</h2>
                 <form id="form-pedido" class="bg-brand-card p-6 rounded border border-gray-800 max-w-2xl">
@@ -100,6 +102,7 @@
                 </form>
             </div>
 
+            <!-- HISTÓRICO (CORRIGIDO) -->
             <div id="view-pedidos" class="view-section hidden">
                 <h2 class="text-2xl font-bold text-white mb-6">Meus Pedidos</h2>
                 <div class="bg-brand-card rounded border border-gray-800 overflow-hidden">
@@ -112,20 +115,17 @@
         </main>
     </div>
 
-    <!-- MUDANÇA CRUCIAL: USANDO VERSÃO 13.0.0 FIXA -->
+    <!-- SCRIPT BLINDADO -->
     <script type="module">
-        // AQUI ESTÁ A CORREÇÃO: Adicionei @13.0.0 para garantir a versão correta
         import { createDirectus, authentication, rest, readItems, createItem } from 'https://esm.sh/@directus/sdk@13.0.0';
 
         const API_URL = 'https://elobrindes-painel.onrender.com';
-        
         const client = createDirectus(API_URL).with(authentication()).with(rest());
         
+        // Globais para o HTML
         window.client = client;
         window.readItems = readItems;
         window.createItem = createItem;
-
-        console.log("SDK v13 Carregado!");
 
         // --- LOGIN ---
         document.getElementById('form-login').addEventListener('submit', async (e) => {
@@ -136,23 +136,19 @@
             const btn = e.target.querySelector('button');
 
             btn.disabled = true;
-            btn.innerHTML = 'Validando...';
+            btn.innerHTML = 'Entrando...';
             errorMsg.classList.add('hidden');
 
             try {
                 await client.login(email, password);
-                
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.remove('hidden');
                 window.router('estoque');
-
             } catch (error) {
                 console.error(error);
                 errorMsg.classList.remove('hidden');
                 let msg = "Erro desconhecido.";
                 if (String(error).includes("401")) msg = "E-mail ou senha incorretos.";
-                if (String(error).includes("Network Error")) msg = "Erro de conexão.";
-                
                 errorMsg.textContent = "Erro: " + msg;
             } finally {
                 btn.disabled = false;
@@ -160,7 +156,7 @@
             }
         });
 
-        // --- ROTAS E FUNÇÕES ---
+        // --- ROTEAMENTO ---
         window.router = function(view) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             document.getElementById(`view-${view}`).classList.remove('hidden');
@@ -174,14 +170,7 @@
             location.reload();
         }
 
-        window.prefillOrder = function(id, name) {
-            window.router('pedir');
-            setTimeout(() => {
-                alert(`Produto selecionado: ${name}`);
-            }, 500);
-        }
-
-        // --- DADOS ---
+        // --- ESTOQUE ---
         async function loadInventory() {
             const grid = document.getElementById('inventory-grid');
             grid.innerHTML = 'Carregando...';
@@ -194,15 +183,18 @@
                     <div class="bg-brand-card p-4 rounded border border-gray-800">
                         <h3 class="font-bold text-white">${item.produto_id?.nome || 'Produto'}</h3>
                         <p class="text-brand-wine text-2xl font-bold mt-2">${item.quantidade_disponivel} unid.</p>
-                        <button onclick="window.prefillOrder('${item.id}', '${item.produto_id?.nome}')" class="mt-4 bg-gray-800 text-white px-3 py-1 rounded text-sm w-full hover:bg-brand-wine transition">Solicitar</button>
+                        <button onclick="window.prefillOrder('${item.id}')" class="mt-4 bg-gray-800 text-white px-3 py-1 rounded text-sm w-full hover:bg-brand-wine transition">Solicitar</button>
                     </div>
                 `).join('');
-            } catch (e) { 
-                console.error(e);
-                grid.innerHTML = 'Erro ao carregar. Tente recarregar a página.'; 
-            }
+            } catch (e) { grid.innerHTML = 'Erro ao carregar estoque.'; }
         }
 
+        window.prefillOrder = function(id) {
+            window.router('pedir');
+            alert('Selecione o produto no formulário.');
+        }
+
+        // --- PEDIDO ---
         async function loadDependencies() {
             try {
                 const [ends, prods] = await Promise.all([
@@ -221,7 +213,8 @@
                 await client.request(createItem('solicitacoes', {
                     tipo: 'SOLICITACAO_ENVIO',
                     status: 'pendente',
-                    quantidade: document.getElementById('pedido-qtd').value,
+                    // Campos básicos para garantir compatibilidade
+                    quantidade: document.getElementById('pedido-qtd').value, 
                     observacoes: `Qtd: ${document.getElementById('pedido-qtd').value}`
                 }));
                 alert('Pedido Enviado!');
@@ -229,11 +222,18 @@
             } catch (e) { alert('Erro: ' + e.message); }
         });
 
+        // --- HISTÓRICO (CORREÇÃO DO ERRO 403) ---
         async function loadHistory() {
             const tbody = document.getElementById('history-table-body');
             tbody.innerHTML = '<tr><td colspan="3" class="p-4">Carregando...</td></tr>';
             try {
-                const items = await client.request(readItems('solicitacoes', { sort: ['-date_created'] }));
+                // AQUI ESTÁ A CORREÇÃO: Pedimos apenas campos específicos
+                // Isso evita erro de permissão em campos ocultos
+                const items = await client.request(readItems('solicitacoes', { 
+                    sort: ['-date_created'],
+                    fields: ['id', 'status', 'date_created', 'tipo'] 
+                }));
+
                 if(!items.length) { tbody.innerHTML = '<tr><td colspan="3" class="p-4">Nenhum pedido.</td></tr>'; return; }
                 
                 tbody.innerHTML = items.map(i => `
@@ -243,7 +243,10 @@
                         <td class="p-4"><span class="bg-gray-700 px-2 py-1 rounded text-xs">${i.status}</span></td>
                     </tr>
                 `).join('');
-            } catch (e) { tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-red-500">Erro.</td></tr>'; }
+            } catch (e) { 
+                console.error(e);
+                tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-red-500">Erro de permissão ou conexão.</td></tr>'; 
+            }
         }
     </script>
 </body>
