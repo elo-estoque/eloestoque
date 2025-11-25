@@ -4,33 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Elo Brindes | Portal do Cliente</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Configuração de Cores -->
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        brand: { dark: '#0a0a0a', wine: '#E31937', light: '#E5E7EB', card: '#171717', hover: '#C2132F' }
+                        brand: {
+                            dark: '#0a0a0a',    wine: '#E31937',
+                            light: '#E5E7EB',   card: '#171717',
+                            hover: '#C2132F'
+                        }
                     },
-                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
                 }
             }
         }
     </script>
+
+    <!-- Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #000000; color: #E5E7EB; }
+        
+        /* Loader */
         .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #E31937; border-radius: 50%; width: 24px; height: 24px; animation: spin 0.8s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Glassmorphism */
         .glass-panel { background: rgba(20, 20, 20, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
         .glass-input { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.3s ease; }
-        .glass-input:focus { background: rgba(255, 255, 255, 0.08); border-color: #E31937; outline: none; }
+        .glass-input:focus { background: rgba(255, 255, 255, 0.08); border-color: #E31937; outline: none; box-shadow: 0 0 0 2px rgba(227, 25, 55, 0.2); }
+        
+        /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #000; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: #E31937; }
-        .chat-container { transition: all 0.3s ease; z-index: 60; }
+
+        /* Chatbot & Particles */
+        .chat-container { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 60; }
         .chat-messages { scrollbar-width: thin; scrollbar-color: #E31937 #1A0505; }
-        /* Fundo Animado */
         .bg-particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: 0; pointer-events: none; }
         .particle { position: absolute; bottom: -50px; color: #E31937; font-size: 2rem; opacity: 0; animation: float 15s infinite linear; }
         @keyframes float { 0% { transform: translateY(0) rotate(0); opacity: 0; } 20% { opacity: 0.15; } 80% { opacity: 0.15; } 100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; } }
@@ -44,23 +64,27 @@
         <div class="bg-particles">
             <i class="ph ph-cube particle" style="left: 10%; animation-delay: 0s; font-size: 3rem;"></i>
             <i class="ph ph-gift particle" style="left: 30%; animation-delay: 4s; font-size: 2rem;"></i>
-            <i class="ph ph-rocket particle" style="left: 70%; animation-delay: 2s; font-size: 4rem;"></i>
         </div>
+
         <div class="glass-panel p-10 rounded-2xl w-full max-w-md mx-4 relative z-10 animate-[fadeIn_0.5s_ease-out]">
             <div class="text-center mb-10">
                 <div class="flex justify-center mb-6">
-                    <img src="logo.png" class="h-24 object-contain drop-shadow-[0_0_15px_rgba(227,25,55,0.5)]" onerror="this.style.display='none'; document.getElementById('fallback').classList.remove('hidden')">
-                    <div id="fallback" class="hidden inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-wine to-red-900 text-white shadow-lg"><i class="ph ph-cube text-4xl"></i></div>
+                    <img src="logo.png" class="h-24 object-contain drop-shadow-[0_0_15px_rgba(227,25,55,0.5)]" onerror="this.style.display='none'; document.getElementById('fallback-icon').classList.remove('hidden')">
+                    <div id="fallback-icon" class="hidden inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-wine to-red-900 text-white shadow-lg"><i class="ph ph-cube text-4xl"></i></div>
                 </div>
                 <h1 class="text-3xl font-bold text-white tracking-tight">Bem-vindo</h1>
                 <p class="text-gray-400 text-sm mt-2 uppercase tracking-widest text-[10px]">Portal Corporativo</p>
             </div>
+
             <form id="form-login" class="space-y-5">
-                <div class="space-y-1"><label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">E-mail</label><input type="email" id="email" required class="w-full glass-input rounded-lg px-4 py-3"></div>
-                <div class="space-y-1"><label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">Senha</label><input type="password" id="password" required class="w-full glass-input rounded-lg px-4 py-3"></div>
-                <button type="submit" class="w-full bg-brand-wine hover:bg-brand-hover text-white font-semibold py-4 rounded-lg transition-all duration-300 shadow-[0_0_20px_rgba(227,25,55,0.3)] mt-4 flex items-center justify-center"><span id="btn-login-text">ACESSAR SISTEMA</span></button>
+                <div class="space-y-1"><label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">E-mail</label><input type="email" id="email" required class="w-full glass-input rounded-lg px-4 py-3 placeholder-gray-600 focus:text-white" placeholder="seunome@empresa.com"></div>
+                <div class="space-y-1"><label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">Senha</label><input type="password" id="password" required class="w-full glass-input rounded-lg px-4 py-3 placeholder-gray-600 focus:text-white" placeholder="••••••••"></div>
+                <button type="submit" class="w-full bg-brand-wine hover:bg-brand-hover text-white font-semibold py-4 rounded-lg transition-all duration-300 mt-4 flex items-center justify-center group">
+                    <span id="btn-login-text" class="tracking-wide">ACESSAR SISTEMA</span>
+                    <div id="btn-login-loader" class="loader hidden ml-2 border-white"></div>
+                </button>
             </form>
-            <div id="login-error" class="mt-6 text-center text-red-400 text-xs hidden border border-red-900/50 bg-red-900/10 p-3 rounded-lg"></div>
+            <div id="login-error" class="mt-6 text-center text-red-400 text-xs hidden border border-red-900/50 bg-red-900/10 p-3 rounded-lg backdrop-blur-sm"></div>
         </div>
         <div class="absolute bottom-6 text-center text-gray-600 text-xs z-10">&copy; 2024 Elo Brindes.</div>
     </div>
@@ -74,27 +98,31 @@
                 <div class="font-bold text-2xl tracking-tighter text-white flex items-center gap-2"><i class="ph-fill ph-cube text-brand-wine"></i>ELO<span class="text-brand-wine">PAINEL</span></div>
             </div>
             <nav class="flex-1 px-4 py-8 space-y-2">
-                <button onclick="window.router('estoque')" class="w-full flex items-center gap-3 px-4 py-4 text-white bg-white/5 border border-white/10 rounded-xl hover:bg-brand-wine transition-all"><i class="ph ph-package text-xl"></i><span class="font-medium">Meu Estoque</span></button>
-                <button onclick="window.router('pedir')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all"><i class="ph ph-paper-plane-tilt text-xl"></i><span class="font-medium">Nova Solicitação</span></button>
-                <button onclick="window.router('pedidos')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all"><i class="ph ph-clock-counter-clockwise text-xl"></i><span class="font-medium">Histórico</span></button>
+                <p class="px-4 text-[10px] uppercase text-gray-500 font-bold tracking-widest mb-2">Menu Principal</p>
+                <button onclick="window.router('estoque')" class="w-full flex items-center gap-3 px-4 py-4 text-white bg-white/5 border border-white/10 rounded-xl transition-all hover:bg-brand-wine hover:border-brand-wine hover:shadow-lg group"><i class="ph ph-package text-xl text-brand-wine group-hover:text-white transition-colors"></i><span class="font-medium">Meu Estoque</span></button>
+                <button onclick="window.router('pedir')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all group"><i class="ph ph-paper-plane-tilt text-xl group-hover:text-brand-wine transition-colors"></i><span class="font-medium">Nova Solicitação</span></button>
+                <button onclick="window.router('repor')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all group"><i class="ph ph-shopping-cart text-xl text-green-400 group-hover:text-green-300"></i><span class="font-medium">Repor Estoque</span></button>
+                <button onclick="window.router('pedidos')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all group"><i class="ph ph-clock-counter-clockwise text-xl group-hover:text-brand-wine transition-colors"></i><span class="font-medium">Histórico</span></button>
             </nav>
-            <div class="p-6 border-t border-white/5"><button onclick="window.logout()" class="flex items-center gap-2 text-gray-500 hover:text-red-400 text-sm font-medium"><i class="ph ph-sign-out"></i> Sair</button></div>
+            <div class="p-6 border-t border-white/5"><button onclick="window.logout()" class="flex items-center gap-2 text-gray-500 hover:text-red-400 text-sm font-medium"><i class="ph ph-sign-out"></i> Encerrar Sessão</button></div>
         </aside>
 
         <main class="flex-1 p-6 md:p-10 overflow-y-auto z-10 relative">
             <!-- Estoque -->
-            <div id="view-estoque" class="view-section">
-                <h2 class="text-3xl font-bold text-white mb-8">Meu Estoque</h2>
+            <div id="view-estoque" class="view-section animate-[fadeIn_0.3s_ease-out]">
+                <header class="flex justify-between items-end mb-8">
+                    <div><h2 class="text-3xl font-bold text-white tracking-tight">Meu Estoque</h2><p class="text-gray-400 text-sm mt-1">Gerencie seus produtos disponíveis</p></div>
+                </header>
                 <div id="inventory-grid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">Carregando...</div>
             </div>
+            
             <!-- Pedido -->
-            <div id="view-pedir" class="view-section hidden">
+            <div id="view-pedir" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
                 <h2 class="text-3xl font-bold text-white mb-2">Solicitar Envio</h2>
-                <p class="text-gray-400 text-sm mb-8 pb-4 border-b border-white/10">Preencha os dados para envio</p>
+                <p class="text-gray-400 text-sm mb-8 pb-4 border-b border-white/10">Envie brindes do seu estoque</p>
                 <form id="form-pedido" class="glass-panel p-8 rounded-2xl max-w-3xl">
                     <div class="mb-6">
                         <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Produto</label>
-                        <!-- IMPORTANTE: O value agora guarda o ID DO ESTOQUE, não do produto -->
                         <select id="pedido-produto" class="w-full glass-input rounded-lg px-4 py-3 bg-[#0a0a0a]"></select>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -110,14 +138,51 @@
                         <div id="box-select-endereco"><select id="pedido-endereco" class="w-full glass-input rounded-lg px-4 py-3 bg-[#0a0a0a]"></select></div>
                         <div id="box-manual-endereco" class="hidden"><textarea id="pedido-endereco-manual" rows="3" class="w-full glass-input rounded-lg px-4 py-3" placeholder="Endereço completo..."></textarea></div>
                     </div>
-                    <button type="submit" class="w-full bg-brand-wine hover:bg-brand-hover text-white py-4 rounded-lg font-bold shadow-lg">Enviar Brinde para Endereço</button>
+                    <button type="submit" class="w-full bg-brand-wine hover:bg-brand-hover text-white py-4 rounded-lg font-bold shadow-lg">Enviar do Meu Estoque</button>
                 </form>
             </div>
-            <!-- Pedidos -->
-            <div id="view-pedidos" class="view-section hidden">
-                <h2 class="text-3xl font-bold text-white mb-8">Meus Pedidos</h2>
+
+            <!-- REPOR ESTOQUE (COM OPÇÃO DE ORÇAMENTO) -->
+            <div id="view-repor" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
+                <h2 class="text-3xl font-bold text-white mb-2">Repor Estoque</h2>
+                <p class="text-gray-400 text-sm mb-8 pb-4 border-b border-white/10">Solicite orçamento para produção</p>
+                <form id="form-repor" class="glass-panel p-8 rounded-2xl max-w-3xl border border-green-900/30">
+                    
+                    <!-- Toggle Manter/Alterar -->
+                    <div class="mb-6 p-4 bg-green-900/20 border border-green-900/50 rounded-xl flex items-center justify-between">
+                        <div>
+                            <span class="text-sm font-bold text-white block">Manter modelo atual?</span>
+                            <span class="text-xs text-gray-400">Mesma arte e especificações do último pedido.</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="repor-manter" class="sr-only peer" checked onchange="toggleReporMode()">
+                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                        </label>
+                    </div>
+
+                    <!-- Campo de Observação (Oculto se Manter for True) -->
+                    <div id="box-repor-obs" class="mb-6 hidden animate-[fadeIn_0.3s_ease-out]">
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">O que você deseja alterar?</label>
+                        <textarea id="repor-obs-texto" rows="3" class="w-full glass-input rounded-lg px-4 py-3 border-yellow-500/50 focus:border-yellow-500" placeholder="Ex: Quero mudar a cor da caneta para azul..."></textarea>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Produto</label>
+                        <select id="repor-produto" class="w-full glass-input rounded-lg px-4 py-3 bg-[#0a0a0a] border-green-900/50 focus:border-green-500"></select>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Qtd Desejada</label><input type="number" id="repor-qtd" class="w-full glass-input rounded-lg px-4 py-3" value="100" min="50"></div>
+                        <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Data Ideal</label><input type="date" id="repor-data" class="w-full glass-input rounded-lg px-4 py-3 text-gray-300"></div>
+                    </div>
+                    <button type="submit" class="w-full bg-green-700 hover:bg-green-600 text-white py-4 rounded-lg font-bold shadow-lg flex items-center justify-center gap-2"><i class="ph ph-currency-dollar"></i> Solicitar Orçamento</button>
+                </form>
+            </div>
+
+            <!-- Histórico -->
+            <div id="view-pedidos" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
+                <h2 class="text-3xl font-bold text-white mb-8">Histórico</h2>
                 <div class="glass-panel rounded-2xl overflow-hidden">
-                    <table class="w-full text-left text-gray-300"><thead class="bg-white/5 text-gray-400 uppercase text-xs"><tr><th class="p-5">ID</th><th class="p-5">Data</th><th class="p-5">Qtd</th><th class="p-5">Status</th></tr></thead><tbody id="history-table-body" class="divide-y divide-white/5"></tbody></table>
+                    <table class="w-full text-left text-gray-300"><thead class="bg-white/5 text-gray-400 uppercase text-xs"><tr><th class="p-5">Tipo</th><th class="p-5">Data</th><th class="p-5">Detalhes / Orçamento</th><th class="p-5">Status</th></tr></thead><tbody id="history-table-body" class="divide-y divide-white/5"></tbody></table>
                 </div>
             </div>
         </main>
@@ -132,7 +197,6 @@
     </div>
 
     <script type="module">
-        // IMPORTAÇÃO DO SDK (COM ATUALIZAÇÃO DE ESTOQUE)
         import { createDirectus, authentication, rest, readItems, createItem, updateItem, readMe } from 'https://esm.sh/@directus/sdk@13.0.0';
 
         const API_URL = 'https://elo-brindes-api-ire7ry-853a54-152-53-165-62.traefik.me';
@@ -140,11 +204,17 @@
         
         window.client = client; window.readItems = readItems; window.createItem = createItem; window.currentOrgId = null;
 
-        // Toggle Endereço
+        // UI
         window.toggleAddressMode = function() {
             const manual = document.getElementById('toggle-endereco').checked;
             document.getElementById('box-select-endereco').classList.toggle('hidden', manual);
             document.getElementById('box-manual-endereco').classList.toggle('hidden', !manual);
+        }
+        
+        window.toggleReporMode = function() {
+            const manter = document.getElementById('repor-manter').checked;
+            document.getElementById('box-repor-obs').classList.toggle('hidden', manter);
+            if(manter) document.getElementById('repor-obs-texto').value = "";
         }
 
         window.toggleChat = function() { document.getElementById('chatbot-window').classList.toggle('hidden'); document.getElementById('chatbot-window').classList.toggle('flex'); }
@@ -164,11 +234,13 @@
             } catch (err) { alert('Erro no login: ' + err.message); btn.disabled = false; btn.innerHTML = 'ACESSAR SISTEMA'; }
         });
 
+        // ROTAS
         window.router = function(view) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             document.getElementById('view-' + view).classList.remove('hidden');
             if(view === 'estoque') loadInventory();
             if(view === 'pedir') loadDependencies();
+            if(view === 'repor') loadRepositionDependencies(); 
             if(view === 'pedidos') loadHistory();
         }
         window.logout = async () => { await client.logout(); location.reload(); }
@@ -186,29 +258,33 @@
                     if(!img) img = 'https://placehold.co/400x300/1A0505/8B0000?text=Sem+Imagem';
                     
                     return `
-                    <div class="glass-panel rounded-xl overflow-hidden group">
+                    <div class="glass-panel rounded-xl overflow-hidden group relative">
                         <div class="h-48 bg-black"><img src="${img}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition"></div>
                         <div class="p-5">
                             <h3 class="font-bold text-white truncate">${item.produto_id?.nome || 'Item'}</h3>
                             <p class="text-brand-wine text-2xl font-bold mt-1">${item.quantidade_disponivel} <span class="text-xs text-gray-500">unid.</span></p>
-                            <button onclick="window.prefill('${item.id}', '${item.produto_id?.nome}', ${item.quantidade_disponivel})" class="mt-3 w-full bg-white/10 hover:bg-brand-wine py-2 rounded text-sm text-white transition">Solicitar</button>
+                            <div class="flex gap-2 mt-3">
+                                <button onclick="window.prefill('${item.id}', '${item.produto_id?.nome}', ${item.quantidade_disponivel}, 'pedir')" class="flex-1 bg-white/10 hover:bg-brand-wine py-2 rounded text-xs text-white transition uppercase tracking-wide font-bold">Enviar</button>
+                                <button onclick="window.prefill('${item.id}', '${item.produto_id?.nome}', 0, 'repor')" class="flex-1 bg-white/5 hover:bg-green-900/50 border border-white/10 py-2 rounded text-xs text-green-400 hover:text-white transition uppercase tracking-wide font-bold">Repor</button>
+                            </div>
                         </div>
                     </div>`;
                 }).join('');
             } catch (e) { grid.innerHTML = 'Erro ao carregar.'; }
         }
 
-        window.prefill = function(id, name, max) {
-            window.router('pedir');
+        window.prefill = function(id, name, max, type) {
+            window.router(type);
             setTimeout(() => {
-                const sel = document.getElementById('pedido-produto');
-                sel.value = id; // Seleciona pelo ID do ESTOQUE
-                sel.setAttribute('data-max', max); // Guarda o máximo pra validar
-                alert(`Selecionado: ${name}`);
+                const sel = document.getElementById(type === 'pedir' ? 'pedido-produto' : 'repor-produto');
+                sel.value = id; 
+                if(type === 'pedir') sel.setAttribute('data-max', max);
+                sel.classList.add('ring-2', 'ring-brand-wine');
+                setTimeout(() => sel.classList.remove('ring-2', 'ring-brand-wine'), 1000);
             }, 500);
         }
 
-        // PEDIDO (COM BAIXA DE ESTOQUE)
+        // ENVIAR DO ESTOQUE
         async function loadDependencies() {
             try {
                 const [ends, prods] = await Promise.all([
@@ -216,7 +292,6 @@
                     client.request(readItems('estoque_cliente', { fields: ['*', 'produto_id.nome'] }))
                 ]);
                 document.getElementById('pedido-endereco').innerHTML = ends.map(e => `<option value="${e.id}" class="bg-black">${e.apelido_local || e.logradouro}</option>`).join('');
-                // IMPORTANTE: O value aqui é o ID do ESTOQUE, e usamos data-max para saber quanto tem
                 document.getElementById('pedido-produto').innerHTML = prods.map(p => `<option value="${p.id}" data-qty="${p.quantidade_disponivel}" class="bg-black">${p.produto_id?.nome} (Disp: ${p.quantidade_disponivel})</option>`).join('');
             } catch(e) { console.error(e); }
         }
@@ -225,79 +300,89 @@
             e.preventDefault();
             const btn = e.target.querySelector('button');
             btn.disabled = true; btn.innerHTML = 'Processando...';
-
             try {
                 const estoqueId = document.getElementById('pedido-produto').value;
                 const qtdSolicitada = parseInt(document.getElementById('pedido-qtd').value);
-                
-                // 1. Verificar Estoque Atual
-                const estoqueItem = await client.request(readItems('estoque_cliente', { 
-                    filter: { id: { _eq: estoqueId } },
-                    fields: ['id', 'quantidade_disponivel']
-                }));
-                
+                const estoqueItem = await client.request(readItems('estoque_cliente', { filter: { id: { _eq: estoqueId } }, fields: ['id', 'quantidade_disponivel'] }));
                 const qtdAtual = estoqueItem[0].quantidade_disponivel;
+                if(qtdSolicitada > qtdAtual) throw new Error(`Estoque insuficiente! Disp: ${qtdAtual}`);
 
-                if(qtdSolicitada > qtdAtual) {
-                    throw new Error(`Estoque insuficiente! Você tem ${qtdAtual} e pediu ${qtdSolicitada}.`);
-                }
+                await client.request(updateItem('estoque_cliente', estoqueId, { quantidade_disponivel: qtdAtual - qtdSolicitada }));
 
-                const novaQtd = qtdAtual - qtdSolicitada;
-
-                // 2. Atualizar Estoque (BAIXA IMEDIATA) - Requer Permissão UPDATE
-                await client.request(updateItem('estoque_cliente', estoqueId, {
-                    quantidade_disponivel: novaQtd
-                }));
-
-                // 3. Criar o Pedido
                 const isManual = document.getElementById('toggle-endereco').checked;
-                const payload = {
+                await client.request(createItem('solicitacoes', {
                     tipo: 'SOLICITACAO_ENVIO', status: 'pendente',
                     quantidade: qtdSolicitada,
-                    observacoes: `Qtd: ${qtdSolicitada} - Data: ${document.getElementById('pedido-data').value}`,
+                    observacoes: `Saída de Estoque. Data: ${document.getElementById('pedido-data').value}`,
                     endereco_id: isManual ? null : document.getElementById('pedido-endereco').value,
                     endereco_manual: isManual ? document.getElementById('pedido-endereco-manual').value : null,
-                    organization_id: window.currentOrgId // Força a empresa correta
-                };
-
-                await client.request(createItem('solicitacoes', payload));
+                    organization_id: window.currentOrgId
+                }));
                 
-                alert('Pedido Enviado e Estoque Atualizado!');
-                window.router('estoque'); // Volta pro estoque pra ver o numero novo
-
-            } catch (e) { 
-                console.error(e); 
-                alert('Erro: ' + (e.message || "Verifique permissão de EDIÇÃO no estoque."));
-            } finally { 
-                btn.disabled = false; btn.innerHTML = 'Confirmar Envio'; 
-            }
+                alert('Envio Solicitado! Estoque atualizado.'); window.router('estoque');
+            } catch (e) { alert('Erro: ' + e.message); } finally { btn.disabled = false; btn.innerHTML = 'Confirmar Envio'; }
         });
 
-        // HISTÓRICO
+        // REPOR ESTOQUE (COM LÓGICA DE ORÇAMENTO)
+        async function loadRepositionDependencies() {
+            try {
+                const prods = await client.request(readItems('estoque_cliente', { fields: ['*', 'produto_id.nome'] }));
+                document.getElementById('repor-produto').innerHTML = prods.map(p => `<option value="${p.id}" class="bg-black">${p.produto_id?.nome}</option>`).join('');
+            } catch(e) { console.error(e); }
+        }
+
+        document.getElementById('form-repor').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.disabled = true; btn.innerHTML = 'Enviando Solicitação...';
+            try {
+                const manter = document.getElementById('repor-manter').checked;
+                const obs = manter ? "Manter modelo/arte atual." : "ALTERAÇÃO: " + document.getElementById('repor-obs-texto').value;
+
+                await client.request(createItem('solicitacoes', {
+                    tipo: 'SOLICITACAO_COMPRA', 
+                    status: 'pendente',
+                    quantidade: parseInt(document.getElementById('repor-qtd').value),
+                    observacoes: `${obs} | Data Ideal: ${document.getElementById('repor-data').value}`,
+                    organization_id: window.currentOrgId
+                }));
+                
+                alert('Solicitação enviada! Aguarde o orçamento.'); 
+                window.router('pedidos');
+            } catch (e) { alert('Erro: ' + e.message); } finally { btn.disabled = false; btn.innerHTML = 'Solicitar Compra'; }
+        });
+
+        // HISTÓRICO (COM VALOR DO ORÇAMENTO)
         async function loadHistory() {
             const tbody = document.getElementById('history-table-body');
             tbody.innerHTML = '<tr><td colspan="4" class="p-4">Carregando...</td></tr>';
             try {
-                const items = await client.request(readItems('solicitacoes', { sort: ['-data_criacao'], fields: ['id', 'status', 'data_criacao', 'quantidade'] }));
+                // Agora tentamos ler o campo 'valor_total'
+                const items = await client.request(readItems('solicitacoes', { sort: ['-data_criacao'], fields: ['id', 'status', 'data_criacao', 'quantidade', 'tipo', 'endereco_manual', 'endereco_id.apelido_local', 'valor_total'] }));
                 if(!items.length) { tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Vazio.</td></tr>'; return; }
-                tbody.innerHTML = items.map(i => `
-                    <tr class="border-b border-white/5 text-sm">
-                        <td class="p-4 text-brand-wine">#${String(i.id).substring(0,8)}</td>
-                        <td class="p-4 text-gray-300">${new Date(i.data_criacao).toLocaleDateString()}</td>
-                        <td class="p-4 text-white font-bold">${i.quantidade || 1}</td>
-                        <td class="p-4"><span class="bg-white/10 px-2 py-1 rounded text-xs text-white">${i.status.toUpperCase()}</span></td>
-                    </tr>`).join('');
+                tbody.innerHTML = items.map(i => {
+                    const isCompra = i.tipo === 'SOLICITACAO_COMPRA';
+                    const icon = isCompra ? '<i class="ph ph-shopping-cart text-green-400"></i>' : '<i class="ph ph-paper-plane-tilt text-brand-wine"></i>';
+                    const tipoTexto = isCompra ? 'Reposição' : 'Envio';
+                    
+                    // Lógica do Orçamento: Se tiver valor, mostra.
+                    let detalhes = isCompra ? (i.valor_total ? `<span class="text-green-400 font-bold">R$ ${i.valor_total}</span> <span class="text-xs text-gray-400">(Orçamento)</span>` : 'Aguardando Orçamento...') : (i.endereco_manual ? '📍 ' + i.endereco_manual : (i.endereco_id?.apelido_local || 'Endereço Cadastrado'));
+
+                    return `
+                    <tr class="border-b border-white/5 text-sm hover:bg-white/5 transition">
+                        <td class="p-4 flex items-center gap-2">${icon} <span class="font-bold">${tipoTexto}</span></td>
+                        <td class="p-4 text-gray-400">${new Date(i.data_criacao).toLocaleDateString()}</td>
+                        <td class="p-4 text-gray-300 truncate max-w-[200px]">${detalhes}</td>
+                        <td class="p-4"><span class="bg-white/10 px-2 py-1 rounded text-xs text-white uppercase">${i.status}</span></td>
+                    </tr>`;
+                }).join('');
             } catch (e) { tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-red-500">Erro.</td></tr>'; }
         }
         
-        // Chatbot Simples
         document.getElementById('chat-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const input = document.getElementById('chat-input');
-            const msg = input.value; if(!msg) return;
+            e.preventDefault(); const input = document.getElementById('chat-input'); const msg = input.value; if(!msg) return;
             document.getElementById('chat-messages').innerHTML += `<div class="bg-brand-wine p-3 rounded-xl mb-2 text-sm text-white text-right ml-auto max-w-[80%]">${msg}</div>`;
             input.value = '';
-            setTimeout(() => document.getElementById('chat-messages').innerHTML += `<div class="bg-white/10 p-3 rounded-xl mb-2 text-sm text-gray-300 max-w-[80%]">Em breve estarei conectada!</div>`, 1000);
         });
     </script>
 </body>
