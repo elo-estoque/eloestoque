@@ -146,9 +146,9 @@
         </div>
     </div>
 
-    <!-- SCRIPT PRINCIPAL (MÓDULOS) -->
+    <!-- SCRIPT PRINCIPAL -->
     <script type="module">
-        import { createDirectus, authentication, rest, readItems, createItem } from 'https://esm.sh/@directus/sdk@13.0.0';
+        import { createDirectus, authentication, rest, readItems, createItem, readMe } from 'https://esm.sh/@directus/sdk@13.0.0';
 
         const API_URL = 'https://elobrindes-painel.onrender.com';
         const client = createDirectus(API_URL).with(authentication()).with(rest());
@@ -157,6 +157,7 @@
         window.client = client;
         window.readItems = readItems;
         window.createItem = createItem;
+        window.currentOrgId = null;
 
         // --- LOGIN ---
         document.getElementById('form-login').addEventListener('submit', async (e) => {
@@ -171,13 +172,17 @@
 
             try {
                 await client.login(email, password);
+                
+                const user = await client.request(readMe({ fields: ['organization_id'] }));
+                window.currentOrgId = user.organization_id;
+                
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.remove('hidden');
                 window.router('estoque');
             } catch (error) {
                 console.error(error);
                 errorMsg.classList.remove('hidden');
-                errorMsg.textContent = "Erro no login. Verifique senha.";
+                errorMsg.textContent = "Erro no login. Verifique senha ou conexão.";
             } finally {
                 btn.disabled = false; btn.innerHTML = 'Acessar Painel';
             }
@@ -194,7 +199,7 @@
 
         window.logout = async function() { await client.logout(); location.reload(); }
 
-        // --- ESTOQUE ---
+        // --- ESTOQUE (LÓGICA DE IMAGEM INTELIGENTE) ---
         async function loadInventory() {
             const grid = document.getElementById('inventory-grid');
             grid.innerHTML = 'Carregando...';
@@ -202,17 +207,41 @@
                 const items = await client.request(readItems('estoque_cliente', { fields: ['*', 'produto_id.*'] }));
                 if(!items.length) { grid.innerHTML = 'Estoque vazio.'; return; }
                 
-                grid.innerHTML = items.map(item => `
-                    <div class="bg-brand-card p-4 rounded border border-gray-800">
-                        <h3 class="font-bold text-white">${item.produto_id?.nome || 'Produto'}</h3>
-                        <p class="text-brand-wine text-2xl font-bold mt-2">${item.quantidade_disponivel} unid.</p>
-                        <button onclick="window.router('pedir')" class="mt-4 bg-gray-800 text-white px-3 py-1 rounded text-sm w-full hover:bg-brand-wine transition">Solicitar</button>
+                grid.innerHTML = items.map(item => {
+                    // Lógica para detectar se é URL externa ou ID de upload
+                    let imgUrl = 'https://placehold.co/400x300/1A0505/8B0000?text=Sem+Imagem';
+                    
+                    if(item.produto_id?.imagem) {
+                        if(item.produto_id.imagem.startsWith('http')) {
+                            // É um link externo (ex: site da Elo)
+                            imgUrl = item.produto_id.imagem;
+                        } else {
+                            // É um upload no Directus
+                            imgUrl = `${API_URL}/assets/${item.produto_id.imagem}`;
+                        }
+                    }
+
+                    return `
+                    <div class="bg-brand-card rounded border border-gray-800 overflow-hidden">
+                        <div class="h-48 w-full bg-black">
+                            <img src="${imgUrl}" class="w-full h-full object-cover" alt="Produto">
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-bold text-white truncate">${item.produto_id?.nome || 'Produto'}</h3>
+                            <p class="text-brand-wine text-2xl font-bold mt-2">${item.quantidade_disponivel} unid.</p>
+                            <button onclick="window.prefillOrder('${item.id}', '${item.produto_id?.nome}')" class="mt-4 bg-gray-800 text-white px-3 py-1 rounded text-sm w-full hover:bg-brand-wine transition">Solicitar</button>
+                        </div>
                     </div>
-                `).join('');
+                `}).join('');
             } catch (e) { grid.innerHTML = 'Erro ao carregar estoque.'; }
         }
 
-        // --- PEDIDO (CORRIGIDO E SIMPLIFICADO) ---
+        window.prefillOrder = function(id, name) {
+            window.router('pedir');
+            setTimeout(() => { alert(`Produto: ${name}. Selecione-o na lista.`); }, 500);
+        }
+
+        // --- PEDIDO ---
         async function loadDependencies() {
             try {
                 const [ends, prods] = await Promise.all([
@@ -220,7 +249,7 @@
                     client.request(readItems('estoque_cliente', { fields: ['*', 'produto_id.*'] }))
                 ]);
                 
-                document.getElementById('pedido-endereco').innerHTML = ends.map(e => `<option value="${e.id}">${e.logradouro}</option>`).join('');
+                document.getElementById('pedido-endereco').innerHTML = ends.map(e => `<option value="${e.id}">${e.apelido_local || e.logradouro}</option>`).join('');
                 document.getElementById('pedido-produto').innerHTML = prods.map(p => `<option value="${p.produto_id?.id}">${p.produto_id?.nome}</option>`).join('');
             } catch(e) { console.error(e); }
         }
@@ -231,13 +260,13 @@
             btn.disabled = true; btn.innerHTML = 'Enviando...';
 
             try {
-                // O Backend (Preset) vai preencher o organization_id sozinho
                 const payload = {
                     tipo: 'SOLICITACAO_ENVIO',
                     status: 'pendente',
                     quantidade: parseInt(document.getElementById('pedido-qtd').value),
                     observacoes: `Data: ${document.getElementById('pedido-data').value}`,
-                    endereco_id: document.getElementById('pedido-endereco').value
+                    endereco_id: document.getElementById('pedido-endereco').value,
+                    organization_id: window.currentOrgId
                 };
 
                 await client.request(createItem('solicitacoes', payload));
@@ -252,12 +281,11 @@
             }
         });
 
-        // --- HISTÓRICO (DATA_CRIACAO CORRIGIDO) ---
+        // --- HISTÓRICO ---
         async function loadHistory() {
             const tbody = document.getElementById('history-table-body');
             tbody.innerHTML = '<tr><td colspan="3" class="p-4">Carregando...</td></tr>';
             try {
-                // AQUI ESTÁ A CORREÇÃO DO ERRO 403 DE LEITURA
                 const items = await client.request(readItems('solicitacoes', { 
                     sort: ['-data_criacao'], 
                     fields: ['id', 'status', 'data_criacao', 'tipo']
@@ -278,7 +306,7 @@
             }
         }
 
-        // --- CHATBOT (Visual) ---
+        // --- CHATBOT ---
         window.toggleChat = function() {
             const chat = document.getElementById('chatbot-window');
             chat.classList.toggle('hidden');
@@ -296,9 +324,8 @@
             input.value = '';
             area.scrollTop = area.scrollHeight;
 
-            // Simulação de resposta
             setTimeout(() => {
-                area.innerHTML += `<div class="bg-gray-800 p-3 rounded-lg mb-2 text-sm text-gray-200 max-w-[85%]">Estou em modo visual. Em breve estarei conectado à IA!</div>`;
+                area.innerHTML += `<div class="bg-gray-800 p-3 rounded-lg mb-2 text-sm text-gray-200 max-w-[85%]">IA em manutenção. Use o atendimento manual.</div>`;
                 area.scrollTop = area.scrollHeight;
             }, 1000);
         });
