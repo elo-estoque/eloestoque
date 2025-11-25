@@ -55,232 +55,134 @@
         .bg-particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: 0; pointer-events: none; }
         .particle { position: absolute; bottom: -50px; color: #E31937; font-size: 2rem; opacity: 0; animation: float 15s infinite linear; }
 
-        /* Glassmorphism Utilities */
-        .glass-panel {
-            background: rgba(20, 20, 20, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-
-        .glass-input {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            transition: all 0.3s ease;
-        }
-        .glass-input:focus {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: #E31937;
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(227, 25, 55, 0.2);
-        }
-
-        /* Scrollbar Premium */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #E31937; }
+        /* Glassmorphism */
+        .glass-panel { background: rgba(20, 20, 20, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .glass-input { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.3s ease; }
+        .glass-input:focus { background: rgba(255, 255, 255, 0.08); border-color: #E31937; outline: none; box-shadow: 0 0 0 2px rgba(227, 25, 55, 0.2); }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #000; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: #E31937; }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden text-gray-200 selection:bg-brand-wine selection:text-white">
 
-    <!-- TELA DE LOGIN -->
+    <!-- LOGIN -->
     <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-black">
-        
-        <!-- Fundo Imagem -->
-        <div class="absolute inset-0 z-0">
-            <img src="fundo1.png" class="w-full h-full object-cover opacity-40" alt="Background" onerror="this.style.display='none'">
-            <div class="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
-        </div>
-
-        <!-- Animação de Ícones no Fundo -->
+        <div class="absolute inset-0 z-0"><img src="fundo1.png" class="w-full h-full object-cover opacity-40" onerror="this.style.display='none'"><div class="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent"></div></div>
         <div class="bg-particles">
             <i class="ph ph-cube particle" style="left: 10%; animation-delay: 0s; font-size: 3rem;"></i>
             <i class="ph ph-gift particle" style="left: 30%; animation-delay: 4s; font-size: 2rem;"></i>
             <i class="ph ph-rocket particle" style="left: 70%; animation-delay: 2s; font-size: 4rem;"></i>
-            <i class="ph ph-package particle" style="left: 50%; animation-delay: 7s; font-size: 2.5rem;"></i>
-            <i class="ph ph-star particle" style="left: 90%; animation-delay: 5s; font-size: 1.5rem;"></i>
         </div>
-
-        <!-- Card de Login -->
         <div class="glass-panel p-10 rounded-2xl w-full max-w-md mx-4 relative z-10 animate-[fadeIn_0.5s_ease-out]">
             <div class="text-center mb-10">
-                <!-- LOGO AREA -->
                 <div class="flex justify-center mb-6">
-                    <img src="logo.png" class="h-24 object-contain drop-shadow-[0_0_15px_rgba(227,25,55,0.5)]" alt="Logo Elo Brindes" onerror="this.style.display='none'; document.getElementById('fallback-icon').classList.remove('hidden')">
-                    <!-- Fallback Icon -->
-                    <div id="fallback-icon" class="hidden inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-wine to-red-900 text-white shadow-lg">
-                        <i class="ph ph-cube text-4xl"></i>
-                    </div>
+                    <img src="logo.png" class="h-24 object-contain drop-shadow-[0_0_15px_rgba(227,25,55,0.5)]" onerror="this.style.display='none'; document.getElementById('fallback').classList.remove('hidden')">
+                    <div id="fallback" class="hidden inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-wine to-red-900 text-white shadow-lg"><i class="ph ph-cube text-4xl"></i></div>
                 </div>
-                
                 <h1 class="text-3xl font-bold text-white tracking-tight">Bem-vindo</h1>
                 <p class="text-gray-400 text-sm mt-2 uppercase tracking-widest text-[10px]">Portal Corporativo</p>
             </div>
-
             <form id="form-login" class="space-y-5">
-                <div class="space-y-1">
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">E-mail Corporativo</label>
-                    <input type="email" id="email" required class="w-full glass-input rounded-lg px-4 py-3 placeholder-gray-600 focus:text-white" placeholder="seunome@empresa.com">
-                </div>
-                <div class="space-y-1">
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">Senha</label>
-                    <input type="password" id="password" required class="w-full glass-input rounded-lg px-4 py-3 placeholder-gray-600 focus:text-white" placeholder="••••••••">
-                </div>
-                
-                <button type="submit" class="w-full bg-brand-wine hover:bg-brand-hover text-white font-semibold py-4 rounded-lg transition-all duration-300 shadow-[0_0_20px_rgba(227,25,55,0.3)] hover:shadow-[0_0_30px_rgba(227,25,55,0.5)] transform hover:-translate-y-0.5 mt-4 flex items-center justify-center group">
-                    <span id="btn-login-text" class="tracking-wide">ACESSAR SISTEMA</span>
-                    <i class="ph ph-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
-                    <div id="btn-login-loader" class="loader hidden ml-2 border-white"></div>
-                </button>
+                <div class="space-y-1"><label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">E-mail</label><input type="email" id="email" required class="w-full glass-input rounded-lg px-4 py-3"></div>
+                <div class="space-y-1"><label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">Senha</label><input type="password" id="password" required class="w-full glass-input rounded-lg px-4 py-3"></div>
+                <button type="submit" class="w-full bg-brand-wine hover:bg-brand-hover text-white font-semibold py-4 rounded-lg transition-all mt-4 flex items-center justify-center"><span id="btn-login-text">ACESSAR SISTEMA</span></button>
             </form>
-            <div id="login-error" class="mt-6 text-center text-red-400 text-xs hidden border border-red-900/50 bg-red-900/10 p-3 rounded-lg backdrop-blur-sm"></div>
+            <div id="login-error" class="mt-6 text-center text-red-400 text-xs hidden border border-red-900/50 bg-red-900/10 p-3 rounded-lg"></div>
         </div>
-        
-        <div class="absolute bottom-6 text-center text-gray-600 text-xs z-10">
-            &copy; 2024 Elo Brindes. Tecnologia & Design.
-        </div>
+        <div class="absolute bottom-6 text-center text-gray-600 text-xs z-10">&copy; 2024 Elo Brindes.</div>
     </div>
 
-    <!-- ÁREA DO APLICATIVO -->
+    <!-- APP -->
     <div id="app-screen" class="hidden w-full h-full flex relative bg-[url('fundo1.png')] bg-cover bg-fixed">
-        <!-- Overlay Dark -->
         <div class="absolute inset-0 bg-black/90 z-0"></div>
-
-        <!-- Sidebar -->
+        
         <aside class="w-72 glass-panel border-r-0 border-r-white/5 flex-col hidden md:flex z-10 relative">
             <div class="h-24 flex items-center px-8 border-b border-white/5">
-                <div class="font-bold text-2xl tracking-tighter text-white flex items-center gap-2">
-                    <i class="ph-fill ph-cube text-brand-wine"></i>
-                    ELO<span class="text-brand-wine">PAINEL</span>
-                </div>
+                <div class="font-bold text-2xl tracking-tighter text-white flex items-center gap-2"><i class="ph-fill ph-cube text-brand-wine"></i>ELO<span class="text-brand-wine">PAINEL</span></div>
             </div>
             <nav class="flex-1 px-4 py-8 space-y-2" id="sidebar-nav">
-                <p class="px-4 text-[10px] uppercase text-gray-500 font-bold tracking-widest mb-2">Menu Principal</p>
+                <p class="px-4 text-[10px] uppercase text-gray-500 font-bold tracking-widest mb-2">Gestão</p>
+                <button id="nav-estoque" onclick="window.router('estoque')" class="w-full flex items-center gap-3 px-4 py-4 text-white bg-white/5 border border-white/10 rounded-xl transition-all hover:bg-brand-wine hover:border-brand-wine hover:shadow-lg group"><i class="ph ph-package text-xl group-hover:text-white transition-colors"></i><span class="font-medium">Meu Estoque</span></button>
+                <button id="nav-pedir" onclick="window.router('pedir')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-paper-plane-tilt text-xl group-hover:text-brand-wine transition-colors"></i><span class="font-medium">Enviar Brindes</span></button>
+                <button id="nav-pedidos" onclick="window.router('pedidos')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-clock-counter-clockwise text-xl group-hover:text-brand-wine transition-colors"></i><span class="font-medium">Histórico</span></button>
                 
-                <button id="nav-estoque" onclick="window.router('estoque')" class="w-full flex items-center gap-3 px-4 py-4 text-white bg-white/5 border border-white/10 rounded-xl transition-all hover:bg-brand-wine hover:border-brand-wine hover:shadow-lg group">
-                    <i class="ph ph-package text-xl group-hover:text-white transition-colors"></i>
-                    <span class="font-medium">Meu Estoque</span>
-                </button>
-                
-                <button id="nav-pedir" onclick="window.router('pedir')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group">
-                    <i class="ph ph-paper-plane-tilt text-xl group-hover:text-brand-wine transition-colors"></i>
-                    <span class="font-medium">Enviar Brindes</span>
-                </button>
-                
-                <button id="nav-repor" onclick="window.router('repor')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group">
-                    <i class="ph ph-shopping-cart text-xl text-green-400 group-hover:text-green-300 transition-colors"></i>
-                    <span class="font-medium">Repor Estoque</span>
-                </button>
-                
-                <button id="nav-pedidos" onclick="window.router('pedidos')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group">
-                    <i class="ph ph-clock-counter-clockwise text-xl group-hover:text-brand-wine transition-colors"></i>
-                    <span class="font-medium">Histórico</span>
-                </button>
+                <p class="px-4 text-[10px] uppercase text-gray-500 font-bold tracking-widest mb-2 mt-6">Compras</p>
+                <!-- NOVO BOTÃO DE CATÁLOGO -->
+                <button id="nav-catalogo" onclick="window.router('catalogo')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-storefront text-xl text-blue-400 group-hover:text-blue-300 transition-colors"></i><span class="font-medium">Catálogo Completo</span></button>
+                <button id="nav-repor" onclick="window.router('repor')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-shopping-cart text-xl text-green-400 group-hover:text-green-300 transition-colors"></i><span class="font-medium">Solicitar Orçamento</span></button>
             </nav>
-            <div class="p-6 border-t border-white/5">
-                <button onclick="window.logout()" class="flex items-center gap-2 text-gray-500 hover:text-red-400 transition-colors text-sm font-medium">
-                    <i class="ph ph-sign-out"></i> Encerrar Sessão
-                </button>
-            </div>
+            <div class="p-6 border-t border-white/5"><button onclick="window.logout()" class="flex items-center gap-2 text-gray-500 hover:text-red-400 text-sm font-medium w-full"><i class="ph ph-sign-out text-lg"></i> Sair do Sistema</button></div>
         </aside>
 
         <main class="flex-1 p-6 md:p-10 overflow-y-auto z-10 relative">
-            <!-- Header Mobile -->
-            <div class="md:hidden mb-6 flex justify-between items-center glass-panel p-4 rounded-xl">
-                 <span class="font-bold text-lg">ELO<span class="text-brand-wine">PAINEL</span></span>
-                 <button onclick="window.logout()" class="text-red-400"><i class="ph ph-sign-out text-xl"></i></button>
-            </div>
-
-            <!-- ESTOQUE -->
+            <!-- Estoque -->
             <div id="view-estoque" class="view-section animate-[fadeIn_0.3s_ease-out]">
                 <header class="flex justify-between items-end mb-8">
-                    <div>
-                        <h2 class="text-3xl font-bold text-white tracking-tight">Meu Estoque</h2>
-                        <p class="text-gray-400 text-sm mt-1">Gerencie seus produtos disponíveis</p>
-                    </div>
-                    <div class="hidden md:block text-right">
-                        <div class="text-xs text-gray-500 uppercase tracking-widest">Status do Sistema</div>
-                        <div class="flex items-center gap-2 text-green-400 text-sm font-bold"><span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Online</div>
-                    </div>
+                    <div><h2 class="text-3xl font-bold text-white tracking-tight">Meu Estoque</h2><p class="text-gray-400 text-sm mt-1">Itens armazenados no nosso galpão</p></div>
                 </header>
-                
                 <div id="inventory-grid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">Carregando...</div>
             </div>
             
-            <!-- PEDIDO -->
+            <!-- NOVO: CATÁLOGO COMPLETO -->
+            <div id="view-catalogo" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
+                <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+                    <div>
+                        <h2 class="text-3xl font-bold text-white tracking-tight">Catálogo de Produtos</h2>
+                        <p class="text-gray-400 text-sm mt-1">Explore todos os brindes disponíveis para personalização</p>
+                    </div>
+                    <div class="relative w-full md:w-64">
+                        <input type="text" id="catalogo-search" placeholder="Buscar produto..." onkeyup="window.filterCatalog()" class="w-full glass-input rounded-lg pl-10 pr-4 py-2 text-sm">
+                        <i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-gray-400"></i>
+                    </div>
+                </header>
+                <div id="catalogo-grid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">Carregando catálogo...</div>
+            </div>
+
+            <!-- Pedido de Envio (Saída) -->
             <div id="view-pedir" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
                 <h2 class="text-3xl font-bold text-white mb-2">Solicitar Envio</h2>
-                <p class="text-gray-400 text-sm mb-8 border-b border-white/10 pb-4">Envie brindes do seu estoque para um endereço</p>
-                
+                <p class="text-gray-400 text-sm mb-8 pb-4 border-b border-white/10">Envie brindes do seu estoque para um endereço</p>
                 <form id="form-pedido" class="glass-panel p-8 rounded-2xl max-w-3xl">
                     <div class="mb-6">
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Produto Selecionado</label>
-                        <select id="pedido-produto" class="w-full glass-input rounded-lg px-4 py-3 bg-[#0a0a0a] focus:bg-[#1a1a1a] appearance-none cursor-pointer"></select>
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Produto (Do seu Estoque)</label>
+                        <select id="pedido-produto" class="w-full glass-input rounded-lg px-4 py-3 bg-[#0a0a0a]"></select>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Quantidade</label>
-                            <input type="number" id="pedido-qtd" class="w-full glass-input rounded-lg px-4 py-3" value="1" min="1">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Data Limite</label>
-                            <input type="date" id="pedido-data" class="w-full glass-input rounded-lg px-4 py-3 text-gray-300">
-                        </div>
+                        <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Qtd</label><input type="number" id="pedido-qtd" class="w-full glass-input rounded-lg px-4 py-3" value="1" min="1"></div>
+                        <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Data</label><input type="date" id="pedido-data" class="w-full glass-input rounded-lg px-4 py-3 text-gray-300"></div>
                     </div>
                     <div class="mb-8">
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Endereço de Entrega</label>
-                        
-                        <!-- Toggle Switch -->
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Endereço</label>
                         <div class="flex items-center gap-3 mb-3">
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="toggle-endereco" class="sr-only peer" onchange="toggleAddressMode()">
-                                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-wine"></div>
-                                <span class="ml-3 text-sm font-medium text-gray-300">Digitar outro endereço manualmente</span>
-                            </label>
+                            <input type="checkbox" id="toggle-endereco" onchange="toggleAddressMode()" class="accent-brand-wine w-4 h-4">
+                            <span class="text-sm text-gray-300">Digitar endereço manualmente</span>
                         </div>
-
-                        <!-- Select Padrão -->
-                        <div id="box-select-endereco">
-                            <select id="pedido-endereco" class="w-full glass-input rounded-lg px-4 py-3 bg-[#0a0a0a] focus:bg-[#1a1a1a] appearance-none cursor-pointer"></select>
-                        </div>
-                        
-                        <!-- Input Manual (Inicialmente Oculto) -->
-                        <div id="box-manual-endereco" class="hidden">
-                            <textarea id="pedido-endereco-manual" rows="3" class="w-full glass-input rounded-lg px-4 py-3" placeholder="Digite o endereço completo (Rua, Número, Cidade, CEP)..."></textarea>
-                        </div>
+                        <div id="box-select-endereco"><select id="pedido-endereco" class="w-full glass-input rounded-lg px-4 py-3 bg-[#0a0a0a]"></select></div>
+                        <div id="box-manual-endereco" class="hidden"><textarea id="pedido-endereco-manual" rows="3" class="w-full glass-input rounded-lg px-4 py-3" placeholder="Endereço completo..."></textarea></div>
                     </div>
-
-                    <button type="submit" class="w-full bg-brand-wine hover:bg-brand-hover text-white py-4 rounded-lg font-bold shadow-lg shadow-brand-wine/20 transition-all hover:scale-[1.01]">Confirmar Envio</button>
+                    <button type="submit" class="w-full bg-brand-wine hover:bg-brand-hover text-white py-4 rounded-lg font-bold shadow-lg">Enviar do Meu Estoque</button>
                 </form>
             </div>
 
-             <!-- Pedido de Compra (Entrada/Reposição) -->
-             <div id="view-repor" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
-                <h2 class="text-3xl font-bold text-white mb-2">Repor Estoque</h2>
-                <p class="text-gray-400 text-sm mb-8 pb-4 border-b border-white/10">Solicite orçamento para produção</p>
+            <!-- Pedido de Compra (Entrada/Reposição) -->
+            <div id="view-repor" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
+                <h2 class="text-3xl font-bold text-white mb-2">Solicitar Orçamento</h2>
+                <p class="text-gray-400 text-sm mb-8 pb-4 border-b border-white/10">Peça cotação para novos produtos ou reposição</p>
                 <form id="form-repor" class="glass-panel p-8 rounded-2xl max-w-3xl border border-green-900/30">
                     
                     <div class="mb-6 p-4 bg-green-900/20 border border-green-900/50 rounded-xl flex items-center justify-between">
-                        <div>
-                            <span class="text-sm font-bold text-white block">Manter modelo atual?</span>
-                            <span class="text-xs text-gray-400">Mesma arte e especificações do último pedido.</span>
-                        </div>
+                        <div><span class="text-sm font-bold text-white block">Manter modelo atual?</span><span class="text-xs text-gray-400">Mesma arte e especificações.</span></div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="repor-manter" class="sr-only peer" checked onchange="toggleReporMode()">
                             <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
                         </label>
                     </div>
-
-                    <div id="box-repor-obs" class="mb-6 hidden animate-[fadeIn_0.3s_ease-out]">
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">O que você deseja alterar?</label>
-                        <textarea id="repor-obs-texto" rows="3" class="w-full glass-input rounded-lg px-4 py-3 border-yellow-500/50 focus:border-yellow-500" placeholder="Ex: Quero mudar a cor da caneta para azul..."></textarea>
-                    </div>
+                    <div id="box-repor-obs" class="mb-6 hidden animate-[fadeIn_0.3s_ease-out]"><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">O que deseja alterar?</label><textarea id="repor-obs-texto" rows="3" class="w-full glass-input rounded-lg px-4 py-3 border-yellow-500/50 focus:border-yellow-500" placeholder="Ex: Quero mudar a cor da caneta para azul..."></textarea></div>
 
                     <div class="mb-6">
                         <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Produto</label>
+                        <!-- Este select será preenchido com TODOS os produtos do catálogo -->
                         <select id="repor-produto" class="w-full glass-input rounded-lg px-4 py-3 bg-[#0a0a0a] border-green-900/50 focus:border-green-500"></select>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -291,25 +193,15 @@
                 </form>
             </div>
 
-            <!-- HISTÓRICO -->
+            <!-- Histórico -->
             <div id="view-pedidos" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
                 <h2 class="text-3xl font-bold text-white mb-8">Histórico</h2>
                 <div class="glass-panel rounded-2xl overflow-hidden">
-                    <table class="w-full text-left text-gray-300">
-                        <thead class="bg-white/5 text-gray-400 uppercase text-xs tracking-wider">
-                            <tr>
-                                <th class="p-5 font-bold">Tipo</th>
-                                <th class="p-5 font-bold">Data</th>
-                                <th class="p-5 font-bold">Detalhes / Orçamento</th>
-                                <th class="p-5 font-bold">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="history-table-body" class="divide-y divide-white/5"></tbody>
-                    </table>
+                    <table class="w-full text-left text-gray-300"><thead class="bg-white/5 text-gray-400 uppercase text-xs"><tr><th class="p-5">Tipo</th><th class="p-5">Data</th><th class="p-5">Detalhes / Orçamento</th><th class="p-5">Status</th></tr></thead><tbody id="history-table-body" class="divide-y divide-white/5"></tbody></table>
                 </div>
             </div>
         </main>
-
+        
         <!-- BOTÃO WHATSAPP FLUTUANTE (DIREITA) -->
         <a href="https://wa.me/5511948171445" target="_blank" class="fixed bottom-8 right-8 bg-[#25D366] hover:bg-[#128C7E] text-white p-4 rounded-full shadow-[0_0_20px_rgba(37,211,102,0.4)] z-50 transition-transform hover:scale-110 flex items-center justify-center group" title="Fale no WhatsApp">
             <i class="ph ph-whatsapp-logo text-3xl"></i>
@@ -324,30 +216,35 @@
         const client = createDirectus(API_URL).with(authentication()).with(rest());
         
         window.client = client; window.readItems = readItems; window.createItem = createItem; window.currentOrgId = null;
+        // Variável global para busca
+        window.allCatalogProducts = [];
 
-        // --- CONTROLE VISUAL DA SIDEBAR ---
+        // --- SIDEBAR ---
         const activeClasses = ['text-white', 'bg-white/5', 'border-white/10', 'shadow-lg'];
         const inactiveClasses = ['text-gray-400', 'hover:text-white', 'hover:bg-white/5', 'border-transparent'];
 
         function updateSidebar(activeId) {
-            const navs = ['nav-estoque', 'nav-pedir', 'nav-repor', 'nav-pedidos'];
-            
+            const navs = ['nav-estoque', 'nav-pedir', 'nav-repor', 'nav-pedidos', 'nav-catalogo'];
             navs.forEach(id => {
                 const el = document.getElementById(id);
                 if(!el) return;
-                
                 el.classList.remove(...activeClasses);
                 el.classList.remove(...inactiveClasses);
                 const icon = el.querySelector('i');
-                icon.classList.remove('text-brand-wine', 'text-green-400', 'group-hover:text-white', 'group-hover:text-green-300', 'text-gray-400');
+                
+                // Reset cores dos ícones
+                icon.classList.remove('text-brand-wine', 'text-green-400', 'text-blue-400', 'text-gray-400');
                 
                 if (id === activeId) {
                     el.classList.add(...activeClasses);
-                    icon.classList.add(id === 'nav-repor' ? 'text-green-300' : 'text-brand-wine');
+                    if (id === 'nav-repor') icon.classList.add('text-green-300');
+                    else if (id === 'nav-catalogo') icon.classList.add('text-blue-300');
+                    else icon.classList.add('text-brand-wine');
                 } else {
                     el.classList.add(...inactiveClasses);
-                    icon.classList.add(id === 'nav-repor' ? 'text-green-400' : 'text-gray-400');
-                    icon.classList.add(id === 'nav-repor' ? 'group-hover:text-green-300' : 'group-hover:text-brand-wine');
+                    if (id === 'nav-repor') icon.classList.add('text-green-400');
+                    else if (id === 'nav-catalogo') icon.classList.add('text-blue-400');
+                    else icon.classList.add('text-gray-400');
                 }
             });
         }
@@ -357,7 +254,6 @@
             document.getElementById('box-select-endereco').classList.toggle('hidden', manual);
             document.getElementById('box-manual-endereco').classList.toggle('hidden', !manual);
         }
-        
         window.toggleReporMode = function() {
             const manter = document.getElementById('repor-manter').checked;
             document.getElementById('box-repor-obs').classList.toggle('hidden', manter);
@@ -379,52 +275,116 @@
             } catch (err) { alert('Erro no login: ' + err.message); btn.disabled = false; btn.innerHTML = 'ACESSAR SISTEMA'; }
         });
 
-        // ROTAS
+        // ROTEAMENTO
         window.router = function(view) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
-            const target = document.getElementById('view-' + view);
-            if(target) target.classList.remove('hidden');
-            updateSidebar('nav-' + view); // Atualiza o menu
-
+            document.getElementById('view-' + view).classList.remove('hidden');
+            updateSidebar('nav-' + view);
+            
             if(view === 'estoque') loadInventory();
             if(view === 'pedir') loadDependencies();
             if(view === 'repor') loadRepositionDependencies(); 
             if(view === 'pedidos') loadHistory();
+            if(view === 'catalogo') loadCatalog(); // NOVA ROTA
         }
         window.logout = async () => { await client.logout(); location.reload(); }
 
-        // ESTOQUE
+        // 1. ESTOQUE (O QUE EU TENHO)
         async function loadInventory() {
             const grid = document.getElementById('inventory-grid');
             grid.innerHTML = 'Carregando...';
             try {
                 const items = await client.request(readItems('estoque_cliente', { fields: ['*', 'produto_id.*'] }));
                 if(!items.length) { grid.innerHTML = 'Estoque vazio.'; return; }
-                grid.innerHTML = items.map(item => {
-                    let img = item.produto_id?.imagem;
-                    if(img && !img.startsWith('http')) img = `${API_URL}/assets/${img}`;
-                    if(!img) img = 'https://placehold.co/400x300/1A0505/8B0000?text=Sem+Imagem';
-                    
-                    return `
-                    <div class="glass-panel rounded-xl overflow-hidden group relative">
-                        <div class="h-48 bg-black"><img src="${img}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition"></div>
-                        <div class="p-5">
-                            <h3 class="font-bold text-white truncate">${item.produto_id?.nome || 'Item'}</h3>
-                            <p class="text-brand-wine text-2xl font-bold mt-1">${item.quantidade_disponivel} <span class="text-xs text-gray-500">unid.</span></p>
-                            <div class="flex gap-2 mt-3">
-                                <button onclick="window.prefill('${item.id}', '${item.produto_id?.nome}', ${item.quantidade_disponivel}, 'pedir')" class="flex-1 bg-white/10 hover:bg-brand-wine py-2 rounded text-xs text-white transition uppercase tracking-wide font-bold">Enviar</button>
-                                <button onclick="window.prefill('${item.id}', '${item.produto_id?.nome}', 0, 'repor')" class="flex-1 bg-white/5 hover:bg-green-900/50 border border-white/10 py-2 rounded text-xs text-green-400 hover:text-white transition uppercase tracking-wide font-bold">Repor</button>
-                            </div>
-                        </div>
-                    </div>`;
-                }).join('');
+                grid.innerHTML = items.map(item => renderCard(item.produto_id, item.id, item.quantidade_disponivel, 'estoque')).join('');
             } catch (e) { grid.innerHTML = 'Erro ao carregar.'; }
         }
 
+        // 2. CATÁLOGO COMPLETO (O QUE POSSO COMPRAR) - NOVO!
+        async function loadCatalog() {
+            const grid = document.getElementById('catalogo-grid');
+            grid.innerHTML = 'Carregando catálogo...';
+            try {
+                // Busca produtos ativos
+                const items = await client.request(readItems('produtos_catalogo', { 
+                    filter: { ativo: { _eq: true } },
+                    limit: 100 
+                }));
+                window.allCatalogProducts = items;
+                window.filterCatalog(); // Renderiza
+            } catch (e) { grid.innerHTML = 'Erro ao carregar catálogo.'; console.error(e); }
+        }
+
+        // Função de Busca no Catálogo
+        window.filterCatalog = function() {
+            const term = document.getElementById('catalogo-search').value.toLowerCase();
+            const grid = document.getElementById('catalogo-grid');
+            
+            const filtered = window.allCatalogProducts.filter(p => 
+                p.nome.toLowerCase().includes(term) || 
+                (p.sku && p.sku.toLowerCase().includes(term))
+            );
+
+            if(!filtered.length) { grid.innerHTML = 'Nenhum produto encontrado.'; return; }
+            
+            grid.innerHTML = filtered.map(prod => renderCard(prod, null, 0, 'catalogo')).join('');
+        }
+
+        // Renderizador de Cards Genérico
+        function renderCard(produto, estoqueId, qtd, mode) {
+            let img = produto?.imagem;
+            if(img && !img.startsWith('http')) img = `${API_URL}/assets/${img}`;
+            if(!img) img = 'https://placehold.co/400x300/1A0505/8B0000?text=Sem+Imagem';
+            
+            // Botões mudam dependendo da tela
+            let buttons = '';
+            if (mode === 'estoque') {
+                buttons = `
+                    <div class="flex gap-2 mt-3">
+                        <button onclick="window.prefill('${estoqueId}', '${produto?.nome}', ${qtd}, 'pedir')" class="flex-1 bg-white/10 hover:bg-brand-wine py-2 rounded text-xs text-white transition uppercase tracking-wide font-bold">Enviar</button>
+                        <button onclick="window.prefill('${produto.id}', '${produto?.nome}', 0, 'repor_catalogo')" class="flex-1 bg-white/5 hover:bg-green-900/50 border border-white/10 py-2 rounded text-xs text-green-400 hover:text-white transition uppercase tracking-wide font-bold">Repor</button>
+                    </div>
+                `;
+            } else if (mode === 'catalogo') {
+                buttons = `
+                    <button onclick="window.prefill('${produto.id}', '${produto?.nome}', 0, 'repor_catalogo')" class="mt-3 w-full bg-green-900/30 border border-green-800 hover:bg-green-700 text-green-400 hover:text-white py-2 rounded text-xs transition uppercase tracking-wide font-bold flex items-center justify-center gap-2">
+                        <i class="ph ph-currency-dollar"></i> Orçar
+                    </button>
+                `;
+            }
+
+            return `
+            <div class="glass-panel rounded-xl overflow-hidden group relative">
+                <div class="h-48 bg-black"><img src="${img}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition"></div>
+                <div class="p-5">
+                    <h3 class="font-bold text-white truncate" title="${produto?.nome}">${produto?.nome}</h3>
+                    ${mode === 'estoque' ? `<p class="text-brand-wine text-2xl font-bold mt-1">${qtd} <span class="text-xs text-gray-500">unid.</span></p>` : `<p class="text-gray-500 text-xs mt-1 uppercase tracking-wide">${produto?.sku || 'Novo'}</p>`}
+                    ${buttons}
+                </div>
+            </div>`;
+        }
+
+        // PREENCHIMENTO AUTOMÁTICO (ROTEAMENTO)
         window.prefill = function(id, name, max, type) {
+            // Se vier do catálogo (id do produto), manda para repor. 
+            // Se vier do estoque (id do estoque), manda para pedir.
+            
+            if(type === 'repor_catalogo') {
+                // Aqui 'id' é o ID do Produto
+                window.router('repor');
+                setTimeout(() => {
+                    const sel = document.getElementById('repor-produto');
+                    sel.value = id; 
+                    sel.classList.add('ring-2', 'ring-green-500');
+                    setTimeout(() => sel.classList.remove('ring-2', 'ring-green-500'), 1000);
+                }, 500);
+                return;
+            }
+
             window.router(type);
             setTimeout(() => {
                 const sel = document.getElementById(type === 'pedir' ? 'pedido-produto' : 'repor-produto');
+                // Se for pedir, ID é do estoque. Se for repor, precisamos achar o produto.
                 sel.value = id; 
                 if(type === 'pedir') sel.setAttribute('data-max', max);
                 sel.classList.add('ring-2', 'ring-brand-wine');
@@ -432,8 +392,9 @@
             }, 500);
         }
 
-        // ENVIAR DO ESTOQUE
+        // CARREGAR DADOS PARA SELECTS
         async function loadDependencies() {
+            // Para ENVIAR (precisa de estoque)
             try {
                 const [ends, prods] = await Promise.all([
                     client.request(readItems('enderecos_entrega')),
@@ -444,60 +405,57 @@
             } catch(e) { console.error(e); }
         }
 
+        async function loadRepositionDependencies() {
+            // Para REPOR (usa o catálogo completo)
+            try {
+                const prods = await client.request(readItems('produtos_catalogo', { sort: ['nome'] }));
+                document.getElementById('repor-produto').innerHTML = prods.map(p => `<option value="${p.id}" class="bg-black">${p.nome}</option>`).join('');
+            } catch(e) { console.error(e); }
+        }
+
+        // ENVIAR FORMULÁRIOS
         document.getElementById('form-pedido').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = e.target.querySelector('button');
-            btn.disabled = true; btn.innerHTML = 'Processando...';
+            const btn = e.target.querySelector('button'); btn.disabled = true;
             try {
                 const estoqueId = document.getElementById('pedido-produto').value;
-                const qtdSolicitada = parseInt(document.getElementById('pedido-qtd').value);
-                const estoqueItem = await client.request(readItems('estoque_cliente', { filter: { id: { _eq: estoqueId } }, fields: ['id', 'quantidade_disponivel'] }));
-                const qtdAtual = estoqueItem[0].quantidade_disponivel;
-                if(qtdSolicitada > qtdAtual) throw new Error(`Estoque insuficiente! Disp: ${qtdAtual}`);
+                const qtd = parseInt(document.getElementById('pedido-qtd').value);
+                const item = await client.request(readItems('estoque_cliente', { filter: { id: { _eq: estoqueId } }, fields: ['id', 'quantidade_disponivel'] }));
+                
+                if(qtd > item[0].quantidade_disponivel) throw new Error('Estoque insuficiente.');
 
-                await client.request(updateItem('estoque_cliente', estoqueId, { quantidade_disponivel: qtdAtual - qtdSolicitada }));
-
+                await client.request(updateItem('estoque_cliente', estoqueId, { quantidade_disponivel: item[0].quantidade_disponivel - qtd }));
+                
                 const isManual = document.getElementById('toggle-endereco').checked;
                 await client.request(createItem('solicitacoes', {
-                    tipo: 'SOLICITACAO_ENVIO', status: 'pendente',
-                    quantidade: qtdSolicitada,
-                    observacoes: `Saída de Estoque. Data: ${document.getElementById('pedido-data').value}`,
+                    tipo: 'SOLICITACAO_ENVIO', status: 'pendente', quantidade: qtd,
+                    observacoes: `Saída. Data: ${document.getElementById('pedido-data').value}`,
                     endereco_id: isManual ? null : document.getElementById('pedido-endereco').value,
                     endereco_manual: isManual ? document.getElementById('pedido-endereco-manual').value : null,
                     organization_id: window.currentOrgId
                 }));
-                
-                alert('Envio Solicitado! Estoque atualizado.'); window.router('estoque');
-            } catch (e) { alert('Erro: ' + e.message); } finally { btn.disabled = false; btn.innerHTML = 'Confirmar Envio'; }
+                alert('Envio solicitado!'); window.router('estoque');
+            } catch (e) { alert('Erro: ' + e.message); } finally { btn.disabled = false; }
         });
-
-        // REPOR ESTOQUE
-        async function loadRepositionDependencies() {
-            try {
-                const prods = await client.request(readItems('estoque_cliente', { fields: ['*', 'produto_id.nome'] }));
-                document.getElementById('repor-produto').innerHTML = prods.map(p => `<option value="${p.id}" class="bg-black">${p.produto_id?.nome}</option>`).join('');
-            } catch(e) { console.error(e); }
-        }
 
         document.getElementById('form-repor').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = e.target.querySelector('button');
-            btn.disabled = true; btn.innerHTML = 'Enviando Solicitação...';
+            const btn = e.target.querySelector('button'); btn.disabled = true;
             try {
                 const manter = document.getElementById('repor-manter').checked;
-                const obs = manter ? "Manter modelo/arte atual." : "ALTERAÇÃO: " + document.getElementById('repor-obs-texto').value;
+                const obs = manter ? "Manter modelo atual." : "ALTERAÇÃO: " + document.getElementById('repor-obs-texto').value;
+                // Pega o nome do produto selecionado para facilitar visualização do admin
+                const sel = document.getElementById('repor-produto');
+                const prodName = sel.options[sel.selectedIndex].text;
 
                 await client.request(createItem('solicitacoes', {
-                    tipo: 'SOLICITACAO_COMPRA', 
-                    status: 'pendente',
+                    tipo: 'SOLICITACAO_COMPRA', status: 'pendente',
                     quantidade: parseInt(document.getElementById('repor-qtd').value),
-                    observacoes: `${obs} | Data Ideal: ${document.getElementById('repor-data').value}`,
+                    observacoes: `Produto: ${prodName} | ${obs} | Data: ${document.getElementById('repor-data').value}`,
                     organization_id: window.currentOrgId
                 }));
-                
-                alert('Solicitação enviada! Aguarde o orçamento.'); 
-                window.router('pedidos');
-            } catch (e) { alert('Erro: ' + e.message); } finally { btn.disabled = false; btn.innerHTML = 'Solicitar Compra'; }
+                alert('Orçamento solicitado!'); window.router('pedidos');
+            } catch (e) { alert('Erro: ' + e.message); } finally { btn.disabled = false; }
         });
 
         // HISTÓRICO
@@ -505,7 +463,7 @@
             const tbody = document.getElementById('history-table-body');
             tbody.innerHTML = '<tr><td colspan="4" class="p-4">Carregando...</td></tr>';
             try {
-                const items = await client.request(readItems('solicitacoes', { sort: ['-data_criacao'], fields: ['id', 'status', 'data_criacao', 'quantidade', 'tipo', 'endereco_manual', 'endereco_id.apelido_local', 'valor_total'] }));
+                const items = await client.request(readItems('solicitacoes', { sort: ['-data_criacao'], fields: ['id', 'status', 'data_criacao', 'quantidade', 'tipo', 'endereco_manual', 'endereco_id.apelido_local', 'valor_total', 'observacoes'] }));
                 if(!items.length) { tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Vazio.</td></tr>'; return; }
                 tbody.innerHTML = items.map(i => {
                     const isCompra = i.tipo === 'SOLICITACAO_COMPRA';
