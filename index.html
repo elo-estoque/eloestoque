@@ -43,7 +43,7 @@
         .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #E31937; border-radius: 50%; width: 24px; height: 24px; animation: spin 0.8s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* Animação de Fundo (Do seu index1) */
+        /* Animação de Fundo */
         @keyframes float {
             0% { transform: translateY(0px) rotate(0deg); opacity: 0; }
             20% { opacity: 0.15; }
@@ -52,52 +52,17 @@
             100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
         }
 
-        .bg-particles {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            overflow: hidden;
-            z-index: 0;
-            pointer-events: none;
-        }
+        .bg-particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: 0; pointer-events: none; }
+        .particle { position: absolute; bottom: -50px; color: #E31937; font-size: 2rem; opacity: 0; animation: float 15s infinite linear; }
 
-        .particle {
-            position: absolute;
-            bottom: -50px;
-            color: #E31937;
-            font-size: 2rem;
-            opacity: 0;
-            animation: float 15s infinite linear;
-        }
+        /* Glassmorphism */
+        .glass-panel { background: rgba(20, 20, 20, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .glass-input { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.3s ease; }
+        .glass-input:focus { background: rgba(255, 255, 255, 0.08); border-color: #E31937; outline: none; box-shadow: 0 0 0 2px rgba(227, 25, 55, 0.2); }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #000; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: #E31937; }
 
-        /* Glassmorphism (Do seu index1) */
-        .glass-panel {
-            background: rgba(20, 20, 20, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-
-        .glass-input {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            transition: all 0.3s ease;
-        }
-        .glass-input:focus {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: #E31937;
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(227, 25, 55, 0.2);
-        }
-
-        /* Scrollbar Premium */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #E31937; }
-
-        /* Chatbot Styles */
         .chat-container { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 60; }
         .chat-messages { scrollbar-width: thin; scrollbar-color: #E31937 #1A0505; }
     </style>
@@ -106,95 +71,56 @@
 
     <!-- TELA DE LOGIN -->
     <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-black">
-        
-        <!-- Fundo Imagem (Do seu index1) -->
         <div class="absolute inset-0 z-0">
             <img src="fundo1.png" class="w-full h-full object-cover opacity-40" alt="Background" onerror="this.style.display='none'">
             <div class="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
         </div>
-
-        <!-- Animação de Ícones no Fundo (Do seu index1) -->
         <div class="bg-particles">
             <i class="ph ph-cube particle" style="left: 10%; animation-delay: 0s; font-size: 3rem;"></i>
             <i class="ph ph-gift particle" style="left: 30%; animation-delay: 4s; font-size: 2rem;"></i>
             <i class="ph ph-rocket particle" style="left: 70%; animation-delay: 2s; font-size: 4rem;"></i>
-            <i class="ph ph-package particle" style="left: 50%; animation-delay: 7s; font-size: 2.5rem;"></i>
-            <i class="ph ph-star particle" style="left: 90%; animation-delay: 5s; font-size: 1.5rem;"></i>
         </div>
 
-        <!-- Card de Login -->
         <div class="glass-panel p-10 rounded-2xl w-full max-w-md mx-4 relative z-10 animate-[fadeIn_0.5s_ease-out]">
             <div class="text-center mb-10">
-                <!-- LOGO AREA (Do seu index1) -->
                 <div class="flex justify-center mb-6">
                     <img src="logo.png" class="h-24 object-contain drop-shadow-[0_0_15px_rgba(227,25,55,0.5)]" alt="Logo Elo Brindes" onerror="this.style.display='none'; document.getElementById('fallback-icon').classList.remove('hidden')">
-                    <!-- Fallback Icon -->
-                    <div id="fallback-icon" class="hidden inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-wine to-red-900 text-white shadow-lg">
-                        <i class="ph ph-cube text-4xl"></i>
-                    </div>
+                    <div id="fallback-icon" class="hidden inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-wine to-red-900 text-white shadow-lg"><i class="ph ph-cube text-4xl"></i></div>
                 </div>
-                
                 <h1 class="text-3xl font-bold text-white tracking-tight">Bem-vindo</h1>
                 <p class="text-gray-400 text-sm mt-2 uppercase tracking-widest text-[10px]">Portal Corporativo</p>
             </div>
 
             <form id="form-login" class="space-y-5">
-                <div class="space-y-1">
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">E-mail Corporativo</label>
-                    <input type="email" id="email" required class="w-full glass-input rounded-lg px-4 py-3 placeholder-gray-600 focus:text-white" placeholder="seunome@empresa.com">
-                </div>
-                <div class="space-y-1">
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">Senha</label>
-                    <input type="password" id="password" required class="w-full glass-input rounded-lg px-4 py-3 placeholder-gray-600 focus:text-white" placeholder="••••••••">
-                </div>
-                
-                <button type="submit" class="w-full bg-brand-wine hover:bg-brand-hover text-white font-semibold py-4 rounded-lg transition-all duration-300 shadow-[0_0_20px_rgba(227,25,55,0.3)] hover:shadow-[0_0_30px_rgba(227,25,55,0.5)] transform hover:-translate-y-0.5 mt-4 flex items-center justify-center group">
+                <div class="space-y-1"><label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">E-mail</label><input type="email" id="email" required class="w-full glass-input rounded-lg px-4 py-3 placeholder-gray-600 focus:text-white" placeholder="seunome@empresa.com"></div>
+                <div class="space-y-1"><label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">Senha</label><input type="password" id="password" required class="w-full glass-input rounded-lg px-4 py-3 placeholder-gray-600 focus:text-white" placeholder="••••••••"></div>
+                <button type="submit" class="w-full bg-brand-wine hover:bg-brand-hover text-white font-semibold py-4 rounded-lg transition-all duration-300 shadow-[0_0_20px_rgba(227,25,55,0.3)] mt-4 flex items-center justify-center group">
                     <span id="btn-login-text" class="tracking-wide">ACESSAR SISTEMA</span>
                     <div id="btn-login-loader" class="loader hidden ml-2 border-white"></div>
                 </button>
             </form>
             <div id="login-error" class="mt-6 text-center text-red-400 text-xs hidden border border-red-900/50 bg-red-900/10 p-3 rounded-lg backdrop-blur-sm"></div>
         </div>
-        
-        <div class="absolute bottom-6 text-center text-gray-600 text-xs z-10">
-            &copy; 2024 Elo Brindes. Tecnologia & Design.
-        </div>
+        <div class="absolute bottom-6 text-center text-gray-600 text-xs z-10">&copy; 2024 Elo Brindes. Tecnologia & Design.</div>
     </div>
 
     <!-- ÁREA DO APLICATIVO -->
     <div id="app-screen" class="hidden w-full h-full flex relative bg-[url('fundo1.png')] bg-cover bg-fixed">
-        <!-- Overlay Dark no App também -->
         <div class="absolute inset-0 bg-black/90 z-0"></div>
 
-        <!-- Sidebar -->
         <aside class="w-72 glass-panel border-r-0 border-r-white/5 flex-col hidden md:flex z-10 relative">
             <div class="h-24 flex items-center px-8 border-b border-white/5">
-                <!-- Mini Logo Sidebar -->
                 <div class="font-bold text-2xl tracking-tighter text-white flex items-center gap-2">
-                    <i class="ph-fill ph-cube text-brand-wine"></i>
-                    ELO<span class="text-brand-wine">PAINEL</span>
+                    <i class="ph-fill ph-cube text-brand-wine"></i> ELO<span class="text-brand-wine">PAINEL</span>
                 </div>
             </div>
             <nav class="flex-1 px-4 py-8 space-y-2">
                 <p class="px-4 text-[10px] uppercase text-gray-500 font-bold tracking-widest mb-2">Menu Principal</p>
-                <button onclick="window.router('estoque')" class="w-full flex items-center gap-3 px-4 py-4 text-white bg-white/5 border border-white/10 rounded-xl transition-all hover:bg-brand-wine hover:border-brand-wine hover:shadow-lg group">
-                    <i class="ph ph-package text-xl text-brand-wine group-hover:text-white transition-colors"></i>
-                    <span class="font-medium">Meu Estoque</span>
-                </button>
-                <button onclick="window.router('pedir')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all group">
-                    <i class="ph ph-paper-plane-tilt text-xl group-hover:text-brand-wine transition-colors"></i>
-                    <span class="font-medium">Nova Solicitação</span>
-                </button>
-                <button onclick="window.router('pedidos')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all group">
-                    <i class="ph ph-clock-counter-clockwise text-xl group-hover:text-brand-wine transition-colors"></i>
-                    <span class="font-medium">Histórico</span>
-                </button>
+                <button onclick="window.router('estoque')" class="w-full flex items-center gap-3 px-4 py-4 text-white bg-white/5 border border-white/10 rounded-xl transition-all hover:bg-brand-wine hover:border-brand-wine hover:shadow-lg group"><i class="ph ph-package text-xl text-brand-wine group-hover:text-white transition-colors"></i><span class="font-medium">Meu Estoque</span></button>
+                <button onclick="window.router('pedir')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all group"><i class="ph ph-paper-plane-tilt text-xl group-hover:text-brand-wine transition-colors"></i><span class="font-medium">Nova Solicitação</span></button>
+                <button onclick="window.router('pedidos')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all group"><i class="ph ph-clock-counter-clockwise text-xl group-hover:text-brand-wine transition-colors"></i><span class="font-medium">Histórico</span></button>
             </nav>
-            <div class="p-6 border-t border-white/5">
-                <button onclick="window.logout()" class="flex items-center gap-2 text-gray-500 hover:text-red-400 transition-colors text-sm font-medium">
-                    <i class="ph ph-sign-out"></i> Encerrar Sessão
-                </button>
-            </div>
+            <div class="p-6 border-t border-white/5"><button onclick="window.logout()" class="flex items-center gap-2 text-gray-500 hover:text-red-400 transition-colors text-sm font-medium"><i class="ph ph-sign-out"></i> Encerrar Sessão</button></div>
         </aside>
 
         <main class="flex-1 p-6 md:p-10 overflow-y-auto z-10 relative">
@@ -207,23 +133,15 @@
             <!-- ESTOQUE -->
             <div id="view-estoque" class="view-section animate-[fadeIn_0.3s_ease-out]">
                 <header class="flex justify-between items-end mb-8">
-                    <div>
-                        <h2 class="text-3xl font-bold text-white tracking-tight">Meu Estoque</h2>
-                        <p class="text-gray-400 text-sm mt-1">Gerencie seus produtos disponíveis</p>
-                    </div>
-                    <div class="hidden md:block text-right">
-                        <div class="text-xs text-gray-500 uppercase tracking-widest">Status do Sistema</div>
-                        <div class="flex items-center gap-2 text-green-400 text-sm font-bold"><span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Online</div>
-                    </div>
+                    <div><h2 class="text-3xl font-bold text-white tracking-tight">Meu Estoque</h2><p class="text-gray-400 text-sm mt-1">Gerencie seus produtos disponíveis</p></div>
                 </header>
-                
                 <div id="inventory-grid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">Carregando...</div>
             </div>
             
-            <!-- PEDIDO -->
+            <!-- PEDIDO (ATUALIZADO COM ENDEREÇO MANUAL) -->
             <div id="view-pedir" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
                 <h2 class="text-3xl font-bold text-white mb-2">Fazer Pedido</h2>
-                <p class="text-gray-400 text-sm mb-8 border-b border-white/10 pb-4">Preencha os dados para envio imediato</p>
+                <p class="text-gray-400 text-sm mb-8 border-b border-white/10 pb-4">Preencha os dados para envio</p>
                 
                 <form id="form-pedido" class="glass-panel p-8 rounded-2xl max-w-3xl">
                     <div class="mb-6">
@@ -231,19 +149,33 @@
                         <select id="pedido-produto" class="w-full glass-input rounded-lg px-4 py-3 bg-[#0a0a0a] focus:bg-[#1a1a1a] appearance-none cursor-pointer"></select>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Quantidade</label>
-                            <input type="number" id="pedido-qtd" class="w-full glass-input rounded-lg px-4 py-3" value="1" min="1">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Data Limite</label>
-                            <input type="date" id="pedido-data" class="w-full glass-input rounded-lg px-4 py-3 text-gray-300">
-                        </div>
+                        <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Quantidade</label><input type="number" id="pedido-qtd" class="w-full glass-input rounded-lg px-4 py-3" value="1" min="1"></div>
+                        <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Data Limite</label><input type="date" id="pedido-data" class="w-full glass-input rounded-lg px-4 py-3 text-gray-300"></div>
                     </div>
+                    
                     <div class="mb-8">
                         <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Endereço de Entrega</label>
-                        <select id="pedido-endereco" class="w-full glass-input rounded-lg px-4 py-3 bg-[#0a0a0a] focus:bg-[#1a1a1a] appearance-none cursor-pointer"></select>
+                        
+                        <!-- Toggle Switch -->
+                        <div class="flex items-center gap-3 mb-3">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="toggle-endereco" class="sr-only peer" onchange="toggleAddressMode()">
+                                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-wine"></div>
+                                <span class="ml-3 text-sm font-medium text-gray-300">Digitar outro endereço manualmente</span>
+                            </label>
+                        </div>
+
+                        <!-- Select Padrão -->
+                        <div id="box-select-endereco">
+                            <select id="pedido-endereco" class="w-full glass-input rounded-lg px-4 py-3 bg-[#0a0a0a] focus:bg-[#1a1a1a] appearance-none cursor-pointer"></select>
+                        </div>
+                        
+                        <!-- Input Manual (Inicialmente Oculto) -->
+                        <div id="box-manual-endereco" class="hidden">
+                            <textarea id="pedido-endereco-manual" rows="3" class="w-full glass-input rounded-lg px-4 py-3" placeholder="Digite o endereço completo (Rua, Número, Cidade, CEP)..."></textarea>
+                        </div>
                     </div>
+
                     <button type="submit" class="w-full bg-brand-wine hover:bg-brand-hover text-white py-4 rounded-lg font-bold shadow-lg shadow-brand-wine/20 transition-all hover:scale-[1.01]">Confirmar Envio</button>
                 </form>
             </div>
@@ -253,40 +185,22 @@
                 <h2 class="text-3xl font-bold text-white mb-8">Meus Pedidos</h2>
                 <div class="glass-panel rounded-2xl overflow-hidden">
                     <table class="w-full text-left text-gray-300">
-                        <thead class="bg-white/5 text-gray-400 uppercase text-xs tracking-wider">
-                            <tr>
-                                <th class="p-5 font-bold">ID do Pedido</th>
-                                <th class="p-5 font-bold">Data</th>
-                                <th class="p-5 font-bold">Status Atual</th>
-                            </tr>
-                        </thead>
+                        <thead class="bg-white/5 text-gray-400 uppercase text-xs tracking-wider"><tr><th class="p-5 font-bold">ID</th><th class="p-5 font-bold">Data</th><th class="p-5 font-bold">Endereço / Destino</th><th class="p-5 font-bold">Status</th></tr></thead>
                         <tbody id="history-table-body" class="divide-y divide-white/5"></tbody>
                     </table>
                 </div>
             </div>
         </main>
 
-        <!-- CHATBOT BUTTON -->
-        <button onclick="toggleChat()" class="fixed bottom-8 right-8 bg-brand-wine hover:bg-brand-hover text-white p-4 rounded-full shadow-[0_0_20px_rgba(227,25,55,0.4)] transition-all hover:scale-110 z-50 group">
-            <i class="ph ph-chat-centered-text text-3xl group-hover:rotate-12 transition-transform"></i>
-        </button>
-
-        <!-- CHATBOT WINDOW -->
+        <!-- CHATBOT -->
+        <button onclick="window.toggleChat()" class="fixed bottom-8 right-8 bg-brand-wine hover:bg-brand-hover text-white p-4 rounded-full shadow-[0_0_20px_rgba(227,25,55,0.4)] transition-all hover:scale-110 z-50 group"><i class="ph ph-chat-centered-text text-3xl group-hover:rotate-12 transition-transform"></i></button>
         <div id="chatbot-window" class="fixed bottom-28 right-8 w-80 md:w-96 h-[550px] glass-panel rounded-2xl shadow-2xl hidden flex-col chat-container border border-white/10 overflow-hidden z-50">
             <div class="bg-gradient-to-r from-brand-wine to-red-900 p-5 flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><i class="ph ph-robot text-white"></i></div>
-                    <div>
-                        <span class="font-bold text-white block leading-tight">EloBot</span>
-                        <span class="text-[10px] text-white/80 uppercase tracking-wide">Assistente Virtual</span>
-                    </div>
-                </div>
-                <button onclick="toggleChat()" class="text-white/80 hover:text-white transition-colors"><i class="ph ph-x text-lg"></i></button>
+                <div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><i class="ph ph-robot text-white"></i></div><div><span class="font-bold text-white block leading-tight">EloBot</span><span class="text-[10px] text-white/80 uppercase tracking-wide">Assistente Virtual</span></div></div>
+                <button onclick="window.toggleChat()" class="text-white/80 hover:text-white transition-colors"><i class="ph ph-x text-lg"></i></button>
             </div>
             <div class="flex-1 p-5 overflow-y-auto chat-messages bg-black/40" id="chat-messages">
-                <div class="bg-white/10 p-4 rounded-2xl rounded-tl-none mb-3 text-sm text-gray-200 max-w-[85%] border border-white/5 shadow-sm">
-                    Olá! Sou a IA da Elo Brindes. Como posso auxiliar sua gestão hoje?
-                </div>
+                <div class="bg-white/10 p-4 rounded-2xl rounded-tl-none mb-3 text-sm text-gray-200 max-w-[85%] border border-white/5 shadow-sm">Olá! Sou a IA da Elo Brindes. Como posso ajudar?</div>
             </div>
             <div class="p-4 border-t border-white/10 bg-black/60 backdrop-blur-md">
                 <form id="chat-form" class="flex gap-2 relative">
@@ -297,22 +211,32 @@
         </div>
     </div>
 
-    <!-- SCRIPT PRINCIPAL (FUNCIONALIDADES BLINDADAS) -->
+    <!-- SCRIPT PRINCIPAL -->
     <script type="module">
         import { createDirectus, authentication, rest, readItems, createItem, readMe } from 'https://esm.sh/@directus/sdk@13.0.0';
 
-        // --- LINK DA API (SEU LINK NOVO) ---
         const API_URL = 'https://elo-brindes-api-ire7ry-853a54-152-53-165-62.traefik.me';
-        
         const client = createDirectus(API_URL).with(authentication()).with(rest());
         
-        // --- TORNANDO FUNÇÕES GLOBAIS ---
-        window.client = client;
-        window.readItems = readItems;
-        window.createItem = createItem;
-        window.currentOrgId = null;
+        window.client = client; window.readItems = readItems; window.createItem = createItem; window.currentOrgId = null;
 
-        // Função Toggle Chat Global
+        // Lógica de Alternar Endereço
+        window.toggleAddressMode = function() {
+            const isManual = document.getElementById('toggle-endereco').checked;
+            const boxSelect = document.getElementById('box-select-endereco');
+            const boxManual = document.getElementById('box-manual-endereco');
+            
+            if(isManual) {
+                boxSelect.classList.add('hidden');
+                boxManual.classList.remove('hidden');
+                document.getElementById('pedido-endereco').value = ""; // Limpa seleção
+            } else {
+                boxSelect.classList.remove('hidden');
+                boxManual.classList.add('hidden');
+                document.getElementById('pedido-endereco-manual').value = ""; // Limpa texto
+            }
+        }
+
         window.toggleChat = function() {
             const chat = document.getElementById('chatbot-window');
             chat.classList.toggle('hidden');
@@ -329,28 +253,19 @@
             const loader = document.getElementById('btn-login-loader');
             const errorMsg = document.getElementById('login-error');
 
-            btn.disabled = true; 
-            btnText.textContent = 'Entrando...';
-            loader.classList.remove('hidden');
-            errorMsg.classList.add('hidden');
+            btn.disabled = true; btnText.textContent = 'Entrando...'; loader.classList.remove('hidden'); errorMsg.classList.add('hidden');
 
             try {
                 await client.login(email, password);
-                
                 const user = await client.request(readMe({ fields: ['organization_id'] }));
                 window.currentOrgId = user.organization_id;
-                
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.remove('hidden');
                 window.router('estoque');
             } catch (error) {
-                console.error(error);
-                errorMsg.classList.remove('hidden');
-                errorMsg.textContent = "Erro no login. Verifique senha ou conexão.";
+                console.error(error); errorMsg.classList.remove('hidden'); errorMsg.textContent = "Erro no login. Verifique senha ou conexão.";
             } finally {
-                btn.disabled = false; 
-                btnText.textContent = 'ACESSAR SISTEMA';
-                loader.classList.add('hidden');
+                btn.disabled = false; btnText.textContent = 'ACESSAR SISTEMA'; loader.classList.add('hidden');
             }
         });
 
@@ -362,35 +277,25 @@
             if(view === 'pedir') loadDependencies();
             if(view === 'pedidos') loadHistory();
         }
-
         window.logout = async function() { await client.logout(); location.reload(); }
 
-        // --- ESTOQUE (LÓGICA DE IMAGEM INTELIGENTE) ---
+        // --- DADOS ---
         async function loadInventory() {
             const grid = document.getElementById('inventory-grid');
             grid.innerHTML = 'Carregando...';
             try {
                 const items = await client.request(readItems('estoque_cliente', { fields: ['*', 'produto_id.*'] }));
                 if(!items.length) { grid.innerHTML = 'Estoque vazio.'; return; }
-                
                 grid.innerHTML = items.map(item => {
                     let imgUrl = 'https://placehold.co/400x300/1A0505/8B0000?text=Sem+Imagem';
-                    if(item.produto_id?.imagem) {
-                        imgUrl = item.produto_id.imagem.startsWith('http') ? item.produto_id.imagem : `${API_URL}/assets/${item.produto_id.imagem}`;
-                    }
-
+                    if(item.produto_id?.imagem) imgUrl = item.produto_id.imagem.startsWith('http') ? item.produto_id.imagem : `${API_URL}/assets/${item.produto_id.imagem}`;
                     return `
                     <div class="glass-panel rounded-xl overflow-hidden group hover:border-brand-wine/50 transition-all duration-300">
-                        <div class="h-48 w-full bg-black relative overflow-hidden">
-                            <img src="${imgUrl}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-80 group-hover:opacity-100" alt="Produto">
-                        </div>
+                        <div class="h-48 w-full bg-black relative overflow-hidden"><img src="${imgUrl}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-80 group-hover:opacity-100" alt="Produto"><div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60"></div></div>
                         <div class="p-5 relative">
                             <h3 class="font-bold text-white truncate text-lg">${item.produto_id?.nome || 'Produto'}</h3>
                             <div class="flex justify-between items-end mt-2">
-                                <div>
-                                    <p class="text-xs text-gray-500 uppercase">Disponível</p>
-                                    <p class="text-brand-wine text-2xl font-bold">${item.quantidade_disponivel} <span class="text-xs text-gray-500 font-normal">unid.</span></p>
-                                </div>
+                                <div><p class="text-xs text-gray-500 uppercase">Disponível</p><p class="text-brand-wine text-2xl font-bold">${item.quantidade_disponivel} <span class="text-xs text-gray-500 font-normal">unid.</span></p></div>
                                 <button onclick="window.prefillOrder('${item.id}', '${item.produto_id?.nome}')" class="bg-white/10 hover:bg-brand-wine text-white p-2 rounded-lg transition-colors"><i class="ph ph-plus font-bold"></i></button>
                             </div>
                             <button onclick="window.prefillOrder('${item.id}', '${item.produto_id?.nome}')" class="mt-4 w-full py-2 border border-white/10 text-xs uppercase tracking-widest text-gray-400 hover:text-white hover:border-white/30 rounded transition-all">Solicitar Envio</button>
@@ -400,19 +305,11 @@
             } catch (e) { grid.innerHTML = 'Erro ao carregar estoque.'; }
         }
 
-        window.prefillOrder = function(id, name) {
-            window.router('pedir');
-            setTimeout(() => { alert(`Produto: ${name}. Selecione-o na lista.`); }, 500);
-        }
+        window.prefillOrder = function(id, name) { window.router('pedir'); setTimeout(() => { alert(`Produto: ${name}. Selecione-o na lista.`); }, 500); }
 
-        // --- PEDIDO ---
         async function loadDependencies() {
             try {
-                const [ends, prods] = await Promise.all([
-                    client.request(readItems('enderecos_entrega')),
-                    client.request(readItems('estoque_cliente', { fields: ['*', 'produto_id.*'] }))
-                ]);
-                
+                const [ends, prods] = await Promise.all([ client.request(readItems('enderecos_entrega')), client.request(readItems('estoque_cliente', { fields: ['*', 'produto_id.*'] })) ]);
                 document.getElementById('pedido-endereco').innerHTML = ends.map(e => `<option value="${e.id}" class="bg-black text-white">${e.apelido_local || e.logradouro}</option>`).join('');
                 document.getElementById('pedido-produto').innerHTML = prods.map(p => `<option value="${p.produto_id?.id}" class="bg-black text-white">${p.produto_id?.nome}</option>`).join('');
             } catch(e) { console.error(e); }
@@ -422,75 +319,47 @@
             e.preventDefault();
             const btn = e.target.querySelector('button');
             btn.disabled = true; btn.innerHTML = 'Enviando...';
-
             try {
+                const isManual = document.getElementById('toggle-endereco').checked;
                 const payload = {
-                    tipo: 'SOLICITACAO_ENVIO',
-                    status: 'pendente',
+                    tipo: 'SOLICITACAO_ENVIO', status: 'pendente',
                     quantidade: parseInt(document.getElementById('pedido-qtd').value),
                     observacoes: `Data: ${document.getElementById('pedido-data').value}`,
-                    endereco_id: document.getElementById('pedido-endereco').value,
-                    organization_id: window.currentOrgId
+                    organization_id: window.currentOrgId,
+                    endereco_id: isManual ? null : document.getElementById('pedido-endereco').value,
+                    endereco_manual: isManual ? document.getElementById('pedido-endereco-manual').value : null
                 };
-
                 await client.request(createItem('solicitacoes', payload));
-                
-                alert('Pedido Enviado com Sucesso!');
-                window.router('pedidos');
-            } catch (e) { 
-                console.error(e);
-                alert('Erro ao enviar: ' + (e.message || "Verifique permissões")); 
-            } finally {
-                btn.disabled = false; btn.innerHTML = 'Enviar Pedido';
-            }
+                alert('Pedido Enviado com Sucesso!'); window.router('pedidos');
+            } catch (e) { console.error(e); alert('Erro ao enviar: ' + e.message); } finally { btn.disabled = false; btn.innerHTML = 'Confirmar Envio'; }
         });
 
-        // --- HISTÓRICO ---
         async function loadHistory() {
             const tbody = document.getElementById('history-table-body');
-            tbody.innerHTML = '<tr><td colspan="3" class="p-4">Carregando...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="p-4">Carregando...</td></tr>';
             try {
-                const items = await client.request(readItems('solicitacoes', { 
-                    sort: ['-data_criacao'], 
-                    fields: ['id', 'status', 'data_criacao', 'tipo']
-                }));
-
-                if(!items.length) { tbody.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-gray-500">Nenhum pedido encontrado.</td></tr>'; return; }
-                
+                const items = await client.request(readItems('solicitacoes', { sort: ['-data_criacao'], fields: ['id', 'status', 'data_criacao', 'tipo', 'endereco_manual', 'endereco_id.apelido_local'] }));
+                if(!items.length) { tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-gray-500">Nenhum pedido encontrado.</td></tr>'; return; }
                 tbody.innerHTML = items.map(i => `
                     <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
                         <td class="p-5 font-mono text-sm text-brand-wine">#${String(i.id).substring(0,8)}...</td>
                         <td class="p-5 text-gray-300">${new Date(i.data_criacao).toLocaleDateString()}</td>
-                        <td class="p-5">
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${i.status === 'pendente' ? 'bg-yellow-900/30 text-yellow-500 border border-yellow-700/50' : 'bg-green-900/30 text-green-500 border border-green-700/50'}">
-                                <span class="w-1.5 h-1.5 rounded-full ${i.status === 'pendente' ? 'bg-yellow-500' : 'bg-green-500'}"></span>
-                                ${i.status.toUpperCase()}
-                            </span>
-                        </td>
+                        <td class="p-5 text-gray-300 text-sm truncate max-w-[200px]">${i.endereco_manual ? '📍 ' + i.endereco_manual : (i.endereco_id?.apelido_local || 'Endereço Cadastrado')}</td>
+                        <td class="p-5"><span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${i.status === 'pendente' ? 'bg-yellow-900/30 text-yellow-500 border border-yellow-700/50' : 'bg-green-900/30 text-green-500 border border-green-700/50'}"><span class="w-1.5 h-1.5 rounded-full ${i.status === 'pendente' ? 'bg-yellow-500' : 'bg-green-500'}"></span>${i.status.toUpperCase()}</span></td>
                     </tr>
                 `).join('');
-            } catch (e) { 
-                console.error(e);
-                tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-red-500">Erro ao carregar lista.</td></tr>'; 
-            }
+            } catch (e) { console.error(e); tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-red-500">Erro ao carregar lista.</td></tr>'; }
         }
-
-        // --- CHATBOT EVENT ---
+        
         document.getElementById('chat-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const input = document.getElementById('chat-input');
             const msg = input.value;
             if(!msg) return;
-
             const area = document.getElementById('chat-messages');
             area.innerHTML += `<div class="bg-brand-wine p-3 rounded-2xl rounded-tr-none mb-3 text-sm text-white max-w-[85%] ml-auto text-right shadow-lg shadow-brand-wine/20">${msg}</div>`;
-            input.value = '';
-            area.scrollTop = area.scrollHeight;
-
-            setTimeout(() => {
-                area.innerHTML += `<div class="bg-white/10 p-4 rounded-2xl rounded-tl-none mb-3 text-sm text-gray-200 max-w-[85%] border border-white/5 shadow-sm">IA em manutenção. Use o atendimento manual.</div>`;
-                area.scrollTop = area.scrollHeight;
-            }, 1000);
+            input.value = ''; area.scrollTop = area.scrollHeight;
+            setTimeout(() => { area.innerHTML += `<div class="bg-white/10 p-4 rounded-2xl rounded-tl-none mb-3 text-sm text-gray-200 max-w-[85%] border border-white/5 shadow-sm">IA em manutenção. Use o atendimento manual.</div>`; area.scrollTop = area.scrollHeight; }, 1000);
         });
     </script>
 </body>
