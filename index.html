@@ -16,8 +16,8 @@
                 extend: {
                     colors: {
                         brand: {
-                            dark: '#0a0a0a',    /* Mais escuro, estilo Tesla */
-                            wine: '#E31937',    /* Um vermelho mais vibrante/tech */
+                            dark: '#0a0a0a',    /* Mais escuro */
+                            wine: '#E31937',    /* Vermelho vibrante */
                             light: '#E5E7EB',   
                             card: '#171717',    /* Cinza quase preto */
                             hover: '#C2132F'
@@ -43,7 +43,7 @@
         .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #E31937; border-radius: 50%; width: 24px; height: 24px; animation: spin 0.8s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* Animação de Fundo (Ícones Flutuantes) */
+        /* Animação de Fundo (Do seu index1) */
         @keyframes float {
             0% { transform: translateY(0px) rotate(0deg); opacity: 0; }
             20% { opacity: 0.15; }
@@ -69,7 +69,7 @@
             animation: float 15s infinite linear;
         }
 
-        /* Glassmorphism Utilities */
+        /* Glassmorphism (Do seu index1) */
         .glass-panel {
             background: rgba(20, 20, 20, 0.7);
             backdrop-filter: blur(12px);
@@ -107,14 +107,13 @@
     <!-- TELA DE LOGIN -->
     <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-black">
         
-        <!-- Fundo Imagem -->
+        <!-- Fundo Imagem (Do seu index1) -->
         <div class="absolute inset-0 z-0">
-            <!-- Coloque sua imagem fundo1.png na mesma pasta -->
             <img src="fundo1.png" class="w-full h-full object-cover opacity-40" alt="Background" onerror="this.style.display='none'">
             <div class="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
         </div>
 
-        <!-- Animação de Ícones no Fundo -->
+        <!-- Animação de Ícones no Fundo (Do seu index1) -->
         <div class="bg-particles">
             <i class="ph ph-cube particle" style="left: 10%; animation-delay: 0s; font-size: 3rem;"></i>
             <i class="ph ph-gift particle" style="left: 30%; animation-delay: 4s; font-size: 2rem;"></i>
@@ -126,12 +125,10 @@
         <!-- Card de Login -->
         <div class="glass-panel p-10 rounded-2xl w-full max-w-md mx-4 relative z-10 animate-[fadeIn_0.5s_ease-out]">
             <div class="text-center mb-10">
-                <!-- LOGO AREA -->
+                <!-- LOGO AREA (Do seu index1) -->
                 <div class="flex justify-center mb-6">
-                    <!-- Substitua logo.png pelo arquivo real. Fallback para ícone se der erro -->
                     <img src="logo.png" class="h-24 object-contain drop-shadow-[0_0_15px_rgba(227,25,55,0.5)]" alt="Logo Elo Brindes" onerror="this.style.display='none'; document.getElementById('fallback-icon').classList.remove('hidden')">
-                    
-                    <!-- Fallback Icon (apenas se não tiver logo.png) -->
+                    <!-- Fallback Icon -->
                     <div id="fallback-icon" class="hidden inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-wine to-red-900 text-white shadow-lg">
                         <i class="ph ph-cube text-4xl"></i>
                     </div>
@@ -153,7 +150,6 @@
                 
                 <button type="submit" class="w-full bg-brand-wine hover:bg-brand-hover text-white font-semibold py-4 rounded-lg transition-all duration-300 shadow-[0_0_20px_rgba(227,25,55,0.3)] hover:shadow-[0_0_30px_rgba(227,25,55,0.5)] transform hover:-translate-y-0.5 mt-4 flex items-center justify-center group">
                     <span id="btn-login-text" class="tracking-wide">ACESSAR SISTEMA</span>
-                    <i class="ph ph-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
                     <div id="btn-login-loader" class="loader hidden ml-2 border-white"></div>
                 </button>
             </form>
@@ -276,7 +272,7 @@
         </button>
 
         <!-- CHATBOT WINDOW -->
-        <div id="chatbot-window" class="fixed bottom-28 right-8 w-80 md:w-96 h-[550px] glass-panel rounded-2xl shadow-2xl hidden flex-col chat-container border border-white/10 overflow-hidden">
+        <div id="chatbot-window" class="fixed bottom-28 right-8 w-80 md:w-96 h-[550px] glass-panel rounded-2xl shadow-2xl hidden flex-col chat-container border border-white/10 overflow-hidden z-50">
             <div class="bg-gradient-to-r from-brand-wine to-red-900 p-5 flex justify-between items-center">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><i class="ph ph-robot text-white"></i></div>
@@ -301,18 +297,27 @@
         </div>
     </div>
 
-    <!-- SCRIPT PRINCIPAL (INTACTO) -->
+    <!-- SCRIPT PRINCIPAL (FUNCIONALIDADES BLINDADAS) -->
     <script type="module">
         import { createDirectus, authentication, rest, readItems, createItem, readMe } from 'https://esm.sh/@directus/sdk@13.0.0';
 
-        const API_URL = 'https://elo-brindes-api-ire7ry-ce032f-152-53-165-62.traefik.me';
+        // --- LINK DA API (SEU LINK NOVO) ---
+        const API_URL = 'https://elo-brindes-api-ire7ry-853a54-152-53-165-62.traefik.me';
+        
         const client = createDirectus(API_URL).with(authentication()).with(rest());
         
-        // Globais
+        // --- TORNANDO FUNÇÕES GLOBAIS ---
         window.client = client;
         window.readItems = readItems;
         window.createItem = createItem;
         window.currentOrgId = null;
+
+        // Função Toggle Chat Global
+        window.toggleChat = function() {
+            const chat = document.getElementById('chatbot-window');
+            chat.classList.toggle('hidden');
+            chat.classList.toggle('flex');
+        }
 
         // --- LOGIN ---
         document.getElementById('form-login').addEventListener('submit', async (e) => {
@@ -320,9 +325,13 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const btn = e.target.querySelector('button');
+            const btnText = document.getElementById('btn-login-text');
+            const loader = document.getElementById('btn-login-loader');
             const errorMsg = document.getElementById('login-error');
 
-            btn.disabled = true; btn.innerHTML = 'Entrando...';
+            btn.disabled = true; 
+            btnText.textContent = 'Entrando...';
+            loader.classList.remove('hidden');
             errorMsg.classList.add('hidden');
 
             try {
@@ -339,7 +348,9 @@
                 errorMsg.classList.remove('hidden');
                 errorMsg.textContent = "Erro no login. Verifique senha ou conexão.";
             } finally {
-                btn.disabled = false; btn.innerHTML = 'Acessar Painel';
+                btn.disabled = false; 
+                btnText.textContent = 'ACESSAR SISTEMA';
+                loader.classList.add('hidden');
             }
         });
 
@@ -363,24 +374,15 @@
                 if(!items.length) { grid.innerHTML = 'Estoque vazio.'; return; }
                 
                 grid.innerHTML = items.map(item => {
-                    // Lógica para detectar se é URL externa ou ID de upload
                     let imgUrl = 'https://placehold.co/400x300/1A0505/8B0000?text=Sem+Imagem';
-                    
                     if(item.produto_id?.imagem) {
-                        if(item.produto_id.imagem.startsWith('http')) {
-                            // É um link externo (ex: site da Elo)
-                            imgUrl = item.produto_id.imagem;
-                        } else {
-                            // É um upload no Directus
-                            imgUrl = `${API_URL}/assets/${item.produto_id.imagem}`;
-                        }
+                        imgUrl = item.produto_id.imagem.startsWith('http') ? item.produto_id.imagem : `${API_URL}/assets/${item.produto_id.imagem}`;
                     }
 
                     return `
                     <div class="glass-panel rounded-xl overflow-hidden group hover:border-brand-wine/50 transition-all duration-300">
                         <div class="h-48 w-full bg-black relative overflow-hidden">
                             <img src="${imgUrl}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-80 group-hover:opacity-100" alt="Produto">
-                            <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60"></div>
                         </div>
                         <div class="p-5 relative">
                             <h3 class="font-bold text-white truncate text-lg">${item.produto_id?.nome || 'Produto'}</h3>
@@ -453,7 +455,7 @@
                     fields: ['id', 'status', 'data_criacao', 'tipo']
                 }));
 
-                if(!items.length) { tbody.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-gray-500">Nenhum pedido encontrado no histórico.</td></tr>'; return; }
+                if(!items.length) { tbody.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-gray-500">Nenhum pedido encontrado.</td></tr>'; return; }
                 
                 tbody.innerHTML = items.map(i => `
                     <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
@@ -473,13 +475,7 @@
             }
         }
 
-        // --- CHATBOT ---
-        window.toggleChat = function() {
-            const chat = document.getElementById('chatbot-window');
-            chat.classList.toggle('hidden');
-            chat.classList.toggle('flex');
-        }
-
+        // --- CHATBOT EVENT ---
         document.getElementById('chat-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const input = document.getElementById('chat-input');
