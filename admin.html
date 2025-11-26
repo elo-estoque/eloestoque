@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elo Admin | Gestão Interna</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#0a0a0a',
+                            wine: '#E31937',
+                            light: '#E5E7EB',   
+                            card: '#171717',
+                            hover: '#C2132F'
+                        }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #000000; color: #E5E7EB; }
+        
+        /* Loader & Glassmorphism */
+        .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #E31937; border-radius: 50%; width: 24px; height: 24px; animation: spin 0.8s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .glass-panel { background: rgba(20, 20, 20, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .glass-input { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.3s ease; }
+        .glass-input:focus { background: rgba(255, 255, 255, 0.08); border-color: #E31937; outline: none; }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #000; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        .modal-enter { animation: modalIn 0.3s ease-out forwards; }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden selection:bg-brand-wine selection:text-white">
+
+    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-black">
+        <div class="absolute inset-0 z-0"><img src="fundo1.png" class="w-full h-full object-cover opacity-40" onerror="this.style.display='none'"><div class="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent"></div></div>
+        
+        <div class="glass-panel p-10 rounded-2xl w-full max-w-md mx-4 relative z-10 border-l-4 border-brand-wine">
+            <div class="text-center mb-10">
+                <img src="logo.png" class="h-20 mx-auto object-contain mb-4" onerror="this.style.display='none'">
+                <h1 class="text-3xl font-bold text-white">Área Restrita</h1>
+                <p class="text-gray-400 text-xs mt-2 uppercase tracking-widest">Acesso Funcionários Elo</p>
+            </div>
+            <form id="form-login" class="space-y-5">
+                <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">E-mail Corporativo</label><input type="email" id="email" required class="w-full glass-input rounded-lg px-4 py-3"></div>
+                <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Senha</label><input type="password" id="password" required class="w-full glass-input rounded-lg px-4 py-3"></div>
+                <button type="submit" class="w-full bg-brand-wine hover:bg-brand-hover text-white font-bold py-4 rounded-lg shadow-lg flex justify-center items-center mt-4 transition group">
+                    <span id="btn-login-text">ENTRAR NO SISTEMA</span><div id="btn-login-loader" class="loader hidden ml-2 border-white"></div>
+                </button>
+            </form>
+        </div>
+        <div class="absolute bottom-6 text-center text-gray-600 text-xs z-10">&copy; 2024 Elo Brindes | Admin.</div>
+    </div>
+
+    <div id="admin-screen" class="hidden w-full h-full flex relative bg-[url('fundo1.png')] bg-cover bg-fixed">
+        <div class="absolute inset-0 bg-black/95 z-0"></div>
+
+        <aside class="w-64 glass-panel border-r border-white/5 flex flex-col z-10 relative">
+            <div class="h-24 flex flex-col items-center justify-center border-b border-white/5">
+                <span class="text-white font-bold text-xl tracking-widest">ELO ADMIN</span>
+                <span class="text-brand-wine text-[10px] uppercase tracking-[0.2em] font-bold">Internal System</span>
+            </div>
+            
+            <div class="p-6">
+                <div class="bg-white/5 border border-white/10 p-4 rounded-xl mb-8">
+                    <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1">Você está logado como</p>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                        <p class="text-white font-bold truncate" id="user-role-display">Carregando...</p>
+                    </div>
+                </div>
+
+                <nav class="space-y-2">
+                    <button onclick="loadTasks()" class="w-full flex items-center gap-3 px-4 py-3 bg-brand-wine text-white rounded-lg font-bold shadow-lg transition hover:bg-brand-hover">
+                        <i class="ph ph-list-checks text-xl"></i> Minhas Tarefas
+                    </button>
+                    <button onclick="loadAllTasks()" class="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition">
+                        <i class="ph ph-eye text-xl"></i> Ver Tudo (Read Only)
+                    </button>
+                </nav>
+            </div>
+
+            <div class="mt-auto p-6 border-t border-white/5">
+                <button onclick="logout()" class="w-full flex items-center gap-2 text-gray-500 hover:text-red-400 transition">
+                    <i class="ph ph-sign-out text-lg"></i> Sair
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 p-8 overflow-y-auto z-10 relative">
+            <header class="flex justify-between items-end mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-white" id="page-title">Central de Tarefas</h2>
+                    <p class="text-gray-400 text-sm mt-1" id="page-subtitle">Gerencie as solicitações pendentes do seu setor.</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="loadTasks()" class="p-2 bg-white/5 rounded-lg text-white hover:bg-white/10 border border-white/10"><i class="ph ph-arrows-clockwise text-xl"></i></button>
+                </div>
+            </header>
+
+            <div id="task-list" class="grid grid-cols-1 gap-4 max-w-4xl">
+                <div class="text-center py-20 text-gray-500">Carregando sistema...</div>
+            </div>
+        </main>
+    </div>
+
+    <div id="action-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/90 backdrop-blur-sm">
+        <div class="glass-panel p-8 rounded-2xl w-full max-w-lg mx-4 relative modal-enter border border-white/10">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="ph ph-x text-xl"></i></button>
+            
+            <div class="mb-6">
+                <span class="text-xs font-bold text-brand-wine uppercase tracking-wider" id="modal-type">SOLICITAÇÃO</span>
+                <h3 class="text-2xl font-bold text-white mt-1" id="modal-title">Processar Pedido</h3>
+                <p class="text-gray-400 text-xs mt-1" id="modal-subtitle">Preencha os dados abaixo para avançar.</p>
+            </div>
+
+            <div id="modal-form-content" class="space-y-4 mb-6"></div>
+
+            <button id="btn-save-action" class="w-full bg-brand-wine hover:bg-brand-hover text-white py-3 rounded-lg font-bold shadow-lg transition">
+                Salvar e Atualizar
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createDirectus, authentication, rest, readItems, updateItem, readMe, readRoles } from 'https://esm.sh/@directus/sdk@13.0.0';
+
+        const API_URL = 'https://elo-brindes-api-ire7ry-853a54-152-53-165-62.traefik.me';
+        const client = createDirectus(API_URL).with(authentication()).with(rest());
+
+        let currentUserRole = '';
+        let currentTaskId = null;
+
+        // === 1. LOGIN DO ADMIN ===
+        document.getElementById('form-login').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-login-text');
+            const loader = document.getElementById('btn-login-loader');
+            
+            btn.classList.add('hidden');
+            loader.classList.remove('hidden');
+
+            try {
+                await client.login(document.getElementById('email').value, document.getElementById('password').value);
+                
+                const me = await client.request(readMe({ fields: ['role', 'first_name'] }));
+                const roleData = await client.request(readRoles({ filter: { id: { _eq: me.role } } }));
+                const roleName = roleData[0]?.name;
+
+                if (!roleName || !roleName.includes('Elo -')) {
+                    throw new Error('Acesso negado. Este painel é exclusivo para colaboradores Elo.');
+                }
+
+                currentUserRole = roleName;
+                startApp(roleName);
+
+            } catch (err) {
+                notify(err.message, 'error');
+                btn.classList.remove('hidden');
+                loader.classList.add('hidden');
+            }
+        });
+
+        function startApp(roleName) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('admin-screen').classList.remove('hidden');
+            document.getElementById('admin-screen').classList.add('flex');
+            document.getElementById('user-role-display').innerText = roleName;
+            
+            if(roleName.includes('Compras')) document.getElementById('page-subtitle').innerText = 'Itens que precisam ser cotados ou comprados.';
+            if(roleName.includes('Vendas')) document.getElementById('page-subtitle').innerText = 'Orçamentos para precificar e aprovar.';
+            if(roleName.includes('Logística')) document.getElementById('page-subtitle').innerText = 'Pedidos liberados para separação e envio.';
+
+            loadTasks();
+        }
+
+        // === 2. CARREGAR TAREFAS (Kanban Lógico) ===
+        window.loadTasks = async function() {
+            const container = document.getElementById('task-list');
+            container.innerHTML = '<div class="text-center text-gray-500 mt-10"><div class="loader border-brand-wine mx-auto mb-4"></div>Buscando pendências...</div>';
+
+            try {
+                // CORREÇÃO AQUI: Forçar a busca de 'produto_id.nome'
+                const tasks = await client.request(readItems('solicitacoes', {
+                    sort: ['-data_criacao'],
+                    fields: ['*', 'produto_id.nome', 'endereco_id.apelido_local', 'endereco_manual']
+                }));
+
+                if (tasks.length === 0) {
+                    container.innerHTML = `
+                        <div class="glass-panel p-8 rounded-xl text-center border border-white/5">
+                            <i class="ph ph-check-circle text-4xl text-green-500 mb-4"></i>
+                            <h3 class="text-xl font-bold text-white">Tudo limpo!</h3>
+                            <p class="text-gray-500 text-sm mt-2">Não há pendências para o setor <b>${currentUserRole}</b> no momento.</p>
+                        </div>`;
+                    return;
+                }
+
+                container.innerHTML = tasks.map(task => renderCard(task)).join('');
+
+            } catch (e) {
+                console.error(e);
+                let msg = e.message;
+                if(msg.includes('403')) msg += " (Erro de Permissão: Verifique se 'Elo - [Setor]' tem permissão 'Read' em Produtos e Solicitações)";
+                container.innerHTML = `<div class="text-red-400 text-center p-4 border border-red-500/30 rounded bg-red-900/10">Erro ao carregar: ${msg}</div>`;
+            }
+        }
+
+        window.loadAllTasks = async function() {
+            notify('Modo visualização geral (Futuro).', 'info');
+        }
+
+        // === 3. RENDERIZAÇÃO DOS CARDS ===
+        function renderCard(task) {
+            let borderClass = 'border-l-4 border-gray-500';
+            if(task.status === 'pendente') borderClass = 'border-l-4 border-yellow-500';
+            if(task.status === 'cotado') borderClass = 'border-l-4 border-blue-500';
+            if(task.status === 'aguardando_pagamento') borderClass = 'border-l-4 border-purple-500';
+            if(task.status === 'liberado_logistica') borderClass = 'border-l-4 border-green-500';
+
+            // === LÓGICA DE NOME (CORREÇÃO DE "INDEFINIDO") ===
+            let produtoNome = 'Produto Indefinido';
+            let nomeOrigem = 'Banco de Dados';
+
+            // 1. Tentativa Oficial (Relacionamento)
+            if (task.produto_id && typeof task.produto_id === 'object' && task.produto_id.nome) {
+                produtoNome = task.produto_id.nome;
+            } 
+            // 2. Tentativa de Resgate (Para itens antigos criados antes do fix)
+            else if (task.observacoes && task.observacoes.includes('Produto:')) {
+                try {
+                    // Ex: "Solicitação | Produto: Caneta Azul | ..."
+                    const partes = task.observacoes.split('|');
+                    const parteNome = partes.find(p => p.trim().includes('Produto:'));
+                    if (parteNome) {
+                        produtoNome = parteNome.replace('Produto:', '').trim() + ' (Recuperado)';
+                        nomeOrigem = 'Recuperado da Obs';
+                    }
+                } catch(e) {}
+            }
+
+            const data = new Date(task.data_criacao).toLocaleDateString();
+            const tipo = task.tipo.replace('SOLICITACAO_', '');
+            
+            const btnAction = `<button onclick="window.openModal('${task.id}')" class="bg-white/10 hover:bg-brand-wine text-white px-6 py-2 rounded-lg font-bold text-sm transition border border-white/5">ABRIR TAREFA</button>`;
+
+            return `
+                <div class="glass-panel p-5 rounded-xl ${borderClass} flex flex-col md:flex-row justify-between items-center gap-4 hover:bg-white/5 transition">
+                    <div class="flex-1 w-full">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="text-[10px] font-bold uppercase bg-white/10 px-2 py-1 rounded text-gray-300">${tipo}</span>
+                            <span class="text-xs text-gray-500">${data}</span>
+                            <span class="text-xs text-brand-wine font-bold uppercase ml-auto md:ml-0">#${task.id}</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white truncate" title="Origem: ${nomeOrigem}">${produtoNome}</h3>
+                        <p class="text-sm text-gray-400 mt-1">Qtd: <b class="text-white">${task.quantidade}</b> • Status: <span class="text-gray-300 capitalize">${task.status.replace('_', ' ')}</span></p>
+                        ${task.observacoes ? `<p class="text-xs text-gray-500 mt-2 italic border-l-2 border-white/10 pl-2 truncate">"${task.observacoes}"</p>` : ''}
+                    </div>
+                    <div class="w-full md:w-auto flex justify-end">
+                        ${btnAction}
+                    </div>
+                </div>
+            `;
+        }
+
+        // === 4. MODAL DINÂMICO ===
+        window.openModal = async function(id) {
+            const modal = document.getElementById('action-modal');
+            const content = document.getElementById('modal-form-content');
+            const btn = document.getElementById('btn-save-action');
+            
+            currentTaskId = id;
+            content.innerHTML = '<div class="loader mx-auto"></div>';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            try {
+                const item = await client.request(readItems('solicitacoes', { filter: { id: { _eq: id } } }));
+                const task = item[0];
+
+                document.getElementById('modal-title').innerText = task.tipo === 'SOLICITACAO_COMPRA' ? 'Cotação / Compra' : 'Envio Logístico';
+                document.getElementById('modal-subtitle').innerText = `Editando solicitação #${task.id} como ${currentUserRole}`;
+
+                let html = '';
+
+                if (currentUserRole.includes('Compras')) {
+                    html += createInput('Fornecedor / Detalhes', 'observacoes', 'text', task.observacoes || '', 'Ex: Kalunga...');
+                    html += createInput('Custo Interno Unitário (R$)', 'custo_interno', 'number', task.custo_interno, '0.00');
+                    html += createSelect('Status', 'status', [
+                        {val: 'pendente', label: 'Pendente (Em análise)'},
+                        {val: 'cotado', label: 'Cotado (Enviar para Vendas)'},
+                        {val: 'estoque_atualizado', label: 'Concluído (Estoque Reposto)'}
+                    ], task.status);
+                } 
+                else if (currentUserRole.includes('Vendas')) {
+                    html += `<div class="bg-white/5 p-3 rounded mb-4 border border-white/10"><p class="text-xs text-gray-500 uppercase">Custo Informado</p><p class="text-xl font-bold text-white">R$ ${task.custo_interno || '0.00'}</p></div>`;
+                    html += createInput('Valor Final ao Cliente (R$)', 'valor_total', 'number', task.valor_total, '0.00');
+                    html += createSelect('Status', 'status', [
+                        {val: 'cotado', label: 'Em Negociação'},
+                        {val: 'aguardando_pagamento', label: 'Aguardando Pagamento'},
+                        {val: 'liberado_logistica', label: 'Venda Fechada (Liberar Logística)'}
+                    ], task.status);
+                }
+                else if (currentUserRole.includes('Logística')) {
+                    const endereco = task.endereco_manual || 'Endereço ID ' + task.endereco_id;
+                    html += `<div class="bg-white/5 p-3 rounded mb-4 border border-white/10"><p class="text-xs text-gray-500 uppercase">Destino</p><p class="text-sm text-white">${endereco}</p></div>`;
+                    html += createInput('Código de Rastreio', 'codigo_rastreio', 'text', task.codigo_rastreio || '', 'Ex: OJ123456789BR');
+                    html += createSelect('Status', 'status', [
+                        {val: 'liberado_logistica', label: 'Em Separação'},
+                        {val: 'enviado', label: 'Enviado (Finalizar)'}
+                    ], task.status);
+                }
+                else {
+                    html += `<p class="text-yellow-500 mb-4">Modo Admin Geral</p>`;
+                    html += createSelect('Status', 'status', [
+                        {val: 'pendente', label: 'Pendente'}, {val: 'cotado', label: 'Cotado'},
+                        {val: 'aguardando_pagamento', label: 'Aguardando Pagamento'},
+                        {val: 'liberado_logistica', label: 'Liberado Logística'},
+                        {val: 'enviado', label: 'Enviado'}, {val: 'concluido', label: 'Concluído'}
+                    ], task.status);
+                }
+
+                content.innerHTML = html;
+
+                btn.onclick = async () => {
+                    const payload = {};
+                    content.querySelectorAll('input, select').forEach(el => {
+                        if (el.type === 'number') {
+                            payload[el.id] = el.value === '' ? null : parseFloat(el.value);
+                        } else {
+                            payload[el.id] = el.value;
+                        }
+                    });
+
+                    try {
+                        btn.innerText = 'Salvando...';
+                        btn.disabled = true;
+                        await client.request(updateItem('solicitacoes', currentTaskId, payload));
+                        
+                        notify('Tarefa atualizada com sucesso!');
+                        closeModal();
+                        loadTasks(); 
+                    } catch(e) {
+                        console.error(e);
+                        let errorMsg = e.message;
+                        if (e.errors && e.errors[0]) errorMsg = e.errors[0].message;
+                        notify('Erro ao salvar: ' + errorMsg, 'error');
+                    } finally {
+                        btn.innerText = 'Salvar e Atualizar';
+                        btn.disabled = false;
+                    }
+                }
+
+            } catch(e) {
+                content.innerHTML = `<p class="text-red-400">Erro ao abrir tarefa: ${e.message}</p>`;
+            }
+        }
+
+        // Helpers
+        function createInput(label, id, type, value, placeholder) {
+            const safeValue = (value === undefined || value === null) ? '' : value;
+            return `<div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">${label}</label><input id="${id}" type="${type}" value="${safeValue}" placeholder="${placeholder}" class="w-full glass-input rounded-lg px-4 py-3 text-white"></div>`;
+        }
+        function createSelect(label, id, options, selected) {
+            const opts = options.map(o => `<option value="${o.val}" ${o.val === selected ? 'selected' : ''} class="bg-black text-white">${o.label}</option>`).join('');
+            return `<div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">${label}</label><select id="${id}" class="w-full glass-input rounded-lg px-4 py-3 text-white bg-[#171717]">${opts}</select></div>`;
+        }
+
+        window.closeModal = function() {
+            document.getElementById('action-modal').classList.add('hidden');
+            document.getElementById('action-modal').classList.remove('flex');
+        }
+
+        window.logout = async () => {
+            await client.logout();
+            location.reload();
+        }
+
+        function notify(msg, type = 'success') {
+            Toastify({ text: msg, duration: 3000, gravity: "top", position: "right", style: { background: type === 'success' ? "#10B981" : "#EF4444" } }).showToast();
+        }
+    </script>
+</body>
+</html>
