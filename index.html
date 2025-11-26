@@ -16,8 +16,8 @@
                 extend: {
                     colors: {
                         brand: {
-                            dark: '#0a0a0a',    /* Mais escuro, estilo Tesla */
-                            wine: '#E31937',    /* Um vermelho mais vibrante/tech */
+                            dark: '#0a0a0a',    /* Mais escuro */
+                            wine: '#E31937',    /* Vermelho vibrante */
                             light: '#E5E7EB',   
                             card: '#171717',    /* Cinza quase preto */
                             hover: '#C2132F'
@@ -39,7 +39,7 @@
 
         body { font-family: 'Inter', sans-serif; background-color: #000000; color: #E5E7EB; }
         
-        /* Loader Customizado */
+        /* Loader */
         .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #E31937; border-radius: 50%; width: 24px; height: 24px; animation: spin 0.8s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
@@ -66,6 +66,13 @@
         /* Modal Animation */
         .modal-enter { animation: modalIn 0.3s ease-out forwards; }
         @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        
+        /* Disabled State */
+        .grayscale-card { filter: grayscale(1); opacity: 0.6; }
+
+        /* Categoria Ativa - Botões Quadrados */
+        .cat-btn { border-radius: 4px; } /* Quadrado leve */
+        .cat-btn.active { background-color: #E31937; color: white; border-color: #E31937; }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden text-gray-200 selection:bg-brand-wine selection:text-white">
@@ -90,7 +97,10 @@
             <form id="form-login" class="space-y-5">
                 <div class="space-y-1"><label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">E-mail</label><input type="email" id="email" required class="w-full glass-input rounded-lg px-4 py-3"></div>
                 <div class="space-y-1"><label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">Senha</label><input type="password" id="password" required class="w-full glass-input rounded-lg px-4 py-3"></div>
-                <button type="submit" class="w-full bg-brand-wine hover:bg-brand-hover text-white font-semibold py-4 rounded-lg transition-all mt-4 flex items-center justify-center"><span id="btn-login-text">ACESSAR SISTEMA</span></button>
+                <button type="submit" class="w-full bg-brand-wine hover:bg-brand-hover text-white font-semibold py-4 rounded-lg transition-all duration-300 shadow-lg mt-4 flex items-center justify-center group">
+                    <span id="btn-login-text" class="tracking-wide">ACESSAR SISTEMA</span>
+                    <div id="btn-login-loader" class="loader hidden ml-2 border-white"></div>
+                </button>
             </form>
             <div id="login-error" class="mt-6 text-center text-red-400 text-xs hidden border border-red-900/50 bg-red-900/10 p-3 rounded-lg"></div>
         </div>
@@ -106,32 +116,79 @@
                 <div class="font-bold text-2xl tracking-tighter text-white flex items-center gap-2"><i class="ph-fill ph-cube text-brand-wine"></i>ELO<span class="text-brand-wine">PAINEL</span></div>
             </div>
             <nav class="flex-1 px-4 py-8 space-y-2" id="sidebar-nav">
-                <p class="px-4 text-[10px] uppercase text-gray-500 font-bold tracking-widest mb-2">Gestão</p>
-                <button id="nav-estoque" onclick="window.router('estoque')" class="w-full flex items-center gap-3 px-4 py-4 text-white bg-white/5 border border-white/10 rounded-xl transition-all hover:bg-brand-wine hover:border-brand-wine hover:shadow-lg group"><i class="ph ph-package text-xl group-hover:text-white transition-colors"></i><span class="font-medium">Meu Estoque</span></button>
-                <button id="nav-pedir" onclick="window.router('pedir')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-paper-plane-tilt text-xl group-hover:text-brand-wine transition-colors"></i><span class="font-medium">Enviar Brindes</span></button>
-                <button id="nav-pedidos" onclick="window.router('pedidos')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-clock-counter-clockwise text-xl group-hover:text-brand-wine transition-colors"></i><span class="font-medium">Histórico</span></button>
+                <p class="px-4 text-[10px] uppercase text-gray-500 font-bold tracking-widest mb-2">Principal</p>
+                <button id="nav-dashboard" onclick="window.router('dashboard')" class="w-full flex items-center gap-3 px-4 py-4 text-white bg-white/5 border border-white/10 rounded-xl hover:bg-brand-wine hover:border-brand-wine transition-all group">
+                    <i class="ph ph-squares-four text-xl text-brand-wine group-hover:text-white"></i><span class="font-medium">Visão Geral</span>
+                </button>
+
+                <p class="px-4 text-[10px] uppercase text-gray-500 font-bold tracking-widest mb-2 mt-4">Gestão</p>
+                <button id="nav-estoque" onclick="window.router('estoque')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-package text-xl group-hover:text-brand-wine"></i><span class="font-medium">Meu Estoque</span></button>
+                <button id="nav-pedidos" onclick="window.router('pedidos')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-clock-counter-clockwise text-xl group-hover:text-brand-wine"></i><span class="font-medium">Histórico</span></button>
                 
-                <p class="px-4 text-[10px] uppercase text-gray-500 font-bold tracking-widest mb-2 mt-6">Compras</p>
-                <button id="nav-catalogo" onclick="window.router('catalogo')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-storefront text-xl text-blue-400 group-hover:text-blue-300 transition-colors"></i><span class="font-medium">Catálogo Completo</span></button>
-                <button id="nav-repor" onclick="window.router('repor')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-shopping-cart text-xl text-green-400 group-hover:text-green-300 transition-colors"></i><span class="font-medium">Solicitar Orçamento</span></button>
+                <p class="px-4 text-[10px] uppercase text-gray-500 font-bold tracking-widest mb-2 mt-6">Ações</p>
+                <button id="nav-pedir" onclick="window.router('pedir')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-paper-plane-tilt text-xl group-hover:text-brand-wine"></i><span class="font-medium">Enviar Brindes</span></button>
+                <button id="nav-repor" onclick="window.router('repor')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-shopping-cart text-xl group-hover:text-green-400"></i><span class="font-medium">Orçar/Repor</span></button>
+                <button id="nav-catalogo" onclick="window.router('catalogo')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-storefront text-xl group-hover:text-blue-400"></i><span class="font-medium">Catálogo</span></button>
             </nav>
-            <div class="p-6 border-t border-white/5"><button onclick="window.logout()" class="flex items-center gap-2 text-gray-500 hover:text-red-400 text-sm font-medium w-full"><i class="ph ph-sign-out text-lg"></i> Sair do Sistema</button></div>
+            <div class="p-6 border-t border-white/5 space-y-2">
+                <button onclick="window.openSettings()" class="flex items-center gap-2 text-gray-400 hover:text-white text-sm font-medium w-full py-2"><i class="ph ph-gear"></i> Minha Conta</button>
+                <button onclick="window.logout()" class="flex items-center gap-2 text-gray-500 hover:text-red-400 text-sm font-medium w-full py-2"><i class="ph ph-sign-out"></i> Sair</button>
+            </div>
         </aside>
 
         <main class="flex-1 p-6 md:p-10 overflow-y-auto z-10 relative">
-            <!-- Estoque -->
-            <div id="view-estoque" class="view-section animate-[fadeIn_0.3s_ease-out]">
-                <header class="flex justify-between items-end mb-8">
-                    <div><h2 class="text-3xl font-bold text-white tracking-tight">Meu Estoque</h2><p class="text-gray-400 text-sm mt-1">Gerencie seus produtos disponíveis</p></div>
+            <!-- DASHBOARD (HOME) -->
+            <div id="view-dashboard" class="view-section animate-[fadeIn_0.3s_ease-out]">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-bold text-white tracking-tight">Visão Geral</h2>
+                    <p class="text-gray-400 text-sm mt-1">Resumo da sua conta e movimentações</p>
                 </header>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="glass-panel p-6 rounded-2xl border-l-4 border-brand-wine">
+                        <p class="text-gray-400 text-xs uppercase tracking-wider">Produtos em Estoque</p>
+                        <p class="text-3xl font-bold text-white mt-2" id="dash-total-items">-</p>
+                    </div>
+                    <div class="glass-panel p-6 rounded-2xl border-l-4 border-green-500">
+                        <p class="text-gray-400 text-xs uppercase tracking-wider">Total de Peças</p>
+                        <p class="text-3xl font-bold text-white mt-2" id="dash-total-qty">-</p>
+                    </div>
+                    <div class="glass-panel p-6 rounded-2xl border-l-4 border-yellow-500">
+                        <p class="text-gray-400 text-xs uppercase tracking-wider">Solicitações Pendentes</p>
+                        <p class="text-3xl font-bold text-white mt-2" id="dash-pending">-</p>
+                    </div>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-4">Acesso Rápido</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button onclick="window.router('pedir')" class="glass-panel p-6 rounded-xl text-left hover:bg-white/5 transition group">
+                        <i class="ph ph-paper-plane-tilt text-2xl text-brand-wine mb-3 group-hover:scale-110 transition-transform inline-block"></i>
+                        <h4 class="font-bold text-white">Enviar para um endereço</h4>
+                        <p class="text-gray-500 text-xs mt-1">Solicite o envio de material do seu estoque</p>
+                    </button>
+                    <button onclick="window.router('repor')" class="glass-panel p-6 rounded-xl text-left hover:bg-white/5 transition group">
+                        <i class="ph ph-shopping-cart text-2xl text-green-400 mb-3 group-hover:scale-110 transition-transform inline-block"></i>
+                        <h4 class="font-bold text-white">Fazer novo Pedido</h4>
+                        <p class="text-gray-500 text-xs mt-1">Produza mais brindes ou peça um orçamento</p>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ESTOQUE -->
+            <div id="view-estoque" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
+                <header class="flex justify-between items-end mb-8"><div><h2 class="text-3xl font-bold text-white tracking-tight">Meu Estoque</h2></div></header>
                 <div id="inventory-grid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">Carregando...</div>
             </div>
             
-            <!-- NOVO: CATÁLOGO -->
+            <!-- CATÁLOGO COM FILTROS (ATUALIZADO) -->
             <div id="view-catalogo" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
-                <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
-                    <div><h2 class="text-3xl font-bold text-white tracking-tight">Catálogo de Produtos</h2><p class="text-gray-400 text-sm mt-1">Explore e solicite orçamentos</p></div>
-                    <div class="relative w-full md:w-64"><input type="text" id="catalogo-search" placeholder="Buscar..." onkeyup="window.filterCatalog()" class="w-full glass-input rounded-lg pl-10 pr-4 py-2 text-sm"><i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-gray-400"></i></div>
+                <header class="mb-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+                        <div><h2 class="text-3xl font-bold text-white tracking-tight">Catálogo de Produtos</h2><p class="text-gray-400 text-sm mt-1">Explore e solicite orçamentos</p></div>
+                        <div class="relative w-full md:w-64"><input type="text" id="catalogo-search" placeholder="Buscar produto..." onkeyup="window.filterCatalog()" class="w-full glass-input rounded-lg pl-10 pr-4 py-2 text-sm"><i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-gray-400"></i></div>
+                    </div>
+                    <!-- ÁREA DE CATEGORIAS -->
+                    <div id="catalog-categories" class="flex flex-wrap gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                        <!-- Botões de categoria injetados via JS -->
+                    </div>
                 </header>
                 <div id="catalogo-grid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">Carregando...</div>
             </div>
@@ -139,7 +196,6 @@
             <!-- Pedido de Envio -->
             <div id="view-pedir" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
                 <h2 class="text-3xl font-bold text-white mb-2">Solicitar Envio</h2>
-                <p class="text-gray-400 text-sm mb-8 pb-4 border-b border-white/10">Envie brindes do seu estoque para um endereço</p>
                 <form id="form-pedido" class="glass-panel p-8 rounded-2xl max-w-3xl">
                     <div class="mb-6"><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Produto</label><select id="pedido-produto" class="w-full glass-input rounded-lg px-4 py-3 bg-[#0a0a0a]"></select></div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -152,30 +208,27 @@
                         <div id="box-select-endereco"><select id="pedido-endereco" class="w-full glass-input rounded-lg px-4 py-3 bg-[#0a0a0a]"></select></div>
                         <div id="box-manual-endereco" class="hidden"><textarea id="pedido-endereco-manual" rows="3" class="w-full glass-input rounded-lg px-4 py-3" placeholder="Endereço completo..."></textarea></div>
                     </div>
-                    <button type="submit" class="w-full bg-brand-wine hover:bg-brand-hover text-white py-4 rounded-lg font-bold shadow-lg">Enviar do Meu Estoque</button>
+                    <button type="submit" class="w-full bg-brand-wine hover:bg-brand-hover text-white py-4 rounded-lg font-bold shadow-lg">Enviar</button>
                 </form>
             </div>
 
-            <!-- Pedido de Compra -->
             <div id="view-repor" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
                 <h2 class="text-3xl font-bold text-white mb-2">Repor Estoque</h2>
-                <p class="text-gray-400 text-sm mb-8 pb-4 border-b border-white/10">Solicite orçamento para produção</p>
                 <form id="form-repor" class="glass-panel p-8 rounded-2xl max-w-3xl border border-green-900/30">
                     <div class="mb-6 p-4 bg-green-900/20 border border-green-900/50 rounded-xl flex items-center justify-between">
-                        <div><span class="text-sm font-bold text-white block">Manter modelo atual?</span><span class="text-xs text-gray-400">Mesma arte e especificações.</span></div>
+                        <div><span class="text-sm font-bold text-white block">Manter modelo atual?</span></div>
                         <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="repor-manter" class="sr-only peer" checked onchange="toggleReporMode()"><div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div></label>
                     </div>
-                    <div id="box-repor-obs" class="mb-6 hidden animate-[fadeIn_0.3s_ease-out]"><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Alterações</label><textarea id="repor-obs-texto" rows="3" class="w-full glass-input rounded-lg px-4 py-3 border-yellow-500/50 focus:border-yellow-500" placeholder="Ex: Quero mudar a cor..."></textarea></div>
-                    <div class="mb-6"><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Produto</label><select id="repor-produto" class="w-full glass-input rounded-lg px-4 py-3 bg-[#0a0a0a] border-green-900/50 focus:border-green-500"></select></div>
+                    <div id="box-repor-obs" class="mb-6 hidden"><textarea id="repor-obs-texto" rows="3" class="w-full glass-input rounded-lg px-4 py-3" placeholder="Ex: Mudar cor..."></textarea></div>
+                    <div class="mb-6"><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Produto</label><select id="repor-produto" class="w-full glass-input rounded-lg px-4 py-3 bg-[#0a0a0a]"></select></div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Qtd</label><input type="number" id="repor-qtd" class="w-full glass-input rounded-lg px-4 py-3" value="100" min="50"></div>
-                        <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Data</label><input type="date" id="repor-data" class="w-full glass-input rounded-lg px-4 py-3 text-gray-300"></div>
+                        <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Qtd</label><input type="number" id="repor-qtd" class="w-full glass-input rounded-lg px-4 py-3" value="100"></div>
+                        <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Data Ideal</label><input type="date" id="repor-data" class="w-full glass-input rounded-lg px-4 py-3 text-gray-300"></div>
                     </div>
-                    <button type="submit" class="w-full bg-green-700 hover:bg-green-600 text-white py-4 rounded-lg font-bold shadow-lg flex items-center justify-center gap-2"><i class="ph ph-currency-dollar"></i> Solicitar Orçamento</button>
+                    <button type="submit" class="w-full bg-green-700 hover:bg-green-600 text-white py-4 rounded-lg font-bold shadow-lg">Solicitar Orçamento</button>
                 </form>
             </div>
 
-            <!-- Histórico -->
             <div id="view-pedidos" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
                 <h2 class="text-3xl font-bold text-white mb-8">Histórico</h2>
                 <div class="glass-panel rounded-2xl overflow-hidden">
@@ -184,75 +237,79 @@
             </div>
         </main>
         
-        <!-- BOTÃO WHATSAPP -->
-        <a href="https://wa.me/5511948171445" target="_blank" class="fixed bottom-8 right-8 bg-[#25D366] hover:bg-[#128C7E] text-white p-4 rounded-full shadow-[0_0_20px_rgba(37,211,102,0.4)] z-50 transition-transform hover:scale-110 flex items-center justify-center group" title="Fale no WhatsApp"><i class="ph ph-whatsapp-logo text-3xl"></i></a>
+        <!-- FAB WhatsApp -->
+        <a href="https://wa.me/5511948171445" target="_blank" class="fixed bottom-8 right-8 bg-[#25D366] hover:bg-[#128C7E] text-white p-4 rounded-full shadow-[0_0_20px_rgba(37,211,102,0.4)] z-50 transition-transform hover:scale-110 group"><i class="ph ph-whatsapp-logo text-3xl"></i></a>
     </div>
 
-    <!-- MODAL DE DETALHES DO PRODUTO -->
+    <!-- MODAL DETALHES -->
     <div id="product-details-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/90 backdrop-blur-sm">
         <div class="glass-panel p-0 rounded-2xl w-full max-w-2xl mx-4 relative overflow-hidden modal-enter border border-white/10">
             <button onclick="closeDetails()" class="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full hover:bg-brand-wine transition z-10"><i class="ph ph-x text-xl"></i></button>
             <div class="flex flex-col md:flex-row h-[80vh] md:h-auto">
-                <!-- Imagem -->
-                <div class="w-full md:w-1/2 h-64 md:h-auto bg-black relative">
-                    <img id="modal-img" src="" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent md:hidden"></div>
-                </div>
-                <!-- Conteúdo -->
+                <div class="w-full md:w-1/2 h-64 md:h-auto bg-black relative"><img id="modal-img" src="" class="w-full h-full object-cover"></div>
                 <div class="w-full md:w-1/2 p-8 flex flex-col justify-between bg-[#121212]">
-                    <div>
-                        <span id="modal-sku" class="text-xs font-bold text-brand-wine uppercase tracking-widest mb-2 block">SKU: 000</span>
-                        <h2 id="modal-title" class="text-2xl font-bold text-white mb-4 leading-tight">Nome do Produto</h2>
-                        <div id="modal-desc" class="text-gray-400 text-sm leading-relaxed mb-6 h-32 overflow-y-auto pr-2 scrollbar-thin">Descrição detalhada...</div>
-                        <div id="modal-info-extra" class="grid grid-cols-2 gap-4 mb-6">
-                            <!-- Injetado via JS -->
-                        </div>
-                    </div>
-                    <div id="modal-actions" class="pt-4 border-t border-white/10">
-                        <!-- Botões injetados via JS -->
-                    </div>
+                    <div><span id="modal-sku" class="text-xs font-bold text-brand-wine uppercase tracking-widest mb-2 block"></span><h2 id="modal-title" class="text-2xl font-bold text-white mb-4"></h2><div id="modal-desc" class="text-gray-400 text-sm h-32 overflow-y-auto"></div><div id="modal-info-extra" class="grid grid-cols-2 gap-4 mb-6"></div></div>
+                    <div id="modal-actions" class="pt-4 border-t border-white/10"></div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- MODAL CONFIGURAÇÕES -->
+    <div id="settings-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/90 backdrop-blur-sm">
+        <div class="glass-panel p-8 rounded-2xl w-full max-w-md mx-4 modal-enter">
+            <div class="flex justify-between items-center mb-6"><h3 class="text-xl font-bold text-white">Minha Conta</h3><button onclick="document.getElementById('settings-modal').classList.add('hidden')" class="text-gray-400 hover:text-white"><i class="ph ph-x text-xl"></i></button></div>
+            <form id="form-password">
+                <div class="mb-4"><label class="block text-xs font-bold text-gray-400 mb-2">Nova Senha</label><input type="password" id="new-password" class="w-full glass-input rounded-lg px-4 py-3"></div>
+                <button type="submit" class="w-full bg-brand-wine text-white py-3 rounded-lg font-bold">Atualizar Senha</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOASTIFY JS -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
     <script type="module">
-        import { createDirectus, authentication, rest, readItems, createItem, updateItem, readMe } from 'https://esm.sh/@directus/sdk@13.0.0';
+        import { createDirectus, authentication, rest, readItems, createItem, updateItem, readMe, updateMe } from 'https://esm.sh/@directus/sdk@13.0.0';
 
         const API_URL = 'https://elo-brindes-api-ire7ry-853a54-152-53-165-62.traefik.me';
         const client = createDirectus(API_URL).with(authentication()).with(rest());
         
         window.client = client; window.readItems = readItems; window.createItem = createItem; window.currentOrgId = null;
-        window.allCatalogProducts = []; window.inventoryItems = []; // Cache simples
+        window.allCatalogProducts = []; window.inventoryItems = []; window.activeCategory = 'TODAS';
 
-        // --- SIDEBAR ---
-        const activeClasses = ['text-white', 'bg-white/5', 'border-white/10', 'shadow-lg'];
-        const inactiveClasses = ['text-gray-400', 'hover:text-white', 'hover:bg-white/5', 'border-transparent'];
+        // FEEDBACK
+        function notify(msg, type = 'success') {
+            Toastify({
+                text: msg, duration: 3000, gravity: "top", position: "right",
+                style: { background: type === 'success' ? "#10B981" : "#EF4444", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.5)" }
+            }).showToast();
+        }
 
+        // SIDEBAR
         function updateSidebar(activeId) {
-            const navs = ['nav-estoque', 'nav-pedir', 'nav-repor', 'nav-pedidos', 'nav-catalogo'];
+            const navs = ['nav-dashboard', 'nav-estoque', 'nav-pedir', 'nav-repor', 'nav-pedidos', 'nav-catalogo'];
             navs.forEach(id => {
-                const el = document.getElementById(id);
-                if(!el) return;
-                el.classList.remove(...activeClasses); el.classList.remove(...inactiveClasses);
+                const el = document.getElementById(id); if(!el) return;
+                el.classList.remove('text-white', 'bg-white/5', 'border-white/10', 'shadow-lg');
+                el.classList.add('text-gray-400', 'border-transparent');
                 const icon = el.querySelector('i');
-                icon.classList.remove('text-brand-wine', 'text-green-400', 'text-blue-400', 'text-gray-400');
+                icon.classList.remove('text-brand-wine', 'text-green-400', 'text-blue-400');
                 
-                if (id === activeId) {
-                    el.classList.add(...activeClasses);
+                if (id === activeId) { 
+                    el.classList.add('text-white', 'bg-white/5', 'border-white/10', 'shadow-lg'); 
+                    el.classList.remove('text-gray-400', 'border-transparent');
                     if (id === 'nav-repor') icon.classList.add('text-green-300');
                     else if (id === 'nav-catalogo') icon.classList.add('text-blue-300');
                     else icon.classList.add('text-brand-wine');
                 } else {
-                    el.classList.add(...inactiveClasses);
-                    if (id === 'nav-repor') icon.classList.add('text-green-400');
-                    else if (id === 'nav-catalogo') icon.classList.add('text-blue-400');
-                    else icon.classList.add('text-gray-400');
+                     if (id === 'nav-repor') icon.classList.add('text-green-400');
+                     else if (id === 'nav-catalogo') icon.classList.add('text-blue-400');
+                     else icon.classList.add('text-gray-400');
                 }
             });
         }
 
-        // UI Toggles
         window.toggleAddressMode = function() {
             const manual = document.getElementById('toggle-endereco').checked;
             document.getElementById('box-select-endereco').classList.toggle('hidden', manual);
@@ -263,80 +320,21 @@
             document.getElementById('box-repor-obs').classList.toggle('hidden', manter);
             if(manter) document.getElementById('repor-obs-texto').value = "";
         }
-
-        // --- MODAL DE DETALHES (NOVO) ---
-        window.openDetails = function(id, type) {
-            let item, produto;
-            
-            if (type === 'estoque') {
-                // Busca no cache de inventário
-                item = window.inventoryItems.find(i => i.id === id);
-                if (!item) return;
-                produto = item.produto_id;
-            } else {
-                // Busca no cache de catálogo
-                produto = window.allCatalogProducts.find(p => p.id === id);
-                if (!produto) return;
-            }
-
-            // Popula Modal
-            const imgUrl = getImgUrl(produto?.imagem);
-            document.getElementById('modal-img').src = imgUrl;
-            document.getElementById('modal-title').textContent = produto?.nome || 'Produto sem nome';
-            document.getElementById('modal-sku').textContent = `SKU: ${produto?.sku || 'N/A'}`;
-            document.getElementById('modal-desc').textContent = produto?.descricao || 'Sem descrição disponível.';
-
-            // Info Extra
-            const infoDiv = document.getElementById('modal-info-extra');
-            if (type === 'estoque') {
-                infoDiv.innerHTML = `
-                    <div class="bg-white/5 p-3 rounded-lg"><p class="text-xs text-gray-500 uppercase">Seu Estoque</p><p class="text-xl font-bold text-brand-wine">${item.quantidade_disponivel} <span class="text-xs">unid.</span></p></div>
-                    <div class="bg-white/5 p-3 rounded-lg"><p class="text-xs text-gray-500 uppercase">Local</p><p class="text-sm font-bold text-white">${item.localizacao_fisica || 'Geral'}</p></div>
-                `;
-                document.getElementById('modal-actions').innerHTML = `
-                    <div class="flex gap-3">
-                        <button onclick="closeDetails(); window.prefill('${item.id}', '${produto?.nome}', ${item.quantidade_disponivel}, 'pedir')" class="flex-1 bg-brand-wine hover:bg-brand-hover text-white py-3 rounded-lg font-bold shadow-lg transition">SOLICITAR ENVIO</button>
-                        <button onclick="closeDetails(); window.prefill('${produto.id}', '${produto?.nome}', 0, 'repor_catalogo')" class="flex-1 bg-white/10 hover:bg-green-900/30 text-green-400 border border-green-900/50 py-3 rounded-lg font-bold transition">REPOR</button>
-                    </div>
-                `;
-            } else {
-                infoDiv.innerHTML = `
-                    <div class="bg-white/5 p-3 rounded-lg"><p class="text-xs text-gray-500 uppercase">Mínimo</p><p class="text-lg font-bold text-white">${produto.multiplos_de || 1} <span class="text-xs">unid.</span></p></div>
-                    <div class="bg-white/5 p-3 rounded-lg"><p class="text-xs text-gray-500 uppercase">Disponibilidade</p><p class="text-sm font-bold text-green-400">Sob Encomenda</p></div>
-                `;
-                document.getElementById('modal-actions').innerHTML = `
-                    <button onclick="closeDetails(); window.prefill('${produto.id}', '${produto?.nome}', 0, 'repor_catalogo')" class="w-full bg-green-700 hover:bg-green-600 text-white py-3 rounded-lg font-bold shadow-lg transition flex items-center justify-center gap-2"><i class="ph ph-currency-dollar"></i> ORÇAR PRODUÇÃO</button>
-                `;
-            }
-
-            document.getElementById('product-details-modal').classList.remove('hidden');
-            document.getElementById('product-details-modal').classList.add('flex');
-        }
-
-        window.closeDetails = function() {
-            document.getElementById('product-details-modal').classList.add('hidden');
-            document.getElementById('product-details-modal').classList.remove('flex');
-        }
-
-        function getImgUrl(img) {
-            if (img && !img.startsWith('http')) return `${API_URL}/assets/${img}`;
-            if (!img) return 'https://placehold.co/600x400/1A0505/8B0000?text=Sem+Imagem';
-            return img;
-        }
+        window.openSettings = function() { document.getElementById('settings-modal').classList.remove('hidden'); }
+        window.closeDetails = function() { document.getElementById('product-details-modal').classList.add('hidden'); document.getElementById('product-details-modal').classList.remove('flex'); }
 
         // LOGIN
         document.getElementById('form-login').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = e.target.querySelector('button');
-            btn.disabled = true; btn.innerHTML = '...';
+            const btn = e.target.querySelector('button'); btn.disabled = true; btn.innerHTML = '...';
             try {
                 await client.login(document.getElementById('email').value, document.getElementById('password').value);
                 const user = await client.request(readMe({ fields: ['organization_id'] }));
                 window.currentOrgId = user.organization_id;
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.remove('hidden');
-                window.router('estoque');
-            } catch (err) { alert('Erro no login: ' + err.message); btn.disabled = false; btn.innerHTML = 'ACESSAR SISTEMA'; }
+                window.router('dashboard');
+            } catch (err) { notify('Erro no login: ' + err.message, 'error'); btn.disabled = false; btn.innerHTML = 'ACESSAR SISTEMA'; }
         });
 
         // ROTAS
@@ -344,7 +342,7 @@
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             document.getElementById('view-' + view).classList.remove('hidden');
             updateSidebar('nav-' + view);
-            
+            if(view === 'dashboard') loadDashboard();
             if(view === 'estoque') loadInventory();
             if(view === 'pedir') loadDependencies();
             if(view === 'repor') loadRepositionDependencies(); 
@@ -353,130 +351,214 @@
         }
         window.logout = async () => { await client.logout(); location.reload(); }
 
-        // 1. ESTOQUE
-        async function loadInventory() {
-            const grid = document.getElementById('inventory-grid');
-            grid.innerHTML = 'Carregando...';
+        // DASHBOARD
+        async function loadDashboard() {
             try {
-                // Agora buscamos 'descricao' e 'sku' também
-                const items = await client.request(readItems('estoque_cliente', { fields: ['*', 'produto_id.*'] }));
-                window.inventoryItems = items; // Salva em cache para o modal
+                const estoque = await client.request(readItems('estoque_cliente', { fields: ['quantidade_disponivel'] }));
+                const pedidos = await client.request(readItems('solicitacoes', { filter: { status: { _eq: 'pendente' } } }));
                 
+                document.getElementById('dash-total-items').innerText = estoque.length;
+                document.getElementById('dash-total-qty').innerText = estoque.reduce((a, b) => a + b.quantidade_disponivel, 0);
+                document.getElementById('dash-pending').innerText = pedidos.length;
+            } catch (e) { console.error(e); }
+        }
+
+        // ESTOQUE
+        async function loadInventory() {
+            const grid = document.getElementById('inventory-grid'); grid.innerHTML = 'Carregando...';
+            try {
+                const items = await client.request(readItems('estoque_cliente', { fields: ['*', 'produto_id.*'] }));
+                window.inventoryItems = items;
                 if(!items.length) { grid.innerHTML = 'Estoque vazio.'; return; }
                 grid.innerHTML = items.map(item => renderCard(item.produto_id, item.id, item.quantidade_disponivel, 'estoque')).join('');
             } catch (e) { grid.innerHTML = 'Erro ao carregar.'; }
         }
 
-        // 2. CATÁLOGO
+        // CATÁLOGO COM FILTROS
         async function loadCatalog() {
-            const grid = document.getElementById('catalogo-grid');
-            grid.innerHTML = 'Carregando catálogo...';
+            const grid = document.getElementById('catalogo-grid'); grid.innerHTML = 'Carregando...';
             try {
-                const items = await client.request(readItems('produtos_catalogo', { filter: { ativo: { _eq: true } }, limit: 100 }));
-                window.allCatalogProducts = items; // Salva cache global
-                window.filterCatalog();
-            } catch (e) { grid.innerHTML = 'Erro ao carregar catálogo.'; console.error(e); }
+                const items = await client.request(readItems('produtos_catalogo', { filter: { ativo: { _eq: true } }, limit: 200 }));
+                window.allCatalogProducts = items;
+                renderCategories(items);
+                window.filterCatalog(window.activeCategory);
+            } catch (e) { grid.innerHTML = 'Erro ao carregar catálogo.'; }
         }
 
-        window.filterCatalog = function() {
+        function renderCategories(products) {
+            const categories = new Set(['TODAS']);
+            products.forEach(p => {
+                let name = p.nome;
+                // Limpa o nome para extrair a categoria correta
+                if(name.startsWith("Kit que tem o ")) name = name.replace("Kit que tem o ", "");
+                if(name.startsWith('"KIT"')) name = name.replace('"KIT"', "").trim();
+                
+                const firstName = name.split(' ')[0].toUpperCase();
+                
+                // Ignora categorias com aspas ou caracteres especiais no início
+                if (firstName.length > 2 && !firstName.includes('"') && !firstName.includes("'")) {
+                    categories.add(firstName);
+                }
+            });
+
+            // Ordena alfabeticamente, garantindo que TODAS seja o primeiro
+            let sortedCats = Array.from(categories).sort();
+            const idx = sortedCats.indexOf('TODAS');
+            if(idx > -1) sortedCats.splice(idx, 1);
+            sortedCats.unshift('TODAS');
+
+            const container = document.getElementById('catalog-categories');
+            container.innerHTML = sortedCats.map(cat => 
+                `<button onclick="window.filterCatalog('${cat}')" class="cat-btn px-6 py-2 rounded-md border border-white/10 text-sm hover:bg-white/10 transition uppercase font-bold tracking-wider ${cat === 'TODAS' ? 'active' : 'text-gray-400'}">${cat}</button>`
+            ).join('');
+        }
+
+        window.filterCatalog = function(category = null) {
             const term = document.getElementById('catalogo-search').value.toLowerCase();
             const grid = document.getElementById('catalogo-grid');
-            const filtered = window.allCatalogProducts.filter(p => p.nome.toLowerCase().includes(term) || (p.sku && p.sku.toLowerCase().includes(term)));
-            if(!filtered.length) { grid.innerHTML = 'Nenhum produto encontrado.'; return; }
+            
+            if(category) {
+                window.activeCategory = category;
+                document.querySelectorAll('.cat-btn').forEach(btn => {
+                    if(btn.innerText === category) { btn.classList.add('active'); btn.classList.remove('text-gray-400'); }
+                    else { btn.classList.remove('active'); btn.classList.add('text-gray-400'); }
+                });
+            }
+
+            const filtered = window.allCatalogProducts.filter(p => {
+                let cleanName = p.nome.toLowerCase();
+                // Limpa também na hora de filtrar
+                 if(cleanName.startsWith("kit que tem o ")) cleanName = cleanName.replace("kit que tem o ", "");
+                 if(cleanName.startsWith('"kit"')) cleanName = cleanName.replace('"kit"', "").trim();
+
+                const matchesTerm = cleanName.includes(term) || (p.sku && p.sku.toLowerCase().includes(term));
+                const matchesCat = window.activeCategory === 'TODAS' || cleanName.toUpperCase().startsWith(window.activeCategory);
+                
+                return matchesTerm && matchesCat;
+            });
+
+            if(!filtered.length) { grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-10">Nenhum produto encontrado.</div>'; return; }
             grid.innerHTML = filtered.map(prod => renderCard(prod, prod.id, 0, 'catalogo')).join('');
         }
 
-        // Render Card (Agora com clique na imagem/título)
+        // RENDER CARD
         function renderCard(produto, idRef, qtd, mode) {
-            const imgUrl = getImgUrl(produto?.imagem);
+            let img = produto?.imagem;
+            if(img && !img.startsWith('http')) img = `${API_URL}/assets/${img}`;
+            if(!img) img = 'https://placehold.co/400x300/1A0505/8B0000?text=Sem+Imagem';
             
-            let buttons = '';
-            if (mode === 'estoque') {
-                buttons = `
-                    <div class="flex gap-2 mt-3">
-                        <button onclick="event.stopPropagation(); window.prefill('${idRef}', '${produto?.nome}', ${qtd}, 'pedir')" class="flex-1 bg-white/10 hover:bg-brand-wine py-2 rounded text-xs text-white transition uppercase tracking-wide font-bold">Enviar</button>
-                        <button onclick="event.stopPropagation(); window.prefill('${produto.id}', '${produto?.nome}', 0, 'repor_catalogo')" class="flex-1 bg-white/5 hover:bg-green-900/50 border border-white/10 py-2 rounded text-xs text-green-400 hover:text-white transition uppercase tracking-wide font-bold">Repor</button>
-                    </div>`;
-            } else {
-                buttons = `
-                    <button onclick="event.stopPropagation(); window.prefill('${produto.id}', '${produto?.nome}', 0, 'repor_catalogo')" class="mt-3 w-full bg-green-900/30 border border-green-800 hover:bg-green-700 text-green-400 hover:text-white py-2 rounded text-xs transition uppercase tracking-wide font-bold flex items-center justify-center gap-2"><i class="ph ph-currency-dollar"></i> Orçar</button>`;
-            }
+            const isOut = mode === 'estoque' && qtd <= 0;
+            const cardClass = isOut ? 'grayscale-card' : '';
+            const btnEnvio = isOut 
+                ? `<button class="flex-1 bg-gray-800 text-gray-500 py-2 rounded text-xs font-bold cursor-not-allowed">Sem Estoque</button>`
+                : `<button onclick="event.stopPropagation(); window.prefill('${idRef}', '${produto?.nome}', ${qtd}, 'pedir')" class="flex-1 bg-white/10 hover:bg-brand-wine py-2 rounded text-xs text-white transition uppercase tracking-wide font-bold">Enviar</button>`;
 
-            // Adicionei onclick no card para abrir detalhes (passando o ID correto dependendo do modo)
+            let buttons = mode === 'estoque' 
+                ? `<div class="flex gap-2 mt-3">${btnEnvio}<button onclick="event.stopPropagation(); window.prefill('${produto.id}', '${produto?.nome}', 0, 'repor_catalogo')" class="flex-1 bg-white/5 hover:bg-green-900/50 border border-white/10 py-2 rounded text-xs text-green-400 hover:text-white transition uppercase tracking-wide font-bold">Repor</button></div>`
+                : `<button onclick="event.stopPropagation(); window.prefill('${produto.id}', '${produto?.nome}', 0, 'repor_catalogo')" class="mt-3 w-full bg-green-900/30 border border-green-800 hover:bg-green-700 text-green-400 hover:text-white py-2 rounded text-xs transition uppercase tracking-wide font-bold flex items-center justify-center gap-2"><i class="ph ph-currency-dollar"></i> Orçar</button>`;
+
             const clickId = mode === 'estoque' ? idRef : produto.id;
             
-            return `
-            <div class="glass-panel rounded-xl overflow-hidden group relative cursor-pointer transition-transform hover:-translate-y-1 hover:shadow-brand-wine/20" onclick="window.openDetails('${clickId}', '${mode}')">
-                <div class="h-48 bg-black relative"><img src="${imgUrl}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition"></div>
-                <div class="p-5">
-                    <h3 class="font-bold text-white truncate" title="${produto?.nome}">${produto?.nome}</h3>
-                    ${mode === 'estoque' ? `<p class="text-brand-wine text-2xl font-bold mt-1">${qtd} <span class="text-xs text-gray-500">unid.</span></p>` : `<p class="text-gray-500 text-xs mt-1 uppercase tracking-wide">${produto?.sku || 'Novo'}</p>`}
-                    ${buttons}
-                </div>
-            </div>`;
+            let extraInfo = '';
+            if(mode === 'estoque') {
+                extraInfo = `<p class="text-brand-wine text-2xl font-bold mt-1">${qtd} <span class="text-xs text-gray-500">unid.</span></p>`;
+            } else {
+                extraInfo = `<p class="text-gray-500 text-xs mt-1 uppercase tracking-wide">${produto?.sku || ''}</p>`;
+            }
+
+            return `<div class="glass-panel rounded-xl overflow-hidden group relative cursor-pointer transition-transform hover:-translate-y-1 ${cardClass}" onclick="window.openDetails('${clickId}', '${mode}')">
+                <div class="h-48 bg-black relative"><img src="${img}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition"></div>
+                <div class="p-5"><h3 class="font-bold text-white truncate" title="${produto?.nome}">${produto?.nome}</h3>
+                ${extraInfo}
+                ${buttons}</div></div>`;
+        }
+
+        window.openDetails = function(id, type) {
+            let item, produto;
+            if (type === 'estoque') { item = window.inventoryItems.find(i => i.id === id); if (!item) return; produto = item.produto_id; } 
+            else { produto = window.allCatalogProducts.find(p => p.id === id); if (!produto) return; }
+
+            let img = produto?.imagem;
+            if(img && !img.startsWith('http')) img = `${API_URL}/assets/${img}`;
+            if(!img) img = 'https://placehold.co/600x400/1A0505/8B0000?text=Sem+Imagem';
+
+            document.getElementById('modal-img').src = img;
+            document.getElementById('modal-title').textContent = produto?.nome || 'Produto';
+            document.getElementById('modal-sku').textContent = `SKU: ${produto?.sku || 'N/A'}`;
+            document.getElementById('modal-desc').textContent = produto?.descricao || 'Sem descrição.';
+            
+            const infoDiv = document.getElementById('modal-info-extra');
+            const actionsDiv = document.getElementById('modal-actions');
+            
+            if (type === 'estoque') {
+                const isOut = item.quantidade_disponivel <= 0;
+                infoDiv.innerHTML = `<div class="bg-white/5 p-3 rounded-lg"><p class="text-xs text-gray-500 uppercase">Estoque</p><p class="text-xl font-bold ${isOut ? 'text-red-500' : 'text-brand-wine'}">${item.quantidade_disponivel}</p></div><div class="bg-white/5 p-3 rounded-lg"><p class="text-xs text-gray-500 uppercase">Local</p><p class="text-sm font-bold text-white">${item.localizacao_fisica || 'Geral'}</p></div>`;
+                actionsDiv.innerHTML = `<div class="flex gap-3">${!isOut ? `<button onclick="closeDetails(); window.prefill('${item.id}', '${produto?.nome}', ${item.quantidade_disponivel}, 'pedir')" class="flex-1 bg-brand-wine hover:bg-brand-hover text-white py-3 rounded-lg font-bold shadow-lg transition">ENVIAR</button>` : ''}<button onclick="closeDetails(); window.prefill('${produto.id}', '${produto?.nome}', 0, 'repor_catalogo')" class="flex-1 bg-white/10 hover:bg-green-900/30 text-green-400 border border-green-900/50 py-3 rounded-lg font-bold transition">REPOR</button></div>`;
+            } else {
+                infoDiv.innerHTML = `<div class="bg-white/5 p-3 rounded-lg w-full"><p class="text-xs text-gray-500 uppercase">Disponibilidade</p><p class="text-sm font-bold text-green-400">Sob Encomenda</p></div>`;
+                actionsDiv.innerHTML = `<button onclick="closeDetails(); window.prefill('${produto.id}', '${produto?.nome}', 0, 'repor_catalogo')" class="w-full bg-green-700 hover:bg-green-600 text-white py-3 rounded-lg font-bold shadow-lg flex items-center justify-center gap-2">ORÇAR</button>`;
+            }
+            document.getElementById('product-details-modal').classList.remove('hidden');
+            document.getElementById('product-details-modal').classList.add('flex');
         }
 
         window.prefill = function(id, name, max, type) {
-            if(type === 'repor_catalogo') {
-                window.router('repor');
-                setTimeout(() => { const sel = document.getElementById('repor-produto'); sel.value = id; sel.classList.add('ring-2', 'ring-green-500'); setTimeout(() => sel.classList.remove('ring-2', 'ring-green-500'), 1000); }, 500);
-                return;
-            }
-            window.router(type);
-            setTimeout(() => { const sel = document.getElementById(type === 'pedir' ? 'pedido-produto' : 'repor-produto'); sel.value = id; if(type === 'pedir') sel.setAttribute('data-max', max); sel.classList.add('ring-2', 'ring-brand-wine'); setTimeout(() => sel.classList.remove('ring-2', 'ring-brand-wine'), 1000); }, 500);
+            if(type === 'repor_catalogo') { window.router('repor'); setTimeout(() => { const sel = document.getElementById('repor-produto'); sel.value = id; }, 500); return; }
+            window.router(type); setTimeout(() => { const sel = document.getElementById(type === 'pedir' ? 'pedido-produto' : 'repor-produto'); sel.value = id; if(type === 'pedir') sel.setAttribute('data-max', max); }, 500);
         }
 
-        // LOADS
+        // LOADS & SUBMITS
         async function loadDependencies() {
-            try {
-                const [ends, prods] = await Promise.all([ client.request(readItems('enderecos_entrega')), client.request(readItems('estoque_cliente', { fields: ['*', 'produto_id.nome'] })) ]);
-                document.getElementById('pedido-endereco').innerHTML = ends.map(e => `<option value="${e.id}" class="bg-black">${e.apelido_local || e.logradouro}</option>`).join('');
-                document.getElementById('pedido-produto').innerHTML = prods.map(p => `<option value="${p.id}" data-qty="${p.quantidade_disponivel}" class="bg-black">${p.produto_id?.nome} (Disp: ${p.quantidade_disponivel})</option>`).join('');
-            } catch(e) { console.error(e); }
+            try { const [ends, prods] = await Promise.all([ client.request(readItems('enderecos_entrega')), client.request(readItems('estoque_cliente', { fields: ['*', 'produto_id.nome'] })) ]); 
+            document.getElementById('pedido-endereco').innerHTML = ends.map(e => `<option value="${e.id}" class="bg-black">${e.apelido_local || e.logradouro}</option>`).join('');
+            document.getElementById('pedido-produto').innerHTML = prods.filter(p => p.quantidade_disponivel > 0).map(p => `<option value="${p.id}" data-qty="${p.quantidade_disponivel}" class="bg-black">${p.produto_id?.nome} (Disp: ${p.quantidade_disponivel})</option>`).join(''); } catch(e) { console.error(e); }
         }
-        async function loadRepositionDependencies() {
-            try { const prods = await client.request(readItems('produtos_catalogo', { sort: ['nome'] })); document.getElementById('repor-produto').innerHTML = prods.map(p => `<option value="${p.id}" class="bg-black">${p.nome}</option>`).join(''); } catch(e) { console.error(e); }
-        }
+        async function loadRepositionDependencies() { try { const prods = await client.request(readItems('produtos_catalogo', { sort: ['nome'] })); document.getElementById('repor-produto').innerHTML = prods.map(p => `<option value="${p.id}" class="bg-black">${p.nome}</option>`).join(''); } catch(e) { console.error(e); } }
 
-        // SUBMITS
         document.getElementById('form-pedido').addEventListener('submit', async (e) => {
-            e.preventDefault(); const btn = e.target.querySelector('button'); btn.disabled = true; btn.innerHTML = 'Processando...';
+            e.preventDefault(); const btn = e.target.querySelector('button'); btn.disabled = true;
             try {
                 const estoqueId = document.getElementById('pedido-produto').value;
-                const qtdSolicitada = parseInt(document.getElementById('pedido-qtd').value);
-                const estoqueItem = await client.request(readItems('estoque_cliente', { filter: { id: { _eq: estoqueId } }, fields: ['id', 'quantidade_disponivel'] }));
-                const qtdAtual = estoqueItem[0].quantidade_disponivel;
-                if(qtdSolicitada > qtdAtual) throw new Error(`Estoque insuficiente! Disp: ${qtdAtual}`);
-                await client.request(updateItem('estoque_cliente', estoqueId, { quantidade_disponivel: qtdAtual - qtdSolicitada }));
+                const qtd = parseInt(document.getElementById('pedido-qtd').value);
+                const item = await client.request(readItems('estoque_cliente', { filter: { id: { _eq: estoqueId } }, fields: ['id', 'quantidade_disponivel'] }));
+                if(qtd > item[0].quantidade_disponivel) throw new Error('Estoque insuficiente.');
+                await client.request(updateItem('estoque_cliente', estoqueId, { quantidade_disponivel: item[0].quantidade_disponivel - qtd }));
                 const isManual = document.getElementById('toggle-endereco').checked;
-                await client.request(createItem('solicitacoes', { tipo: 'SOLICITACAO_ENVIO', status: 'pendente', quantidade: qtdSolicitada, observacoes: `Saída de Estoque. Data: ${document.getElementById('pedido-data').value}`, endereco_id: isManual ? null : document.getElementById('pedido-endereco').value, endereco_manual: isManual ? document.getElementById('pedido-endereco-manual').value : null, organization_id: window.currentOrgId }));
-                alert('Envio Solicitado! Estoque atualizado.'); window.router('estoque');
-            } catch (e) { alert('Erro: ' + e.message); } finally { btn.disabled = false; btn.innerHTML = 'Confirmar Envio'; }
+                await client.request(createItem('solicitacoes', { tipo: 'SOLICITACAO_ENVIO', status: 'pendente', quantidade: qtd, observacoes: `Saída. Data: ${document.getElementById('pedido-data').value}`, endereco_id: isManual ? null : document.getElementById('pedido-endereco').value, endereco_manual: isManual ? document.getElementById('pedido-endereco-manual').value : null, organization_id: window.currentOrgId }));
+                notify('Envio solicitado com sucesso!'); window.router('estoque');
+            } catch (e) { notify(e.message, 'error'); } finally { btn.disabled = false; }
         });
 
         document.getElementById('form-repor').addEventListener('submit', async (e) => {
-            e.preventDefault(); const btn = e.target.querySelector('button'); btn.disabled = true; btn.innerHTML = 'Enviando...';
+            e.preventDefault(); const btn = e.target.querySelector('button'); btn.disabled = true;
             try {
-                const manter = document.getElementById('repor-manter').checked;
-                const obs = manter ? "Manter modelo/arte atual." : "ALTERAÇÃO: " + document.getElementById('repor-obs-texto').value;
+                const obs = document.getElementById('repor-manter').checked ? "Manter modelo." : "ALTERAÇÃO: " + document.getElementById('repor-obs-texto').value;
                 const sel = document.getElementById('repor-produto'); const prodName = sel.options[sel.selectedIndex].text;
-                await client.request(createItem('solicitacoes', { tipo: 'SOLICITACAO_COMPRA', status: 'pendente', quantidade: parseInt(document.getElementById('repor-qtd').value), observacoes: `${obs} | Data Ideal: ${document.getElementById('repor-data').value}`, organization_id: window.currentOrgId }));
-                alert('Solicitação enviada! Aguarde o orçamento.'); window.router('pedidos');
-            } catch (e) { alert('Erro: ' + e.message); } finally { btn.disabled = false; btn.innerHTML = 'Solicitar Compra'; }
+                await client.request(createItem('solicitacoes', { tipo: 'SOLICITACAO_COMPRA', status: 'pendente', quantidade: parseInt(document.getElementById('repor-qtd').value), observacoes: `${obs} | Data: ${document.getElementById('repor-data').value}`, organization_id: window.currentOrgId }));
+                notify('Orçamento solicitado!'); window.router('pedidos');
+            } catch (e) { notify(e.message, 'error'); } finally { btn.disabled = false; }
+        });
+        
+        document.getElementById('form-password').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPass = document.getElementById('new-password').value;
+            try {
+                await client.request(updateMe({ password: newPass }));
+                notify('Senha atualizada!'); document.getElementById('settings-modal').classList.add('hidden');
+            } catch (e) { notify('Erro ao trocar senha.', 'error'); }
         });
 
-        // HISTORICO
         async function loadHistory() {
             const tbody = document.getElementById('history-table-body'); tbody.innerHTML = '<tr><td colspan="4" class="p-4">Carregando...</td></tr>';
             try {
-                const items = await client.request(readItems('solicitacoes', { sort: ['-data_criacao'], fields: ['id', 'status', 'data_criacao', 'quantidade', 'tipo', 'endereco_manual', 'endereco_id.apelido_local', 'valor_total', 'observacoes'] }));
+                const items = await client.request(readItems('solicitacoes', { sort: ['-data_criacao'], fields: ['id', 'status', 'data_criacao', 'quantidade', 'tipo', 'endereco_manual', 'endereco_id.apelido_local', 'valor_total'] }));
                 if(!items.length) { tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Vazio.</td></tr>'; return; }
                 tbody.innerHTML = items.map(i => {
                     const isCompra = i.tipo === 'SOLICITACAO_COMPRA';
                     const icon = isCompra ? '<i class="ph ph-shopping-cart text-green-400"></i>' : '<i class="ph ph-paper-plane-tilt text-brand-wine"></i>';
-                    const tipoTexto = isCompra ? 'Reposição' : 'Envio';
-                    let detalhes = isCompra ? (i.valor_total ? `<span class="text-green-400 font-bold">R$ ${i.valor_total}</span> <span class="text-xs text-gray-400">(Orçamento)</span>` : 'Aguardando Orçamento...') : (i.endereco_manual ? '📍 ' + i.endereco_manual : (i.endereco_id?.apelido_local || 'Endereço Cadastrado'));
-                    return `<tr class="border-b border-white/5 text-sm hover:bg-white/5 transition"><td class="p-4 flex items-center gap-2">${icon} <span class="font-bold">${tipoTexto}</span></td><td class="p-4 text-gray-400">${new Date(i.data_criacao).toLocaleDateString()}</td><td class="p-4 text-gray-300 truncate max-w-[200px]">${detalhes}</td><td class="p-4"><span class="bg-white/10 px-2 py-1 rounded text-xs text-white uppercase">${i.status}</span></td></tr>`;
+                    const tipo = isCompra ? 'Reposição' : 'Envio';
+                    const det = isCompra ? (i.valor_total ? `<span class="text-green-400 font-bold">R$ ${i.valor_total}</span>` : 'Aguardando Orçamento') : (i.endereco_manual || i.endereco_id?.apelido_local || 'Endereço');
+                    return `<tr class="border-b border-white/5 text-sm hover:bg-white/5"><td class="p-4 flex items-center gap-2">${icon} <span class="font-bold">${tipo}</span></td><td class="p-4 text-gray-400">${new Date(i.data_criacao).toLocaleDateString()}</td><td class="p-4 text-gray-300 truncate max-w-[200px]">${det}</td><td class="p-4"><span class="bg-white/10 px-2 py-1 rounded text-xs text-white uppercase">${i.status}</span></td></tr>`;
                 }).join('');
             } catch (e) { tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-red-500">Erro.</td></tr>'; }
         }
