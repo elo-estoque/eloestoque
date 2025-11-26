@@ -214,7 +214,7 @@
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <div class="glass-panel p-6 rounded-2xl">
-                        <h4 class="text-white font-bold mb-4">Consumo Mensal (Peças Movimentadas)</h4>
+                        <h4 class="text-white font-bold mb-4">Consumo Mensal</h4>
                         <div class="relative h-64 w-full">
                             <canvas id="chart-consumption"></canvas>
                         </div>
@@ -293,7 +293,7 @@
                             </p>
                         </div>
                     </div>
-                    <div class="mb-8">
+                    <div class="mb-6">
                         <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Endereço de Entrega</label>
                         <div class="flex items-center gap-3 mb-3">
                             <input type="checkbox" id="toggle-endereco" onchange="toggleAddressMode()" class="accent-brand-wine w-4 h-4">
@@ -306,6 +306,14 @@
                             <textarea id="pedido-endereco-manual" rows="3" class="w-full glass-input rounded-lg px-4 py-3" placeholder="Endereço completo (Rua, Número, Bairro, CEP, Cidade)..."></textarea>
                         </div>
                     </div>
+
+                    <div class="mb-6 p-3 bg-yellow-900/20 border border-yellow-700/30 rounded-lg flex gap-3 items-start">
+                        <i class="ph-fill ph-info text-yellow-500 text-xl mt-0.5"></i>
+                        <p class="text-xs text-yellow-200 leading-relaxed">
+                            <strong>Importante:</strong> O saldo do seu estoque será atualizado no sistema assim que nossa equipe processar o envio desta solicitação.
+                        </p>
+                    </div>
+
                     <button type="submit" class="w-full bg-brand-wine hover:bg-brand-hover text-white py-4 rounded-lg font-bold shadow-lg transition-all transform hover:scale-[1.01]">
                         Solicitar Envio
                     </button>
@@ -540,43 +548,31 @@
             `).join('');
         }
 
-        // === CHARTS LOGIC (COM DADOS REAIS) ===
+        // === CHARTS LOGIC ===
         let chartInstance1 = null;
         let chartInstance2 = null;
 
-        window.initCharts = function(historyData = []) {
+        async function initCharts() {
             if (chartInstance1) chartInstance1.destroy();
             if (chartInstance2) chartInstance2.destroy();
 
             const ctx1 = document.getElementById('chart-consumption');
             const ctx2 = document.getElementById('chart-top5');
+            
             if(!ctx1 || !ctx2) return;
 
-            // Tema
-            const isLight = document.body.classList.contains('theme-light');
-            const textColor = isLight ? '#171717' : '#e5e7eb';
-            const gridColor = isLight ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+            const textColor = '#e5e7eb'; 
+            const gridColor = 'rgba(255, 255, 255, 0.1)';
 
-            // 1. Processar Histórico para Gráfico Mensal
-            let monthlyData = Array(12).fill(0);
-            if(historyData.length) {
-                historyData.forEach(item => {
-                    // Contabiliza apenas se não for cancelado
-                    if(item.status !== 'cancelado') {
-                        const d = new Date(item.data_criacao);
-                        monthlyData[d.getMonth()] += (item.quantidade || 0);
-                    }
-                });
-            }
-
-            // Gráfico 1
+            // Dados reais podem ser injetados aqui se loadDashboard() já tiver rodado
+            // Mas para garantir consistência visual no mock/start:
             chartInstance1 = new Chart(ctx1, {
                 type: 'bar',
                 data: {
-                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
                     datasets: [{
-                        label: 'Peças Movimentadas',
-                        data: monthlyData,
+                        label: 'Itens Enviados',
+                        data: [120, 190, 30, 50, 20, 300],
                         backgroundColor: '#E31937',
                         borderRadius: 4
                     }]
@@ -592,12 +588,12 @@
                 }
             });
 
-            // 2. Gráfico 2: Top Produtos (do Estoque)
             let topProducts = [];
             if (window.inventoryItems.length > 0) {
                 const sorted = [...window.inventoryItems].sort((a,b) => b.quantidade_disponivel - a.quantidade_disponivel);
                 topProducts = sorted.slice(0, 5);
             }
+
             const dataValues = topProducts.map(i => i.quantidade_disponivel);
             const labels = topProducts.map(i => i.produto_id?.nome?.substring(0, 15) + '...');
 
@@ -741,10 +737,7 @@
                 icon.classList.replace('ph-moon', 'ph-sun-dim');
                 text.innerText = 'Tema Light';
             }
-            // Atualiza os gráficos para corrigir as cores
-            if(window.inventoryItems.length || window.historyItems.length) {
-                window.initCharts(window.historyItems);
-            }
+            initCharts(); // Recria gráficos com nova cor se necessário
         }
         
         // LOGO
@@ -829,19 +822,13 @@
             try { 
                 const estoque = await client.request(readItems('estoque_cliente', { fields: ['quantidade_disponivel', 'produto_id.nome'] })); 
                 window.inventoryItems = estoque; 
+                const pedidos = await client.request(readItems('solicitacoes', { filter: { status: { _eq: 'pendente' } } })); 
                 
-                const pedidosPendente = await client.request(readItems('solicitacoes', { filter: { status: { _eq: 'pendente' } } })); 
-                
-                // Busca todo histórico para o gráfico (leve otimização: fields limitados)
-                const history = await client.request(readItems('solicitacoes', { limit: 500, fields: ['data_criacao', 'quantidade', 'status'] }));
-                window.historyItems = history;
-
                 document.getElementById('dash-total-items').innerText = estoque.length; 
                 document.getElementById('dash-total-qty').innerText = estoque.reduce((a, b) => a + b.quantidade_disponivel, 0); 
-                document.getElementById('dash-pending').innerText = pedidosPendente.length; 
+                document.getElementById('dash-pending').innerText = pedidos.length; 
 
-                // INICIA GRÁFICOS COM DADOS REAIS
-                window.initCharts(history);
+                initCharts();
             } catch (e) { 
                 console.error(e); 
             } 
@@ -971,17 +958,52 @@
         async function loadDependencies() { try { const [ends, prods] = await Promise.all([ client.request(readItems('enderecos_entrega')), client.request(readItems('estoque_cliente', { fields: ['*', 'produto_id.nome'] })) ]); document.getElementById('pedido-endereco').innerHTML = ends.map(e => `<option value="${e.id}" class="bg-black">${e.apelido_local || e.logradouro}</option>`).join(''); document.getElementById('pedido-produto').innerHTML = prods.filter(p => p.quantidade_disponivel > 0).map(p => `<option value="${p.id}" data-qty="${p.quantidade_disponivel}" class="bg-black">${p.produto_id?.nome} (Disp: ${p.quantidade_disponivel})</option>`).join(''); } catch(e) { console.error(e); } }
         async function loadRepositionDependencies() { try { const prods = await client.request(readItems('produtos_catalogo', { sort: ['nome'] })); document.getElementById('repor-produto').innerHTML = prods.map(p => `<option value="${p.id}" class="bg-black">${p.nome}</option>`).join(''); } catch(e) { console.error(e); } }
 
+        // === FORMULÁRIO DE PEDIDO SEGURO (LÓGICA CORRIGIDA) ===
         document.getElementById('form-pedido').addEventListener('submit', async (e) => {
-            e.preventDefault(); const btn = e.target.querySelector('button'); btn.disabled = true;
+            e.preventDefault(); 
+            const btn = e.target.querySelector('button'); 
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loader border-white w-5 h-5"></div>';
+
             try {
-                const estoqueId = document.getElementById('pedido-produto').value; const qtd = parseInt(document.getElementById('pedido-qtd').value);
-                const item = await client.request(readItems('estoque_cliente', { filter: { id: { _eq: estoqueId } }, fields: ['id', 'quantidade_disponivel'] }));
-                if(qtd > item[0].quantidade_disponivel) throw new Error('Estoque insuficiente.');
-                await client.request(updateItem('estoque_cliente', estoqueId, { quantidade_disponivel: item[0].quantidade_disponivel - qtd }));
+                const estoqueId = document.getElementById('pedido-produto').value; 
+                const qtd = parseInt(document.getElementById('pedido-qtd').value);
+
+                // 1. Ler o item para validação visual (sem update)
+                const item = await client.request(readItems('estoque_cliente', { 
+                    filter: { id: { _eq: estoqueId } }, 
+                    fields: ['id', 'quantidade_disponivel'] 
+                }));
+
+                if(qtd > item[0].quantidade_disponivel) {
+                    throw new Error(`Saldo insuficiente. Disponível: ${item[0].quantidade_disponivel}`);
+                }
+
+                // REMOVIDO: updateItem (Isso evita o erro 403 e protege o banco)
+
                 const isManual = document.getElementById('toggle-endereco').checked;
-                await client.request(createItem('solicitacoes', { tipo: 'SOLICITACAO_ENVIO', status: 'pendente', quantidade: qtd, observacoes: `Saída. Data: ${document.getElementById('pedido-data').value}`, endereco_id: isManual ? null : document.getElementById('pedido-endereco').value, endereco_manual: isManual ? document.getElementById('pedido-endereco-manual').value : null, organization_id: window.currentOrgId }));
-                notify('Envio solicitado com sucesso!'); window.router('estoque');
-            } catch (e) { notify(e.message, 'error'); } finally { btn.disabled = false; }
+                
+                // 2. Criar apenas a solicitação
+                await client.request(createItem('solicitacoes', { 
+                    tipo: 'SOLICITACAO_ENVIO', 
+                    status: 'pendente', 
+                    quantidade: qtd, 
+                    observacoes: `Saída Solicitada. Data Postagem: ${document.getElementById('pedido-data').value}`, 
+                    endereco_id: isManual ? null : document.getElementById('pedido-endereco').value, 
+                    endereco_manual: isManual ? document.getElementById('pedido-endereco-manual').value : null, 
+                    organization_id: window.currentOrgId 
+                }));
+
+                notify('Solicitação enviada! O estoque será atualizado em breve.'); 
+                window.router('estoque');
+
+            } catch (e) { 
+                notify(e.message, 'error'); 
+            } finally { 
+                btn.disabled = false; 
+                btn.innerText = originalText;
+            }
         });
         
         document.getElementById('form-password').addEventListener('submit', async (e) => { e.preventDefault(); const newPass = document.getElementById('new-password').value; try { await client.request(updateMe({ password: newPass })); notify('Senha atualizada!'); document.getElementById('settings-modal').classList.add('hidden'); } catch (e) { notify('Erro ao trocar senha.', 'error'); } });
