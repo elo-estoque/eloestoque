@@ -132,7 +132,7 @@
             </nav>
             <div class="p-6 border-t border-white/5 space-y-2">
                 <button onclick="window.openSettings()" class="flex items-center gap-2 text-gray-400 hover:text-white text-sm font-medium w-full py-2"><i class="ph ph-gear"></i> Minha Conta</button>
-                <button onclick="window.logout()" class="flex items-center gap-2 text-gray-500 hover:text-red-400 text-sm font-medium w-full py-2"><i class="ph ph-sign-out"></i> Sair</button>
+                <button onclick="window.logout()" class="flex items-center gap-2 text-gray-500 hover:text-red-400 text-sm font-medium w-full py-2 cursor-pointer"><i class="ph ph-sign-out"></i> Sair</button>
             </div>
         </aside>
 
@@ -496,13 +496,19 @@
         window.openSettings = function() { document.getElementById('settings-modal').classList.remove('hidden'); const saved = localStorage.getItem('customClientLogo'); if(saved) { document.getElementById('preview-logo').src = saved; document.getElementById('preview-logo').classList.remove('hidden'); document.getElementById('preview-icon').classList.add('hidden'); } }
         window.closeDetails = function() { document.getElementById('product-details-modal').classList.add('hidden'); document.getElementById('product-details-modal').classList.remove('flex'); }
 
+        // LOGOUT CORRIGIDO (COM TRY/CATCH)
+        window.logout = async () => {
+            try { await client.logout(); } catch (e) { console.log('Logout force'); }
+            location.reload();
+        }
+
         // LOGIN & INIT
         document.getElementById('form-login').addEventListener('submit', async (e) => {
             e.preventDefault(); const btn = e.target.querySelector('button'); btn.disabled = true; btn.innerHTML = '...';
             try { await client.login(document.getElementById('email').value, document.getElementById('password').value); const user = await client.request(readMe({ fields: ['organization_id'] })); window.currentOrgId = user.organization_id; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-screen').classList.remove('hidden'); window.router('dashboard'); window.updateLogoDisplay(); window.checkTutorial(); } catch (err) { notify('Erro no login: ' + err.message, 'error'); btn.disabled = false; btn.innerHTML = 'ACESSAR SISTEMA'; }
         });
         
-        // --- ALTERAÇÃO AQUI: REGRA DE DATAS ---
+        // DATAS
         window.setMinDates = function() {
             // 1. Data atual (para envios imediatos)
             const today = new Date();
@@ -534,7 +540,6 @@
             if(view === 'pedidos') loadHistory();
             if(view === 'catalogo') loadCatalog();
         }
-        window.logout = async () => { await client.logout(); location.reload(); }
 
         // CORE FUNCTIONS
         async function loadDashboard() { try { const estoque = await client.request(readItems('estoque_cliente', { fields: ['quantidade_disponivel'] })); const pedidos = await client.request(readItems('solicitacoes', { filter: { status: { _eq: 'pendente' } } })); document.getElementById('dash-total-items').innerText = estoque.length; document.getElementById('dash-total-qty').innerText = estoque.reduce((a, b) => a + b.quantidade_disponivel, 0); document.getElementById('dash-pending').innerText = pedidos.length; } catch (e) { console.error(e); } }
