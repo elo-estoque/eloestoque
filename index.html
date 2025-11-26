@@ -74,6 +74,49 @@
         /* Steps do Tutorial */
         .step-dot { height: 8px; width: 8px; border-radius: 50%; background-color: rgba(255,255,255,0.2); transition: all 0.3s; }
         .step-dot.active { background-color: #E31937; width: 24px; border-radius: 4px; }
+
+        /* === LIGHT THEME OVERRIDE (FIXED LEGIBILITY) === */
+        body.theme-light { 
+            background-color: #f4f4f4 !important;
+            color: #171717 !important; /* Texto principal escuro */
+        }
+        body.theme-light .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        body.theme-light .glass-input {
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            color: #171717;
+        }
+        /* Inverte Cores de Fundo e Texto (Garantindo Legibilidade) */
+        body.theme-light .bg-black { background-color: #f4f4f4 !important; }
+        body.theme-light .text-white { color: #171717 !important; } /* Texto branco vira preto */
+        body.theme-light .text-gray-200 { color: #171717 !important; }
+        body.theme-light .text-gray-300 { color: #333 !important; }
+        body.theme-light .text-gray-400 { color: #555 !important; }
+        body.theme-light .text-gray-500 { color: #888 !important; }
+        /* Tabelas e Bordas */
+        body.theme-light .bg-white\/5 { background-color: rgba(0, 0, 0, 0.05) !important; }
+        body.theme-light .border-white\/5,
+        body.theme-light .divide-y.divide-white\/5 { border-color: rgba(0, 0, 0, 0.1) !important; }
+        body.theme-light .hover\:bg-white\/5:hover { background-color: rgba(0, 0, 0, 0.08) !important; }
+        /* Garante cores de marca */
+        body.theme-light .text-brand-wine, 
+        body.theme-light .ph-fill.ph-cube.text-brand-wine { color: #E31937 !important; }
+        body.theme-light .text-green-400 { color: #22c55e !important; }
+        body.theme-light .text-red-500 { color: #ef4444 !important; }
+        body.theme-light #btn-finalize-quote { color: white !important; }
+        body.theme-light .bg-brand-wine { background-color: #E31937 !important; }
+
+        /* === CORREÇÃO DOS TÍTULOS NO MODO LIGHT === */
+        body.theme-light .section-title {
+            color: #ffffff !important; /* Força Branco mesmo no tema Light */
+        }
+        
     </style>
 </head>
 <body class="h-screen flex overflow-hidden text-gray-200 selection:bg-brand-wine selection:text-white">
@@ -115,8 +158,7 @@
                 <img id="sidebar-logo" src="logo.png" class="h-12 w-auto max-w-full object-contain drop-shadow-lg transition-transform hover:scale-105">
             </div>
 
-            <nav class="flex-1 px-4 py-8 space-y-2" id="sidebar-nav">
-                <p class="px-4 text-[10px] uppercase text-gray-500 font-bold tracking-widest mb-2">Principal</p>
+            <nav class="flex-1 px-4 py-2 space-y-2" id="sidebar-nav"> <p class="px-4 text-[10px] uppercase text-gray-500 font-bold tracking-widest mb-2">Principal</p>
                 <button id="nav-dashboard" onclick="window.router('dashboard')" class="w-full flex items-center gap-3 px-4 py-4 text-white bg-white/5 border border-white/10 rounded-xl hover:bg-brand-wine hover:border-brand-wine transition-all group">
                     <i class="ph ph-squares-four text-xl text-brand-wine group-hover:text-white"></i><span class="font-medium">Visão Geral</span>
                 </button>
@@ -130,8 +172,8 @@
                 <button id="nav-repor" onclick="window.router('repor')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-shopping-cart text-xl group-hover:text-green-400"></i><span class="font-medium">Orçar/Repor</span></button>
                 <button id="nav-catalogo" onclick="window.router('catalogo')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-storefront text-xl group-hover:text-blue-400"></i><span class="font-medium">Catálogo</span></button>
             </nav>
-            <div class="p-6 border-t border-white/5 space-y-2">
-                <button onclick="window.openSettings()" class="flex items-center gap-2 text-gray-400 hover:text-white text-sm font-medium w-full py-2"><i class="ph ph-gear"></i> Minha Conta</button>
+            <div class="p-4 border-t border-white/5 space-y-2"> <button id="theme-toggle-btn" onclick="window.toggleTheme()" class="flex items-center gap-2 text-gray-400 hover:text-white text-sm font-medium w-full py-2 cursor-pointer"><i class="ph ph-sun-dim"></i> <span id="theme-text">Tema Light</span></button>
+                <button onclick="window.openSettings()" class="flex items-center gap-2 text-gray-400 hover:text-white text-sm font-medium w-full py-2 cursor-pointer"><i class="ph ph-gear"></i> Minha Conta</button>
                 <button onclick="window.logout()" class="flex items-center gap-2 text-gray-500 hover:text-red-400 text-sm font-medium w-full py-2 cursor-pointer"><i class="ph ph-sign-out"></i> Sair</button>
             </div>
         </aside>
@@ -139,7 +181,7 @@
         <main class="flex-1 p-6 md:p-10 overflow-y-auto z-10 relative">
             <div id="view-dashboard" class="view-section animate-[fadeIn_0.3s_ease-out]">
                 <header class="mb-8">
-                    <h2 class="text-3xl font-bold text-white tracking-tight">Visão Geral</h2>
+                    <h2 class="text-3xl font-bold text-white tracking-tight section-title">Visão Geral</h2>
                     <p class="text-gray-400 text-sm mt-1">Resumo da sua conta e movimentações</p>
                 </header>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -156,7 +198,7 @@
                         <p class="text-3xl font-bold text-white mt-2" id="dash-pending">-</p>
                     </div>
                 </div>
-                <h3 class="text-xl font-bold text-white mb-4">Acesso Rápido</h3>
+                <h3 class="text-xl font-bold text-white mb-4 section-title">Acesso Rápido</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <button onclick="window.router('pedir')" class="glass-panel p-6 rounded-xl text-left hover:bg-white/5 transition group">
                         <i class="ph ph-paper-plane-tilt text-2xl text-brand-wine mb-3 group-hover:scale-110 transition-transform inline-block"></i>
@@ -172,14 +214,21 @@
             </div>
 
             <div id="view-estoque" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
-                <header class="flex justify-between items-end mb-8"><div><h2 class="text-3xl font-bold text-white tracking-tight">Meu Estoque</h2></div></header>
+                <header class="flex justify-between items-end mb-8">
+                    <div>
+                        <h2 class="text-3xl font-bold text-white tracking-tight section-title">Meu Estoque</h2>
+                    </div>
+                </header>
                 <div id="inventory-grid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">Carregando...</div>
             </div>
             
             <div id="view-catalogo" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
                 <header class="mb-8">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
-                        <div><h2 class="text-3xl font-bold text-white tracking-tight">Catálogo de Produtos</h2><p class="text-gray-400 text-sm mt-1">Explore e solicite orçamentos</p></div>
+                        <div>
+                            <h2 class="text-3xl font-bold text-white tracking-tight section-title">Catálogo de Produtos</h2>
+                            <p class="text-gray-400 text-sm mt-1">Explore e solicite orçamentos</p>
+                        </div>
                         <div class="relative w-full md:w-64"><input type="text" id="catalogo-search" placeholder="Buscar produto..." onkeyup="window.filterCatalog()" class="w-full glass-input rounded-lg pl-10 pr-4 py-2 text-sm"><i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-gray-400"></i></div>
                     </div>
                     <div id="catalog-categories" class="flex flex-wrap gap-2 overflow-x-auto pb-2 scrollbar-hide"></div>
@@ -188,7 +237,7 @@
             </div>
 
             <div id="view-pedir" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
-                <h2 class="text-3xl font-bold text-white mb-2">Solicitar Envio</h2>
+                <h2 class="text-3xl font-bold text-white mb-2 section-title">Solicitar Envio</h2>
                 <form id="form-pedido" class="glass-panel p-8 rounded-2xl max-w-3xl">
                     <div class="mb-6">
                         <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Produto</label>
@@ -229,7 +278,7 @@
             </div>
 
             <div id="view-repor" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
-                <h2 class="text-3xl font-bold text-white mb-2">Orçamento / Reposição</h2>
+                <h2 class="text-3xl font-bold text-white mb-2 section-title">Orçamento / Reposição</h2>
                 <div class="flex flex-col lg:flex-row gap-6">
                     <div class="w-full lg:w-1/2">
                         <div class="glass-panel p-6 rounded-2xl border border-green-900/30">
@@ -283,7 +332,7 @@
             </div>
 
             <div id="view-pedidos" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
-                <h2 class="text-3xl font-bold text-white mb-8">Histórico</h2>
+                <h2 class="text-3xl font-bold text-white mb-8 section-title">Histórico</h2>
                 <div class="glass-panel rounded-2xl overflow-hidden">
                     <table class="w-full text-left text-gray-300"><thead class="bg-white/5 text-gray-400 uppercase text-xs"><tr><th class="p-5">Tipo</th><th class="p-5">Data</th><th class="p-5">Detalhes</th><th class="p-5">Status</th></tr></thead><tbody id="history-table-body" class="divide-y divide-white/5"></tbody></table>
                 </div>
@@ -471,11 +520,30 @@
         window.nextStep = function() { if (currentStep < tutorialSteps.length - 1) window.renderStep(currentStep + 1); else window.closeTutorial(); }
         window.closeTutorial = function() { document.getElementById('tutorial-modal').classList.add('hidden'); document.getElementById('tutorial-modal').classList.remove('flex'); localStorage.setItem('tutorial_completed_v1', 'true'); }
 
+        // TEMA LIGHT/DARK
+        window.toggleTheme = function() {
+            const body = document.body;
+            const isLight = body.classList.toggle('theme-light');
+            
+            // Salva o estado no localStorage
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            
+            // Atualiza texto e ícone do botão
+            const icon = document.querySelector('#theme-toggle-btn i');
+            const text = document.getElementById('theme-text');
+            if (isLight) {
+                icon.classList.replace('ph-sun-dim', 'ph-moon');
+                text.innerText = 'Tema Dark';
+            } else {
+                icon.classList.replace('ph-moon', 'ph-sun-dim');
+                text.innerText = 'Tema Light';
+            }
+        }
+        
         // LOGO
         window.handleLogoUpload = function(input) { if (input.files && input.files[0]) { const reader = new FileReader(); reader.onload = function(e) { document.getElementById('preview-logo').src = e.target.result; document.getElementById('preview-logo').classList.remove('hidden'); document.getElementById('preview-icon').classList.add('hidden'); }; reader.readAsDataURL(input.files[0]); } }
         window.saveLogo = function() { const src = document.getElementById('preview-logo').src; if(src && src.includes('data:image')) { localStorage.setItem('customClientLogo', src); window.updateLogoDisplay(); notify('Logo da empresa atualizado!'); } else { notify('Escolha uma imagem primeiro.', 'error'); } }
         window.updateLogoDisplay = function() { const saved = localStorage.getItem('customClientLogo'); if(saved) document.getElementById('sidebar-logo').src = saved; }
-        window.addEventListener('load', window.updateLogoDisplay);
 
         // FEEDBACK
         function notify(msg, type = 'success') { Toastify({ text: msg, duration: 3000, gravity: "top", position: "right", style: { background: type === 'success' ? "#10B981" : "#EF4444", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.5)" } }).showToast(); }
@@ -510,22 +578,10 @@
         
         // DATAS
         window.setMinDates = function() {
-            // 1. Data atual (para envios imediatos)
-            const today = new Date();
-            const todayStr = today.toISOString().split('T')[0];
-
-            // 2. Data para orçamento (Daqui a 7 dias)
-            const nextWeek = new Date();
-            nextWeek.setDate(nextWeek.getDate() + 7); // Adiciona 7 dias
-            const nextWeekStr = nextWeek.toISOString().split('T')[0];
-
-            // Aplica no Pedido (Envio) - HOJE
-            const elPedido = document.getElementById('pedido-data');
-            if(elPedido) elPedido.min = todayStr;
-
-            // Aplica no Orçamento (Repor) - DAQUI A 7 DIAS
-            const elRepor = document.getElementById('repor-data');
-            if(elRepor) elRepor.min = nextWeekStr;
+            const today = new Date(); const todayStr = today.toISOString().split('T')[0];
+            const nextWeek = new Date(); nextWeek.setDate(nextWeek.getDate() + 7); const nextWeekStr = nextWeek.toISOString().split('T')[0];
+            const elPedido = document.getElementById('pedido-data'); if(elPedido) elPedido.min = todayStr;
+            const elRepor = document.getElementById('repor-data'); if(elRepor) elRepor.min = nextWeekStr;
         }
 
         // ROUTER
@@ -536,10 +592,28 @@
             if(view === 'dashboard') loadDashboard();
             if(view === 'estoque') loadInventory();
             if(view === 'pedir') { loadDependencies(); setTimeout(window.setMinDates, 100); }
-            if(view === 'repor') { loadRepositionDependencies(); setTimeout(window.setMinDates, 100); }
+            if(view === 'repor') { loadRepositionDependencies(); setTimeout(window.setMinDates, 100); window.renderQuoteCart(); }
             if(view === 'pedidos') loadHistory();
             if(view === 'catalogo') loadCatalog();
         }
+
+        // LOAD THEME ON START
+        window.addEventListener('load', function() {
+            window.updateLogoDisplay();
+            const savedTheme = localStorage.getItem('theme');
+            const icon = document.querySelector('#theme-toggle-btn i');
+            const text = document.getElementById('theme-text');
+
+            if (savedTheme === 'light') {
+                document.body.classList.add('theme-light');
+                icon.classList.replace('ph-sun-dim', 'ph-moon');
+                text.innerText = 'Tema Dark';
+            } else {
+                icon.classList.replace('ph-moon', 'ph-sun-dim');
+                text.innerText = 'Tema Light';
+            }
+        });
+
 
         // CORE FUNCTIONS
         async function loadDashboard() { try { const estoque = await client.request(readItems('estoque_cliente', { fields: ['quantidade_disponivel'] })); const pedidos = await client.request(readItems('solicitacoes', { filter: { status: { _eq: 'pendente' } } })); document.getElementById('dash-total-items').innerText = estoque.length; document.getElementById('dash-total-qty').innerText = estoque.reduce((a, b) => a + b.quantidade_disponivel, 0); document.getElementById('dash-pending').innerText = pedidos.length; } catch (e) { console.error(e); } }
