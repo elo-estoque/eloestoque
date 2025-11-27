@@ -197,6 +197,19 @@
                     <h2 class="text-3xl font-bold text-white tracking-tight section-title">Visão Geral</h2>
                     <p class="text-gray-400 text-sm mt-1">Resumo da sua conta e movimentações</p>
                 </header>
+                
+                <div id="manager-approvals" class="hidden mb-8">
+                    <div class="glass-panel p-6 rounded-2xl border-l-4 border-yellow-500">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-bold text-white flex items-center gap-2"><i class="ph-fill ph-stamp text-yellow-500"></i> Aprovações Pendentes</h3>
+                            <button onclick="window.loadApprovals()" class="text-sm text-brand-wine hover:underline">Atualizar</button>
+                        </div>
+                        <div id="approvals-list" class="space-y-3">
+                            <p class="text-gray-500 text-sm">Nenhuma solicitação aguardando aprovação.</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div class="glass-panel p-6 rounded-2xl border-l-4 border-brand-wine">
                         <p class="text-gray-400 text-xs uppercase tracking-wider">Produtos em Estoque</p>
@@ -457,6 +470,43 @@
         window.allCatalogProducts = []; window.inventoryItems = []; window.historyItems = []; window.activeCategory = 'TODAS';
         window.quoteCart = [];
         window.selectedBatchDescription = null; 
+        
+        // NOVAS VARIÁVEIS GLOBAIS DE PERMISSÃO
+        window.currentUser = null; 
+        window.currentOrgConfig = null;
+
+        // === INIT FUNCTION: CARREGA DADOS CRÍTICOS AO ABRIR ===
+        async function initApp() {
+            try {
+                // Tenta buscar o usuário atual (se já tiver token salvo)
+                const user = await client.request(readMe({ fields: ['*', 'organization_id'] }));
+                
+                if(user) {
+                    // Se achou usuário, busca a organização
+                    const orgId = typeof user.organization_id === 'object' ? user.organization_id.id : user.organization_id;
+                    
+                    if(orgId) {
+                        const org = await client.request(readItem('organizacoes', orgId, { fields: ['id', 'exige_aprovacao'] }));
+                        
+                        // Configura variáveis globais
+                        window.currentUser = user;
+                        window.currentOrgId = orgId;
+                        window.currentOrgConfig = org;
+                        
+                        console.log('App initialized via Refresh:', { user, org });
+                        
+                        // Redireciona pro app
+                        document.getElementById('login-screen').classList.add('hidden');
+                        document.getElementById('app-screen').classList.remove('hidden');
+                        window.router('dashboard');
+                        window.updateLogoDisplay();
+                    }
+                }
+            } catch (e) {
+                // Se der erro (ex: não logado), fica na tela de login
+                console.log('User not logged in or session expired');
+            }
+        }
 
         // === MENU MOBILE TOGGLE ===
         window.toggleSidebar = function() {
@@ -684,10 +734,15 @@
             btn.disabled = true;
 
             try {
+                // LÓGICA DE APROVAÇÃO
+                const needsApproval = window.currentOrgConfig?.exige_aprovacao === true;
+                const isManager = window.currentUser?.eh_gestor === true;
+                const initialStatus = (needsApproval && !isManager) ? 'aguardando_aprovacao' : 'pendente';
+
                 const promises = window.quoteCart.map(item => {
                     return client.request(createItem('solicitacoes', { 
                         tipo: 'SOLICITACAO_COMPRA', 
-                        status: 'pendente', 
+                        status: initialStatus, 
                         quantidade: item.qtd, 
                         produto_id: item.id, 
                         observacoes: `${item.obs} | Data Ideal: ${item.data}`, 
@@ -696,7 +751,13 @@
                 });
 
                 await Promise.all(promises);
-                notify('Orçamento enviado com sucesso!');
+                
+                if (initialStatus === 'aguardando_aprovacao') {
+                    notify('Solicitação enviada para aprovação do gestor.');
+                } else {
+                    notify('Orçamento enviado com sucesso!');
+                }
+                
                 window.quoteCart = []; 
                 window.renderQuoteCart();
                 window.router('pedidos'); 
@@ -760,19 +821,41 @@
             e.preventDefault(); const btn = e.target.querySelector('button'); btn.disabled = true; btn.innerHTML = '...';
             try { 
                 await client.login(document.getElementById('email').value, document.getElementById('password').value); 
-                const user = await client.request(readMe({ fields: ['organization_id'] })); 
-                window.currentOrgId = user.organization_id; 
+                
+                // NOVO: Busca dados profundos do usuário (se é gestor) e da empresa (se exige aprovação)
+                const user = await client.request(readMe({ 
+                    fields: ['*', 'organization_id'] 
+                })); 
+                
+                // Validação de Segurança
+                if (!user.organization_id) {
+                    throw new Error("Seu usuário não está vinculado a uma empresa. Contate o suporte.");
+                }
+
+                // 3. Busca EXPLICITAMENTE as configurações da empresa (Isso resolve o bug!)
+                const orgId = typeof user.organization_id === 'object' ? user.organization_id.id : user.organization_id;
+                
+                const empresaConfig = await client.request(readItem('organizacoes', orgId, {
+                    fields: ['id', 'exige_aprovacao']
+                }));
+
+                // 4. Salva tudo nas variáveis globais
+                window.currentOrgId = orgId;
+                window.currentUser = user; 
+                window.currentOrgConfig = empresaConfig;
+
                 document.getElementById('login-screen').classList.add('hidden'); 
                 document.getElementById('app-screen').classList.remove('hidden'); 
                 window.router('dashboard'); 
                 window.updateLogoDisplay(); 
                 
-                // Agora checkTutorial já está definida!
                 if(typeof window.checkTutorial === 'function') {
                     window.checkTutorial(); 
                 }
+
             } catch (err) { 
-                notify('Erro no login: ' + err.message, 'error'); 
+                console.error(err);
+                notify('Erro no login: ' + (err.message || "Verifique suas credenciais"), 'error'); 
                 btn.disabled = false; 
                 btn.innerHTML = 'ACESSAR SISTEMA'; 
             }
@@ -799,7 +882,9 @@
         }
 
         window.addEventListener('load', function() {
-            window.updateLogoDisplay();
+            // EXECUTA O INIT AO RECARREGAR A PÁGINA
+            initApp();
+
             const savedTheme = localStorage.getItem('theme');
             const icon = document.querySelector('#theme-toggle-btn i');
             const text = document.getElementById('theme-text');
@@ -817,6 +902,7 @@
         // CORE FUNCTIONS
         async function loadDashboard() { 
             try { 
+                // Carrega estatísticas básicas
                 const estoque = await client.request(readItems('estoque_cliente', { fields: ['quantidade_disponivel', 'produto_id.nome'] })); 
                 window.inventoryItems = estoque; 
                 
@@ -828,10 +914,89 @@
                 document.getElementById('dash-total-qty').innerText = estoque.reduce((a, b) => a + b.quantidade_disponivel, 0); 
                 document.getElementById('dash-pending').innerText = pedidosPendente.length; 
 
+                // NOVO: Se for gestor, carrega as aprovações pendentes
+                const isManager = window.currentUser?.eh_gestor === true;
+                const approvalSection = document.getElementById('manager-approvals');
+                
+                if (isManager) {
+                    approvalSection.classList.remove('hidden');
+                    window.loadApprovals();
+                } else {
+                    approvalSection.classList.add('hidden');
+                }
+
                 initCharts();
             } catch (e) { 
                 console.error(e); 
             } 
+        }
+
+        // === NOVA FUNÇÃO: CARREGAR APROVAÇÕES ===
+        window.loadApprovals = async function() {
+            const list = document.getElementById('approvals-list');
+            list.innerHTML = '<p class="text-white text-sm">Carregando...</p>';
+            
+            try {
+                const pendentes = await client.request(readItems('solicitacoes', { 
+                    filter: { status: { _eq: 'aguardando_aprovacao' } },
+                    fields: ['*', 'produto_id.nome']
+                }));
+
+                if (pendentes.length === 0) {
+                    list.innerHTML = '<p class="text-gray-500 text-sm">Nenhuma solicitação aguardando aprovação.</p>';
+                    return;
+                }
+
+                list.innerHTML = pendentes.map(p => `
+                    <div class="bg-black/30 border border-white/5 p-4 rounded-lg flex justify-between items-center">
+                        <div>
+                            <p class="text-white font-bold text-sm">${p.produto_id?.nome || 'Produto'}</p>
+                            <p class="text-gray-400 text-xs">Qtd: ${p.quantidade} | Criado em: ${new Date(p.data_criacao).toLocaleDateString()}</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="window.approveRequest('${p.id}')" class="bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-3 py-2 rounded">Aprovar</button>
+                            <button onclick="window.rejectRequest('${p.id}')" class="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-3 py-2 rounded">Reprovar</button>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (e) {
+                console.error(e);
+                list.innerHTML = '<p class="text-red-500 text-sm">Erro ao carregar.</p>';
+            }
+        }
+
+        window.approveRequest = async function(id) {
+            if(!confirm('Deseja aprovar esta solicitação?')) return;
+            try {
+                await client.request(updateItem('solicitacoes', id, { status: 'pendente' }));
+                notify('Solicitação APROVADA e enviada para produção!');
+                window.loadApprovals();
+            } catch (e) {
+                console.error("Erro completo:", e);
+                let msg = e.message;
+                if(e.errors && e.errors.length > 0) msg = e.errors[0].message;
+                
+                if(msg.includes("Forbidden") || msg.includes("403")) {
+                    msg = "Permissão negada. Verifique se você é Gestor.";
+                }
+                
+                notify('Erro: ' + msg, 'error');
+            }
+        }
+
+        window.rejectRequest = async function(id) {
+            if(!confirm('Deseja REPROVAR esta solicitação?')) return;
+            try {
+                await client.request(updateItem('solicitacoes', id, { status: 'cancelado' }));
+                notify('Solicitação REPROVADA.');
+                window.loadApprovals();
+            } catch (e) {
+                console.error("Erro completo:", e);
+                let msg = e.message;
+                if(e.errors && e.errors.length > 0) msg = e.errors[0].message;
+                notify('Erro: ' + msg, 'error');
+            }
         }
 
         // === ATUALIZADO: Carregar Estoque com Variações (Lotes) ===
@@ -1006,21 +1171,19 @@
             if (type === 'estoque') {
                 if(lotes.length > 0) {
                     let listaLotes = lotes.map(lote => {
-                        // FIX DA IMAGEM: Verifica se é objeto ou string para pegar ID ou URL
-                        let valFoto = lote.foto_lote;
-                        if (typeof valFoto === 'object' && valFoto !== null) {
-                            valFoto = valFoto.id;
+                        // FIX DA IMAGEM: Verifica se é objeto ou string para pegar ID certo
+                        let fileVal = lote.foto_lote;
+                        if (typeof fileVal === 'object' && fileVal !== null) {
+                            fileVal = fileVal.id;
                         }
-
-                        let fotoLote = imgPrincipal; // Default
-                        if (valFoto) {
-                            // Se já for uma URL completa (ex: https://...), usa ela direto.
-                            // Se for só um ID do Directus, adiciona o prefixo.
-                            if (typeof valFoto === 'string' && valFoto.startsWith('http')) {
-                                fotoLote = valFoto;
-                            } else {
-                                fotoLote = `${API_URL}/assets/${valFoto}`;
-                            }
+                        
+                        let fotoLote;
+                        if (typeof fileVal === 'string' && fileVal.startsWith('http')) {
+                            fotoLote = fileVal;
+                        } else if (fileVal) {
+                            fotoLote = `${API_URL}/assets/${fileVal}`;
+                        } else {
+                            fotoLote = imgPrincipal; // Fallback para a principal
                         }
 
                         return `
@@ -1162,9 +1325,14 @@
                 // INCLUI VARIAÇÃO NA OBSERVAÇÃO
                 const detalheVariacao = window.selectedBatchDescription ? `[${window.selectedBatchDescription}] ` : '';
 
+                // === LÓGICA DE APROVAÇÃO ===
+                const needsApproval = window.currentOrgConfig?.exige_aprovacao === true;
+                const isManager = window.currentUser?.eh_gestor === true;
+                const finalStatus = (needsApproval && !isManager) ? 'aguardando_aprovacao' : 'pendente';
+
                 await client.request(createItem('solicitacoes', { 
                     tipo: 'SOLICITACAO_ENVIO', 
-                    status: 'pendente', 
+                    status: finalStatus, 
                     quantidade: qtd,
                     produto_id: dadosEstoque.produto_id, 
                     observacoes: `${detalheVariacao}Saída Solicitada. Data Postagem: ${document.getElementById('pedido-data').value}`, 
@@ -1173,13 +1341,18 @@
                     organization_id: window.currentOrgId 
                 }));
 
-                notify('Solicitação enviada! O estoque será atualizado em breve.'); 
+                if(finalStatus === 'aguardando_aprovacao') {
+                    notify('Solicitação enviada para aprovação do gestor.');
+                } else {
+                    notify('Solicitação enviada! O estoque será atualizado em breve.'); 
+                }
+                
                 window.router('estoque');
 
             } catch (e) { 
                 let msg = e.message || "Erro desconhecido";
                 if(e.errors && e.errors.length > 0) msg = e.errors[0].message;
-                notify(msg, 'error'); 
+                notify('Erro: ' + msg, 'error');
             } finally { 
                 btn.disabled = false; 
                 btn.innerText = originalText;
