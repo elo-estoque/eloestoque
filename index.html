@@ -108,6 +108,12 @@
         /* CORREÇÃO DO TÍTULO NO DARK MODE */
         /* Garante que h3 dentro de p-5 seja branco no modo escuro */
         body:not(.theme-light) .p-5 h3 { color: #ffffff !important; }
+
+        /* CORREÇÃO PARA O MODAL DE DETALHES NO MODO LIGHT */
+        /* Força o texto a ser branco/claro dentro do modal, pois o fundo do modal é hardcoded como escuro */
+        body.theme-light #product-details-modal .text-white,
+        body.theme-light #product-details-modal h2 { color: #ffffff !important; }
+        body.theme-light #product-details-modal .text-gray-400 { color: #9CA3AF !important; }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden text-gray-200 selection:bg-brand-wine selection:text-white">
@@ -1030,6 +1036,7 @@
             document.getElementById('product-details-modal').classList.add('flex');
         }
 
+        // === CORREÇÃO VISUAL PARA SELEÇÃO DE LOTE ===
         window.selectBatchForShipping = function(estoqueId, prodNome, loteDesc, maxQtd) {
             closeDetails();
             window.router('pedir');
@@ -1038,8 +1045,14 @@
                 sel.value = estoqueId;
                 sel.setAttribute('data-max', maxQtd);
                 window.selectedBatchDescription = loteDesc;
+                
+                // FORÇA A ATUALIZAÇÃO DO TEXTO DO DROPDOWN PARA REFLETIR O LOTE ESCOLHIDO
+                if(sel.options[sel.selectedIndex]) {
+                    sel.options[sel.selectedIndex].text = `${prodNome} - ${loteDesc} (Disp: ${maxQtd})`;
+                }
+
                 notify(`Selecionado: ${prodNome} - ${loteDesc}`);
-            }, 500);
+            }, 700); // Aumentei levemente o tempo para garantir que a lista carregou
         }
 
         window.prefill = function(id, name, max, type) {
