@@ -438,7 +438,7 @@
     <script type="module">
         import { createDirectus, authentication, rest, readItems, createItem, updateItem, readMe, updateMe } from 'https://esm.sh/@directus/sdk@13.0.0';
 
-        const API_URL = 'https://elo-brindes-api-ire7ry-853a54-152-53-165-62.traefik.me';
+        const API_URL = 'https://entregas.elobrindes.com.br';
         const client = createDirectus(API_URL).with(authentication()).with(rest());
         
         window.client = client; window.readItems = readItems; window.createItem = createItem; window.currentOrgId = null;
