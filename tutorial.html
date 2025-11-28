@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elo Brindes | Case do Projeto</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#0a0a0a',
+                            wine: '#E31937',
+                            light: '#E5E7EB',   
+                            card: '#171717',
+                            hover: '#C2132F'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #000000; color: #E5E7EB; overflow-x: hidden; }
+        
+        .glass-panel { background: rgba(20, 20, 20, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        
+        .text-gradient {
+            background: linear-gradient(to right, #E31937, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .bg-grid-pattern {
+            background-image: linear-gradient(to right, #222 1px, transparent 1px), linear-gradient(to bottom, #222 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+        }
+
+        /* Animações Suaves */
+        .fade-in-up { animation: fadeInUp 0.8s ease-out forwards; opacity: 0; transform: translateY(20px); }
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- BACKGROUND -->
+    <div class="fixed inset-0 z-0 bg-black">
+        <div class="absolute inset-0 bg-grid-pattern opacity-20"></div>
+        <div class="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-brand-wine/10 to-transparent"></div>
+    </div>
+
+    <!-- HEADER -->
+    <header class="relative z-10 border-b border-white/10 bg-black/50 backdrop-blur-md sticky top-0">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-brand-wine rounded-lg flex items-center justify-center text-white shadow-lg shadow-brand-wine/30">
+                    <i class="ph-fill ph-rocket-launch text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-xl tracking-tight text-white">Elo <span class="text-brand-wine">System</span></h1>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest">Case de Sucesso</p>
+                </div>
+            </div>
+            <nav class="hidden md:flex gap-6 text-sm font-medium text-gray-400">
+                <a href="#sobre" class="hover:text-white transition">O Projeto</a>
+                <a href="#funcionalidades" class="hover:text-white transition">Funcionalidades</a>
+                <a href="#stack" class="hover:text-white transition">Tecnologia</a>
+                <a href="#timeline" class="hover:text-white transition">Cronograma</a>
+            </nav>
+            <a href="index.html" class="bg-white/10 hover:bg-brand-wine text-white px-5 py-2 rounded-full text-sm font-bold transition border border-white/10">
+                Ver Demo Online
+            </a>
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="relative z-10 pt-20 pb-32 px-6 text-center">
+        <div class="max-w-4xl mx-auto">
+            <span class="inline-block py-1 px-3 rounded-full bg-brand-wine/10 border border-brand-wine/30 text-brand-wine text-xs font-bold uppercase tracking-widest mb-6 fade-in-up">
+                Desenvolvimento Full Stack
+            </span>
+            <h1 class="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight leading-tight fade-in-up delay-100">
+                Logística Promocional <br> <span class="text-gradient">Reinventada.</span>
+            </h1>
+            <p class="text-xl text-gray-400 mb-10 max-w-2xl mx-auto fade-in-up delay-200">
+                Um ecossistema B2B completo para gestão de brindes corporativos. 
+                Do controle de estoque multi-cliente à esteira de aprovação financeira.
+            </p>
+            
+            <!-- MOCKUP PRINCIPAL -->
+            <div class="relative mx-auto max-w-5xl fade-in-up delay-300">
+                <div class="absolute -inset-1 bg-gradient-to-r from-brand-wine to-purple-600 rounded-2xl blur opacity-30"></div>
+                <div class="relative glass-panel rounded-xl overflow-hidden border border-white/10">
+                    <img src="print_dashboard.png" alt="Dashboard Principal" class="w-full h-auto object-cover" onerror="this.src='https://placehold.co/1200x600/111/333?text=Dashboard+Preview'">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SOBRE O PROJETO -->
+    <section id="sobre" class="relative z-10 py-20 bg-black/50">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+            <div>
+                <h2 class="text-3xl font-bold text-white mb-6">O Desafio</h2>
+                <p class="text-gray-400 leading-relaxed mb-6">
+                    A Elo Brindes precisava transicionar de planilhas e processos manuais para um sistema digital robusto. O objetivo era oferecer autonomia para grandes clientes corporativos gerenciarem seus estoques, solicitarem envios e aprovarem orçamentos em uma plataforma unificada.
+                </p>
+                <div class="flex gap-4">
+                    <div class="bg-white/5 p-4 rounded-lg border border-white/5">
+                        <p class="text-2xl font-bold text-white">Multi-Tenant</p>
+                        <p class="text-xs text-gray-500">Dados isolados por empresa</p>
+                    </div>
+                    <div class="bg-white/5 p-4 rounded-lg border border-white/5">
+                        <p class="text-2xl font-bold text-white">4 Dias</p>
+                        <p class="text-xs text-gray-500">Tempo de Desenvolvimento</p>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <img src="print_estoque.png" class="rounded-xl border border-white/10 shadow-2xl transform translate-y-8" onerror="this.src='https://placehold.co/400x300/111/333?text=Estoque'">
+                <img src="print_admin.png" class="rounded-xl border border-white/10 shadow-2xl transform -translate-y-8" onerror="this.src='https://placehold.co/400x300/111/333?text=Admin'">
+            </div>
+        </div>
+    </section>
+
+    <!-- FUNCIONALIDADES -->
+    <section id="funcionalidades" class="relative z-10 py-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-white">Poderoso & Intuitivo</h2>
+                <p class="text-gray-400 mt-2">Funcionalidades pensadas para eficiência operacional.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Card 1 -->
+                <div class="glass-panel p-8 rounded-2xl hover:border-brand-wine/50 transition group">
+                    <div class="w-12 h-12 bg-brand-wine/10 rounded-lg flex items-center justify-center text-brand-wine mb-6 group-hover:bg-brand-wine group-hover:text-white transition">
+                        <i class="ph-fill ph-package text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">WMS Simplificado</h3>
+                    <p class="text-sm text-gray-400">Controle de estoque em tempo real com suporte a variações (cor, tamanho), fotos reais do galpão e baixa automática.</p>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="glass-panel p-8 rounded-2xl hover:border-brand-wine/50 transition group">
+                    <div class="w-12 h-12 bg-green-900/20 rounded-lg flex items-center justify-center text-green-500 mb-6 group-hover:bg-green-600 group-hover:text-white transition">
+                        <i class="ph-fill ph-currency-dollar text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Orçamentos & Vendas</h3>
+                    <p class="text-sm text-gray-400">Fluxo completo de reposição. O cliente solicita, o comercial orça e o cliente aprova no painel. Upsell integrado.</p>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="glass-panel p-8 rounded-2xl hover:border-brand-wine/50 transition group">
+                    <div class="w-12 h-12 bg-blue-900/20 rounded-lg flex items-center justify-center text-blue-500 mb-6 group-hover:bg-blue-600 group-hover:text-white transition">
+                        <i class="ph-fill ph-lock-key text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Segurança B2B</h3>
+                    <p class="text-sm text-gray-400">Arquitetura RLS (Row Level Security). Cada cliente acessa um ambiente isolado, com sua própria logo e dados.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- STACK TECNOLÓGICA -->
+    <section id="stack" class="relative z-10 py-20 bg-white/5 border-y border-white/5">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h2 class="text-3xl font-bold text-white mb-6">A Tecnologia</h2>
+                    <p class="text-gray-400 mb-6">
+                        Construído sobre uma stack moderna, focada em performance, escalabilidade e baixo custo de manutenção (Self-Hosted).
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-4">
+                            <div class="p-2 bg-black rounded border border-white/10"><i class="ph-fill ph-database text-brand-wine text-xl"></i></div>
+                            <div>
+                                <h4 class="text-white font-bold">Directus (Headless CMS)</h4>
+                                <p class="text-xs text-gray-400">Backend poderoso que gerencia o banco de dados, API REST e Autenticação em tempo real.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="p-2 bg-black rounded border border-white/10"><i class="ph-fill ph-cloud text-blue-400 text-xl"></i></div>
+                            <div>
+                                <h4 class="text-white font-bold">Coolify (DevOps)</h4>
+                                <p class="text-xs text-gray-400">Infraestrutura própria (VPS) gerenciada via Coolify, eliminando custos de nuvem (AWS/Render).</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="p-2 bg-black rounded border border-white/10"><i class="ph-fill ph-code text-yellow-400 text-xl"></i></div>
+                            <div>
+                                <h4 class="text-white font-bold">Vanilla JS + Tailwind</h4>
+                                <p class="text-xs text-gray-400">Frontend ultraleve sem frameworks pesados. Carregamento instantâneo.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-panel p-8 rounded-2xl border border-white/10 relative">
+                    <div class="absolute -top-4 -right-4 bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">Zero Custo Licença</div>
+                    <pre class="text-xs text-gray-400 font-mono overflow-x-auto">
+// Arquitetura Simplificada
+const stack = {
+  frontend: "HTML5 + TailwindCSS",
+  backend: "Directus (Node.js)",
+  database: "PostgreSQL 15",
+  deploy: "Coolify (Docker)",
+  security: "Roles & Permissions (RBAC)"
+};
+
+// Performance
+const metrics = {
+  loadTime: "< 0.8s",
+  apiLatency: "150ms",
+  uxScore: "10/10"
+};
+                    </pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TIMELINE -->
+    <section id="timeline" class="relative z-10 py-20">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+            <h2 class="text-3xl font-bold text-white mb-12">Execução em 4 Dias</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="glass-panel p-6 rounded-xl border-t-4 border-gray-700">
+                    <span class="text-4xl font-black text-gray-700 opacity-50 mb-2 block">01</span>
+                    <h4 class="text-white font-bold">Arquitetura</h4>
+                    <p class="text-[10px] text-gray-500 mt-2">Modelagem do Banco de Dados SQL e Definição de Regras de Negócio.</p>
+                </div>
+                <div class="glass-panel p-6 rounded-xl border-t-4 border-gray-500">
+                    <span class="text-4xl font-black text-gray-500 opacity-50 mb-2 block">02</span>
+                    <h4 class="text-white font-bold">Backend</h4>
+                    <p class="text-[10px] text-gray-500 mt-2">Setup do Directus, Roles, Permissões de Segurança e API.</p>
+                </div>
+                <div class="glass-panel p-6 rounded-xl border-t-4 border-brand-wine">
+                    <span class="text-4xl font-black text-brand-wine opacity-50 mb-2 block">03</span>
+                    <h4 class="text-white font-bold">Frontend</h4>
+                    <p class="text-[10px] text-gray-500 mt-2">Desenvolvimento da interface, integração API e Dashboard.</p>
+                </div>
+                <div class="glass-panel p-6 rounded-xl border-t-4 border-green-500">
+                    <span class="text-4xl font-black text-green-500 opacity-50 mb-2 block">04</span>
+                    <h4 class="text-white font-bold">Deploy</h4>
+                    <p class="text-[10px] text-gray-500 mt-2">Migração para Servidor Próprio (Coolify) e Entrega Final.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="relative z-10 py-10 border-t border-white/10 text-center">
+        <p class="text-gray-500 text-sm">&copy; 2024 Elo Brindes System. Desenvolvido com <i class="ph-fill ph-heart text-brand-wine"></i> e Tecnologia.</p>
+    </footer>
+
+</body>
+</html>
