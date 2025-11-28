@@ -931,7 +931,7 @@
             } 
         }
 
-        // === NOVA FUNÇÃO: CARREGAR APROVAÇÕES ===
+        // === ATUALIZADO: FUNÇÃO DE CARREGAR APROVAÇÕES COM DETALHES DO USUÁRIO E TIPO ===
         window.loadApprovals = async function() {
             const list = document.getElementById('approvals-list');
             list.innerHTML = '<p class="text-white text-sm">Carregando...</p>';
@@ -939,7 +939,7 @@
             try {
                 const pendentes = await client.request(readItems('solicitacoes', { 
                     filter: { status: { _eq: 'aguardando_aprovacao' } },
-                    fields: ['*', 'produto_id.nome']
+                    fields: ['*', 'produto_id.nome', 'user_created.first_name', 'user_created.last_name'] // Added user_created
                 }));
 
                 if (pendentes.length === 0) {
@@ -947,18 +947,44 @@
                     return;
                 }
 
-                list.innerHTML = pendentes.map(p => `
-                    <div class="bg-black/30 border border-white/5 p-4 rounded-lg flex justify-between items-center">
-                        <div>
+                list.innerHTML = pendentes.map(p => {
+                    const nomeSolicitante = p.user_created 
+                        ? `${p.user_created.first_name} ${p.user_created.last_name || ''}`.trim() 
+                        : 'Usuário';
+                    
+                    const isEnvio = p.tipo === 'SOLICITACAO_ENVIO';
+                    const badgeClass = isEnvio 
+                        ? 'bg-brand-wine/20 text-brand-wine border-brand-wine/30' 
+                        : 'bg-green-500/20 text-green-400 border-green-500/30';
+                    const tipoLabel = isEnvio ? 'ENVIO' : 'ORÇAMENTO';
+                    const icon = isEnvio ? '<i class="ph-fill ph-paper-plane-tilt"></i>' : '<i class="ph-fill ph-shopping-cart"></i>';
+
+                    return `
+                    <div class="bg-black/30 border border-white/5 p-4 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${badgeClass} flex items-center gap-1">
+                                    ${icon} ${tipoLabel}
+                                </span>
+                                <span class="text-xs text-gray-500">#${p.id}</span>
+                            </div>
                             <p class="text-white font-bold text-sm">${p.produto_id?.nome || 'Produto'}</p>
-                            <p class="text-gray-400 text-xs">Qtd: ${p.quantidade} | Criado em: ${new Date(p.data_criacao).toLocaleDateString()}</p>
+                            <div class="flex items-center gap-3 mt-1 text-xs text-gray-400">
+                                <span class="flex items-center gap-1"><i class="ph ph-cube"></i> Qtd: <b class="text-gray-300">${p.quantidade}</b></span>
+                                <span class="hidden md:inline text-gray-600">|</span>
+                                <span class="flex items-center gap-1" title="Solicitante"><i class="ph ph-user"></i> ${nomeSolicitante}</span>
+                                <span class="hidden md:inline text-gray-600">|</span>
+                                <span class="flex items-center gap-1"><i class="ph ph-calendar"></i> ${new Date(p.data_criacao).toLocaleDateString()}</span>
+                            </div>
+                            ${p.observacoes ? `<p class="text-[10px] text-gray-500 mt-2 italic border-l-2 border-white/10 pl-2">"${p.observacoes}"</p>` : ''}
                         </div>
-                        <div class="flex gap-2">
-                            <button onclick="window.approveRequest('${p.id}')" class="bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-3 py-2 rounded">Aprovar</button>
-                            <button onclick="window.rejectRequest('${p.id}')" class="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-3 py-2 rounded">Reprovar</button>
+                        <div class="flex gap-2 w-full md:w-auto mt-2 md:mt-0">
+                            <button onclick="window.approveRequest('${p.id}')" class="flex-1 md:flex-none bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-4 py-2 rounded transition shadow-lg">Aprovar</button>
+                            <button onclick="window.rejectRequest('${p.id}')" class="flex-1 md:flex-none bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-4 py-2 rounded transition shadow-lg">Reprovar</button>
                         </div>
                     </div>
-                `).join('');
+                    `;
+                }).join('');
 
             } catch (e) {
                 console.error(e);
