@@ -33,7 +33,6 @@
     </script>
 
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
 
@@ -120,6 +119,14 @@
         body.theme-light .history-detail-row { background-color: rgba(0,0,0,0.03); }
         .detail-enter { animation: slideDown 0.3s ease-out forwards; transform-origin: top; }
         @keyframes slideDown { from { opacity: 0; transform: scaleY(0.9); max-height: 0; } to { opacity: 1; transform: scaleY(1); max-height: 500px; } }
+        
+        /* Estilos específicos para o Modal de Gerenciamento de Endereços */
+        .address-tab-btn.active { border-bottom: 2px solid #E31937; color: #E31937; }
+        body.theme-light .address-tab-btn.active { color: #E31937; }
+        
+        .status-dot-green { color: #10B981; }
+        .status-dot-yellow { color: #F59E0B; }
+        .status-dot-red { color: #EF4444; }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden text-gray-200 selection:bg-brand-wine selection:text-white">
@@ -307,18 +314,62 @@
                         </div>
                     </div>
                     <div class="mb-6">
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Endereço de Entrega</label>
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex justify-between items-center">
+                            <span>Endereço de Entrega</span>
+                            <button type="button" onclick="window.openAddressManager()" class="text-brand-wine hover:text-brand-hover text-xs font-semibold flex items-center gap-1"><i class="ph ph-map-pin"></i> Gerenciar/Importar Endereços</button>
+                        </label>
                         <div class="flex items-center gap-3 mb-3">
                             <input type="checkbox" id="toggle-endereco" onchange="toggleAddressMode()" class="accent-brand-wine w-4 h-4">
-                            <span class="text-sm text-gray-300">Digitar endereço manualmente</span>
+                            <span class="text-sm text-gray-300">Digitar endereço manualmente (uso único)</span>
                         </div>
                         <div id="box-select-endereco">
                             <select id="pedido-endereco" class="w-full glass-input rounded-lg px-4 py-3 bg-[#0a0a0a]"></select>
                         </div>
-                        <div id="box-manual-endereco" class="hidden">
-                            <textarea id="pedido-endereco-manual" rows="3" class="w-full glass-input rounded-lg px-4 py-3" placeholder="Endereço completo (Rua, Número, Bairro, CEP, Cidade)..."></textarea>
+                        
+                        <div id="box-manual-endereco" class="hidden space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">CEP *</label>
+                                    <input type="text" id="manual-pedido-cep" required class="w-full glass-input rounded-lg px-4 py-3" placeholder="00000-000" onblur="window.fetchCepManual(this.value)">
+                                    <p id="cep-pedido-feedback" class="text-xs text-yellow-500 mt-1 hidden">Buscando...</p>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">A/C (Aos Cuidados de) *</label>
+                                    <input type="text" id="manual-pedido-ac" required class="w-full glass-input rounded-lg px-4 py-3" placeholder="Nome do destinatário">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Logradouro (Rua/Av) *</label>
+                                    <input type="text" id="manual-pedido-logradouro" required class="w-full glass-input rounded-lg px-4 py-3" placeholder="Rua...">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Número *</label>
+                                    <input type="text" id="manual-pedido-numero" required class="w-full glass-input rounded-lg px-4 py-3" placeholder="123">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Bairro *</label>
+                                    <input type="text" id="manual-pedido-bairro" required class="w-full glass-input rounded-lg px-4 py-3" placeholder="Bairro...">
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Cidade *</label>
+                                    <input type="text" id="manual-pedido-cidade" required class="w-full glass-input rounded-lg px-4 py-3" placeholder="Cidade...">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">UF *</label>
+                                    <input type="text" id="manual-pedido-uf" required class="w-full glass-input rounded-lg px-4 py-3" placeholder="SP" maxlength="2">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Complemento</label>
+                                    <input type="text" id="manual-pedido-complemento" class="w-full glass-input rounded-lg px-4 py-3" placeholder="Apto, Bloco, etc.">
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                        </div>
 
                     <div class="mb-6 p-3 bg-yellow-900/20 border border-yellow-700/30 rounded-lg flex gap-3 items-start">
                         <i class="ph-fill ph-info text-yellow-500 text-xl mt-0.5"></i>
@@ -447,6 +498,88 @@
         </div>
     </div>
 
+    <div id="address-manager-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/90 backdrop-blur-sm">
+        <div class="glass-panel p-6 rounded-2xl w-full max-w-4xl mx-4 relative overflow-hidden modal-enter border border-white/10">
+            <div class="flex justify-between items-center mb-6"><h3 class="text-xl font-bold text-white">Gerenciar/Importar Endereços</h3><button onclick="document.getElementById('address-manager-modal').classList.add('hidden')" class="text-gray-400 hover:text-white"><i class="ph ph-x text-xl"></i></button></div>
+            
+            <div class="flex border-b border-white/10 mb-6">
+                <button id="tab-manual-btn" onclick="window.setAddressTab('manual')" class="address-tab-btn px-4 py-2 text-sm font-semibold text-gray-400 hover:text-white transition active">Cadastro Manual</button>
+                <button id="tab-import-btn" onclick="window.setAddressTab('import')" class="address-tab-btn px-4 py-2 text-sm font-semibold text-gray-400 hover:text-white transition">Importação Inteligente</button>
+            </div>
+
+            <div id="address-tab-manual" class="space-y-4">
+                <form id="form-manual-address">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">CEP *</label>
+                            <input type="text" id="manual-cep" required class="w-full glass-input rounded-lg px-4 py-3" placeholder="00000-000" onblur="window.fetchCep(this.value)">
+                            <p id="cep-feedback" class="text-xs text-yellow-500 mt-1 hidden">Buscando...</p>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">A/C (Aos Cuidados de) *</label>
+                            <input type="text" id="manual-ac" required class="w-full glass-input rounded-lg px-4 py-3" placeholder="Nome do destinatário">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Logradouro (Rua/Av) *</label>
+                            <input type="text" id="manual-logradouro" required class="w-full glass-input rounded-lg px-4 py-3" placeholder="Rua...">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Número *</label>
+                            <input type="text" id="manual-numero" required class="w-full glass-input rounded-lg px-4 py-3" placeholder="123">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Bairro *</label>
+                            <input type="text" id="manual-bairro" required class="w-full glass-input rounded-lg px-4 py-3" placeholder="Bairro...">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Cidade *</label>
+                            <input type="text" id="manual-cidade" required class="w-full glass-input rounded-lg px-4 py-3" placeholder="Cidade...">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">UF *</label>
+                            <input type="text" id="manual-uf" required class="w-full glass-input rounded-lg px-4 py-3" placeholder="SP" maxlength="2">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Complemento</label>
+                            <input type="text" id="manual-complemento" class="w-full glass-input rounded-lg px-4 py-3" placeholder="Apto, Bloco, etc.">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btn-save-manual-address" class="w-full bg-brand-wine hover:bg-brand-hover text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2">
+                        <i class="ph ph-save"></i> SALVAR ENDEREÇO
+                    </button>
+                </form>
+            </div>
+            
+            <div id="address-tab-import" class="hidden">
+                <div class="flex flex-col md:flex-row gap-4 items-center mb-6 p-4 bg-white/5 rounded-lg border border-white/10">
+                    <label for="import-file" class="cursor-pointer bg-white/10 hover:bg-white/20 text-white text-sm font-bold py-3 px-6 rounded-lg transition inline-block border border-white/5 flex items-center gap-2">
+                        <i class="ph ph-upload-simple text-lg"></i> Subir Planilha (.xlsx ou .csv)
+                        <input type="file" id="import-file" accept=".xlsx,.xls,.csv" class="hidden" onchange="window.handleAddressImport(event)">
+                    </label>
+                    <p class="text-xs text-gray-400 flex-1">Envie uma planilha com uma coluna de 'Endereço Completo' e uma de 'A/C' (Aos Cuidados de).</p>
+                </div>
+
+                <div id="import-preview-container" class="max-h-96 overflow-y-auto mb-4 relative">
+                    <p id="import-placeholder" class="text-center text-gray-500 py-10">Nenhuma planilha carregada.</p>
+                </div>
+                
+                <div id="import-actions" class="mt-4 hidden">
+                    <button type="button" onclick="window.saveImportedAddresses()" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2">
+                        <i class="ph ph-check-circle"></i> SALVAR <span id="import-count">0</span> ENDEREÇOS
+                    </button>
+                    <p id="import-warning" class="text-xs text-red-400 text-center mt-2 hidden">Existem endereços com dados críticos ausentes (CEP ou Número). Revise ou edite na planilha original.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
     <div id="tutorial-modal" class="fixed inset-0 z-[200] hidden items-center justify-center bg-black/95 backdrop-blur-sm">
         <div class="glass-panel p-10 rounded-2xl w-full max-w-lg mx-4 text-center modal-enter relative">
             <div id="tutorial-content" class="mb-8"></div>
@@ -474,6 +607,7 @@
         // NOVAS VARIÁVEIS GLOBAIS DE PERMISSÃO
         window.currentUser = null; 
         window.currentOrgConfig = null;
+        window.importedAddresses = []; 
 
         // === INIT FUNCTION: CARREGA DADOS CRÍTICOS AO ABRIR ===
         async function initApp() {
@@ -617,8 +751,7 @@
             if(window.historyItems && window.historyItems.length) {
                 window.historyItems.forEach(item => {
                     if(item.status !== 'cancelado') {
-                        const d = new Date(item.data_criacao);
-                        monthlyData[d.getMonth()] += (item.quantidade || 0);
+                        monthlyData[new Date(item.data_criacao).getMonth()] += (item.quantidade || 0);
                     }
                 });
             } else {
@@ -807,7 +940,19 @@
                 document.getElementById('main-sidebar').classList.remove('flex');
             }
         }
-        window.toggleAddressMode = function() { const manual = document.getElementById('toggle-endereco').checked; document.getElementById('box-select-endereco').classList.toggle('hidden', manual); document.getElementById('box-manual-endereco').classList.toggle('hidden', !manual); }
+        
+        // ATUALIZADO: Lógica de toggle para o novo BOX de Endereço Manual
+        window.toggleAddressMode = function() { 
+            const manual = document.getElementById('toggle-endereco').checked; 
+            document.getElementById('box-select-endereco').classList.toggle('hidden', manual); 
+            document.getElementById('box-manual-endereco').classList.toggle('hidden', !manual);
+            
+            // Define o atributo required nos campos manuais baseado no checkbox
+            document.querySelectorAll('#box-manual-endereco input[required]').forEach(input => {
+                input.required = manual;
+            });
+        }
+        
         window.toggleReporMode = function() { const manter = document.getElementById('repor-manter').checked; document.getElementById('box-repor-obs').classList.toggle('hidden', manter); if(manter) document.getElementById('repor-obs-texto').value = ""; }
         window.openSettings = function() { document.getElementById('settings-modal').classList.remove('hidden'); const saved = localStorage.getItem('customClientLogo'); if(saved) { document.getElementById('preview-logo').src = saved; document.getElementById('preview-logo').classList.remove('hidden'); document.getElementById('preview-icon').classList.add('hidden'); } }
         window.closeDetails = function() { document.getElementById('product-details-modal').classList.add('hidden'); document.getElementById('product-details-modal').classList.remove('flex'); }
@@ -823,9 +968,7 @@
                 await client.login(document.getElementById('email').value, document.getElementById('password').value); 
                 
                 // NOVO: Busca dados profundos do usuário (se é gestor) e da empresa (se exige aprovação)
-                const user = await client.request(readMe({ 
-                    fields: ['*', 'organization_id'] 
-                })); 
+                const user = await client.request(readMe({ fields: ['*', 'organization_id'] })); 
                 
                 // Validação de Segurança
                 if (!user.organization_id) {
@@ -931,7 +1074,7 @@
             } 
         }
 
-        // === ATUALIZADO: FUNÇÃO DE CARREGAR APROVAÇÕES COM DETALHES DO USUÁRIO E TIPO ===
+        // === NOVA FUNÇÃO: CARREGAR APROVAÇÕES ===
         window.loadApprovals = async function() {
             const list = document.getElementById('approvals-list');
             list.innerHTML = '<p class="text-white text-sm">Carregando...</p>';
@@ -939,7 +1082,7 @@
             try {
                 const pendentes = await client.request(readItems('solicitacoes', { 
                     filter: { status: { _eq: 'aguardando_aprovacao' } },
-                    fields: ['*', 'produto_id.nome', 'user_created.first_name', 'user_created.last_name'] // Added user_created
+                    fields: ['*', 'produto_id.nome']
                 }));
 
                 if (pendentes.length === 0) {
@@ -947,44 +1090,18 @@
                     return;
                 }
 
-                list.innerHTML = pendentes.map(p => {
-                    const nomeSolicitante = p.user_created 
-                        ? `${p.user_created.first_name} ${p.user_created.last_name || ''}`.trim() 
-                        : 'Usuário';
-                    
-                    const isEnvio = p.tipo === 'SOLICITACAO_ENVIO';
-                    const badgeClass = isEnvio 
-                        ? 'bg-brand-wine/20 text-brand-wine border-brand-wine/30' 
-                        : 'bg-green-500/20 text-green-400 border-green-500/30';
-                    const tipoLabel = isEnvio ? 'ENVIO' : 'ORÇAMENTO';
-                    const icon = isEnvio ? '<i class="ph-fill ph-paper-plane-tilt"></i>' : '<i class="ph-fill ph-shopping-cart"></i>';
-
-                    return `
-                    <div class="bg-black/30 border border-white/5 p-4 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${badgeClass} flex items-center gap-1">
-                                    ${icon} ${tipoLabel}
-                                </span>
-                                <span class="text-xs text-gray-500">#${p.id}</span>
-                            </div>
+                list.innerHTML = pendentes.map(p => `
+                    <div class="bg-black/30 border border-white/5 p-4 rounded-lg flex justify-between items-center">
+                        <div>
                             <p class="text-white font-bold text-sm">${p.produto_id?.nome || 'Produto'}</p>
-                            <div class="flex items-center gap-3 mt-1 text-xs text-gray-400">
-                                <span class="flex items-center gap-1"><i class="ph ph-cube"></i> Qtd: <b class="text-gray-300">${p.quantidade}</b></span>
-                                <span class="hidden md:inline text-gray-600">|</span>
-                                <span class="flex items-center gap-1" title="Solicitante"><i class="ph ph-user"></i> ${nomeSolicitante}</span>
-                                <span class="hidden md:inline text-gray-600">|</span>
-                                <span class="flex items-center gap-1"><i class="ph ph-calendar"></i> ${new Date(p.data_criacao).toLocaleDateString()}</span>
-                            </div>
-                            ${p.observacoes ? `<p class="text-[10px] text-gray-500 mt-2 italic border-l-2 border-white/10 pl-2">"${p.observacoes}"</p>` : ''}
+                            <p class="text-gray-400 text-xs">Qtd: ${p.quantidade} | Criado em: ${new Date(p.data_criacao).toLocaleDateString()}</p>
                         </div>
-                        <div class="flex gap-2 w-full md:w-auto mt-2 md:mt-0">
-                            <button onclick="window.approveRequest('${p.id}')" class="flex-1 md:flex-none bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-4 py-2 rounded transition shadow-lg">Aprovar</button>
-                            <button onclick="window.rejectRequest('${p.id}')" class="flex-1 md:flex-none bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-4 py-2 rounded transition shadow-lg">Reprovar</button>
+                        <div class="flex gap-2">
+                            <button onclick="window.approveRequest('${p.id}')" class="bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-3 py-2 rounded">Aprovar</button>
+                            <button onclick="window.rejectRequest('${p.id}')" class="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-3 py-2 rounded">Reprovar</button>
                         </div>
                     </div>
-                    `;
-                }).join('');
+                `).join('');
 
             } catch (e) {
                 console.error(e);
@@ -1288,7 +1405,7 @@
         async function loadDependencies() { 
             try { 
                 const [ends, prods] = await Promise.all([ 
-                    client.request(readItems('enderecos_entrega')), 
+                    client.request(readItems('enderecos_entrega', { sort: ['apelido_local'] })), 
                     client.request(readItems('estoque_cliente', { fields: ['*', 'produto_id.nome', 'estoque_lotes.*'] })) 
                 ]); 
                 
@@ -1350,6 +1467,30 @@
                 
                 // INCLUI VARIAÇÃO NA OBSERVAÇÃO
                 const detalheVariacao = window.selectedBatchDescription ? `[${window.selectedBatchDescription}] ` : '';
+                
+                let enderecoManualData = null;
+                let enderecoId = isManual ? null : document.getElementById('pedido-endereco').value;
+                
+                // SE FOR MANUAL, CONSTRÓI A STRING COMPLETA E DETALHADA PARA SALVAR NO CAMPO endereco_manual
+                if(isManual) {
+                    const cep = document.getElementById('manual-pedido-cep').value;
+                    const logradouro = document.getElementById('manual-pedido-logradouro').value;
+                    const numero = document.getElementById('manual-pedido-numero').value;
+                    const bairro = document.getElementById('manual-pedido-bairro').value;
+                    const cidade = document.getElementById('manual-pedido-cidade').value;
+                    const uf = document.getElementById('manual-pedido-uf').value;
+                    const complemento = document.getElementById('manual-pedido-complemento').value;
+                    const ac = document.getElementById('manual-pedido-ac').value;
+
+                    // Validação extra para garantir que todos os campos obrigatórios foram preenchidos
+                    if (!cep || !logradouro || !numero || !bairro || !cidade || !uf || !ac) {
+                         throw new Error("Preencha todos os campos obrigatórios do endereço manual (CEP, Logradouro, Número, Bairro, Cidade, UF e A/C).");
+                    }
+
+                    // Formato detalhado para salvamento no campo 'endereco_manual'
+                    enderecoManualData = `A/C: ${ac} | CEP: ${cep} | Endereço: ${logradouro}, ${numero} - ${complemento} - ${bairro}, ${cidade}/${uf}`;
+                }
+
 
                 // === LÓGICA DE APROVAÇÃO ===
                 const needsApproval = window.currentOrgConfig?.exige_aprovacao === true;
@@ -1362,8 +1503,8 @@
                     quantidade: qtd,
                     produto_id: dadosEstoque.produto_id, 
                     observacoes: `${detalheVariacao}Saída Solicitada. Data Postagem: ${document.getElementById('pedido-data').value}`, 
-                    endereco_id: isManual ? null : document.getElementById('pedido-endereco').value, 
-                    endereco_manual: isManual ? document.getElementById('pedido-endereco-manual').value : null, 
+                    endereco_id: enderecoId, // ID se for endereço selecionado
+                    endereco_manual: enderecoManualData, // String detalhada se for manual
                     organization_id: window.currentOrgId 
                 }));
 
@@ -1545,6 +1686,334 @@
                 }).join('');
             } catch (e) { tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-red-500">Erro.</td></tr>'; }
         }
+        
+        // =================================================================================
+        // === NOVAS FUNÇÕES: GERENCIAMENTO DE ENDEREÇOS (COM ALTERAÇÕES) ===
+        // =================================================================================
+
+        window.openAddressManager = function() {
+            document.getElementById('address-manager-modal').classList.remove('hidden');
+            document.getElementById('address-manager-modal').classList.add('flex');
+            window.setAddressTab('manual'); // Inicia no cadastro manual
+        }
+
+        window.setAddressTab = function(tabName) {
+            document.querySelectorAll('.address-tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tab-${tabName}-btn`).classList.add('active');
+
+            document.getElementById('address-tab-manual').classList.add('hidden');
+            document.getElementById('address-tab-import').classList.add('hidden');
+            document.getElementById(`address-tab-${tabName}`).classList.remove('hidden');
+        }
+
+        // --- FUNÇÃO DE BUSCA CEP PARA O MODAL DE CADASTRO MANUAL ---
+        window.fetchCep = async function(cep) {
+            const cleanCep = cep.replace(/\D/g, '');
+            const feedback = document.getElementById('cep-feedback');
+            
+            document.getElementById('manual-logradouro').value = '';
+            document.getElementById('manual-bairro').value = '';
+            document.getElementById('manual-cidade').value = '';
+            document.getElementById('manual-uf').value = '';
+            
+            if (cleanCep.length !== 8) return;
+
+            feedback.textContent = 'Buscando CEP...';
+            feedback.classList.remove('hidden');
+            
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+                const data = await response.json();
+
+                if (data.erro) {
+                    feedback.textContent = 'CEP não encontrado.';
+                    feedback.classList.remove('hidden');
+                    return;
+                }
+
+                document.getElementById('manual-logradouro').value = data.logradouro || '';
+                document.getElementById('manual-bairro').value = data.bairro || '';
+                document.getElementById('manual-cidade').value = data.localidade || '';
+                document.getElementById('manual-uf').value = data.uf || '';
+                
+                // Remove a mensagem de feedback se a busca for bem-sucedida
+                feedback.classList.add('hidden');
+                document.getElementById('manual-numero').focus();
+
+            } catch (error) {
+                feedback.textContent = 'Erro na comunicação com o ViaCEP.';
+                feedback.classList.remove('hidden');
+            }
+        }
+        
+        // --- NOVA FUNÇÃO DE BUSCA CEP PARA O CAMPO MANUAL NA TELA DE PEDIDO ---
+        window.fetchCepManual = async function(cep) {
+            const cleanCep = cep.replace(/\D/g, '');
+            const feedback = document.getElementById('cep-pedido-feedback');
+            
+            document.getElementById('manual-pedido-logradouro').value = '';
+            document.getElementById('manual-pedido-bairro').value = '';
+            document.getElementById('manual-pedido-cidade').value = '';
+            document.getElementById('manual-pedido-uf').value = '';
+            
+            if (cleanCep.length !== 8) return;
+
+            feedback.textContent = 'Buscando CEP...';
+            feedback.classList.remove('hidden');
+            
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+                const data = await response.json();
+
+                if (data.erro) {
+                    feedback.textContent = 'CEP não encontrado.';
+                    feedback.classList.remove('hidden');
+                    return;
+                }
+
+                document.getElementById('manual-pedido-logradouro').value = data.logradouro || '';
+                document.getElementById('manual-pedido-bairro').value = data.bairro || '';
+                document.getElementById('manual-pedido-cidade').value = data.localidade || '';
+                document.getElementById('manual-pedido-uf').value = data.uf || '';
+                
+                feedback.classList.add('hidden');
+                document.getElementById('manual-pedido-numero').focus();
+
+            } catch (error) {
+                feedback.textContent = 'Erro na comunicação com o ViaCEP.';
+                feedback.classList.remove('hidden');
+            }
+        }
+
+
+        document.getElementById('form-manual-address').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-manual-address');
+            const originalText = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loader border-white w-5 h-5"></div> <span class="ml-2">Salvando...</span>';
+
+            const address = {
+                cep: document.getElementById('manual-cep').value.replace(/\D/g, ''),
+                logradouro: document.getElementById('manual-logradouro').value,
+                numero: document.getElementById('manual-numero').value,
+                bairro: document.getElementById('manual-bairro').value,
+                cidade: document.getElementById('manual-cidade').value,
+                estado: document.getElementById('manual-uf').value,
+                complemento: document.getElementById('manual-complemento').value,
+                apelido_local: document.getElementById('manual-ac').value, // Usando A/C como apelido/referência
+                organization_id: window.currentOrgId
+            };
+
+            // Validação de campos críticos não preenchidos
+            if (!address.numero || !address.apelido_local) {
+                notify('Obrigatório preencher NÚMERO e A/C (Aos Cuidados de).', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                return;
+            }
+            // Validação completa de campos obrigatórios
+             if (!address.cep || !address.logradouro || !address.bairro || !address.cidade || !address.estado) {
+                notify('Obrigatório preencher CEP, Logradouro, Bairro, Cidade e UF.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                return;
+            }
+
+            try {
+                await client.request(createItem('enderecos_entrega', address));
+                notify(`Endereço "${address.apelido_local}" cadastrado com sucesso!`, 'success');
+                document.getElementById('address-manager-modal').classList.add('hidden');
+                // Recarrega o SELECT de endereços na tela de envio
+                await loadDependencies(); 
+            } catch (e) {
+                let msg = e.message || "Erro desconhecido ao salvar endereço.";
+                if(e.errors && e.errors.length > 0) msg = e.errors[0].message;
+                notify('Erro ao salvar: ' + msg, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
+        
+        // --- ABA IMPORTAÇÃO: NORMALIZAÇÃO INTELIGENTE (AGORA CHAMA A API PYTHON) ---
+        
+        window.handleAddressImport = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // URL DA API PYTHON (Normalizador de Tabelas no Dokploy)
+            const API_URL = 'https://elo-brindes-normalizadorapi-3ctahv-2b319c-152-53-165-62.traefik.me/normalizar';
+            const container = document.getElementById('import-preview-container');
+            const placeholder = document.getElementById('import-placeholder');
+            
+            // 1. Feedback visual (Substitui placeholder)
+            if(placeholder) placeholder.classList.add('hidden');
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-10 space-y-3">
+                    <div class="loader border-brand-wine w-8 h-8"></div>
+                    <p class="text-gray-400 text-sm">Enviando para Inteligência Artificial...</p>
+                    <p class="text-gray-600 text-xs">Normalizando endereços e corrigindo formatação</p>
+                </div>
+            `;
+
+            // 2. Prepara o envio (FormData)
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                // 3. Faz o fetch para a API Python
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Erro de rede ou formato de API inválido.' }));
+                    throw new Error(errorData.error || `Erro HTTP ${response.status}: Falha na normalização do servidor.`);
+                }
+
+                // 4. Recebe os dados já limpos do Python
+                const data = await response.json();
+                
+                if (data.length === 0) throw new Error("A planilha parece estar vazia ou ilegível.");
+
+                // 5. Atualiza a variável global (Chaves: status, cep, logradouro, numero, apelido_local, etc.)
+                window.importedAddresses = data;
+                
+                // Verifica erros críticos baseado no status que o Python definiu
+                const hasCriticalErrors = window.importedAddresses.some(a => a.status !== 'OK');
+                
+                // 6. Chama a função de renderização (mantida inalterada)
+                window.renderImportPreview(hasCriticalErrors);
+                
+                notify(`Processamento concluído! ${window.importedAddresses.length} endereços analisados.`);
+
+            } catch (error) {
+                console.error("Erro na API Python:", error);
+                container.innerHTML = `
+                    <div class="text-center py-10">
+                        <i class="ph ph-warning-circle text-3xl text-red-500 mb-2"></i>
+                        <p class="text-red-400 mb-2">Erro ao processar planilha.</p>
+                        <p class="text-gray-500 text-xs">${error.message}</p>
+                    </div>
+                `;
+                notify('Falha na importação: ' + error.message, 'error');
+            }
+            
+            // 7. Limpa o input
+            event.target.value = ''; 
+        }
+
+        window.renderImportPreview = function(hasCriticalErrors) {
+            const container = document.getElementById('import-preview-container');
+            const actionsDiv = document.getElementById('import-actions');
+            const countSpan = document.getElementById('import-count');
+            const warningP = document.getElementById('import-warning');
+            
+            if (window.importedAddresses.length === 0) {
+                container.innerHTML = '<p id="import-placeholder" class="text-center text-gray-500 py-10">Nenhuma planilha carregada.</p>';
+                actionsDiv.classList.add('hidden');
+                return;
+            }
+            
+            countSpan.textContent = window.importedAddresses.length;
+            actionsDiv.classList.remove('hidden');
+            warningP.classList.toggle('hidden', !hasCriticalErrors);
+
+            const tableHtml = `
+                <table class="w-full text-left text-gray-300 responsive-table text-sm">
+                    <thead class="bg-white/5 text-gray-400 uppercase text-xs sticky top-0 backdrop-blur-sm">
+                        <tr>
+                            <th class="p-3">Status</th>
+                            <th class="p-3">A/C</th>
+                            <th class="p-3">CEP</th>
+                            <th class="p-3">Rua</th>
+                            <th class="p-3">N°</th>
+                            <th class="p-3">Bairro/Cidade</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5">
+                        ${window.importedAddresses.map(addr => {
+                            let statusClass = 'status-dot-green';
+                            let icon = '<i class="ph ph-check-circle-fill"></i>';
+                            if (addr.status.includes('FALTA') || addr.status !== 'OK') {
+                                statusClass = addr.status.includes('NÚMERO') || addr.status.includes('CEP') ? 'status-dot-red' : 'status-dot-yellow';
+                                icon = statusClass === 'status-dot-red' ? '<i class="ph ph-x-circle-fill"></i>' : '<i class="ph ph-warning-circle-fill"></i>';
+                            }
+                            
+                            return `
+                                <tr class="hover:bg-white/5">
+                                    <td class="p-3" data-label="Status"><span class="${statusClass} flex items-center gap-1 font-bold">${icon} ${addr.status}</span></td>
+                                    <td class="p-3 truncate max-w-[100px] text-white" data-label="A/C">${addr.apelido_local}</td>
+                                    <td class="p-3" data-label="CEP">${addr.cep || 'N/A'}</td>
+                                    <td class="p-3 truncate max-w-[150px]" data-label="Rua">${addr.logradouro}</td>
+                                    <td class="p-3 text-white font-bold" data-label="N°">${addr.numero || 'S/N'}</td>
+                                    <td class="p-3" data-label="Bairro">${addr.bairro || addr.cidade || 'N/A'}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+            container.innerHTML = tableHtml;
+        }
+
+        window.saveImportedAddresses = async function() {
+            if (window.importedAddresses.length === 0) return;
+
+            const hasCriticalErrors = window.importedAddresses.some(a => a.status.includes('NÚMERO') || a.status.includes('CEP'));
+            if (hasCriticalErrors && !confirm("AVISO: Alguns endereços estão com CEP ou NÚMERO ausentes e o registro será incompleto. Deseja continuar?")) {
+                return;
+            }
+
+            const btn = document.querySelector('#import-actions button');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loader border-white w-5 h-5"></div> <span class="ml-2">Cadastrando em lote...</span>';
+            
+            const addressesToSave = window.importedAddresses.map(addr => ({
+                cep: addr.cep,
+                logradouro: addr.logradouro,
+                numero: addr.numero === 'S/N' ? null : addr.numero,
+                bairro: addr.bairro === 'N/A' ? null : addr.bairro,
+                cidade: addr.cidade === 'N/A' ? null : addr.cidade,
+                estado: addr.estado === 'N/A' ? null : addr.estado,
+                complemento: addr.complemento,
+                apelido_local: addr.apelido_local,
+                observacoes: `Importado via Planilha. Endereço Completo Original: ${addr.fullAddress}`,
+                organization_id: window.currentOrgId
+            })).filter(addr => addr.numero && addr.cep); // Salva APENAS os minimamente válidos
+
+            try {
+                // Como não há função batch-create, fazemos um Promise.all
+                const savePromises = addressesToSave.map(addr => client.request(createItem('enderecos_entrega', addr)));
+                await Promise.all(savePromises);
+                
+                notify(`${savePromises.length} endereços cadastrados com sucesso!`, 'success');
+                document.getElementById('address-manager-modal').classList.add('hidden');
+                // Recarrega o SELECT de endereços na tela de envio
+                await loadDependencies(); 
+                
+            } catch (e) {
+                let msg = e.message || "Erro desconhecido ao salvar endereços em lote.";
+                if(e.errors && e.errors.length > 0) msg = e.errors[0].message;
+                notify('Erro: ' + msg, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                // Limpa o estado da importação
+                window.importedAddresses = [];
+                document.getElementById('import-file').value = '';
+                document.getElementById('import-actions').classList.add('hidden');
+                document.getElementById('import-preview-container').innerHTML = '<p id="import-placeholder" class="text-center text-gray-500 py-10">Nenhuma planilha carregada.</p>';
+            }
+        }
+        
+        // =================================================================================
+        // === FIM DAS NOVAS FUNÇÕES ===
+        // =================================================================================
     </script>
 </body>
 </html>
