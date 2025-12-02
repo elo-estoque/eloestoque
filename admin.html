@@ -160,7 +160,7 @@
     </div>
 
     <script type="module">
-        import { createDirectus, authentication, rest, readItems, updateItem, createItem, deleteItem, readMe, readRoles, readUsers, createUser, updateUser, deleteUser } from 'https://esm.sh/@directus/sdk@13.0.0';
+        import { createDirectus, authentication, rest, readItems, updateItem, createItem, deleteItem, readMe, readRoles, readUsers, createUser, updateUser, deleteUser, uploadFiles } from 'https://esm.sh/@directus/sdk@13.0.0';
 
         const API_URL = 'https://admin-entregas.elobrindes.com.br/';
         const client = createDirectus(API_URL).with(authentication()).with(rest());
@@ -443,7 +443,7 @@
                 </div>`;
         }
 
-        // === 7. MODAL DE PROCESSO (SETORES NORMAIS) ===
+        // === 7. MODAL DE PROCESSO (SETORES NORMAIS) - ATUALIZADO ===
         window.openProcessModal = async function(id) {
             const modal = document.getElementById('action-modal');
             const content = document.getElementById('modal-form-content');
@@ -466,12 +466,20 @@
                     html += createSelect('Status', 'status', [{v:'pendente',l:'Pendente'},{v:'cotado',l:'Cotado'},{v:'aguardando_pagamento',l:'Aprovado'}], task.status);
                 } 
                 else if (currentSector === 'financeiro') {
-                    html += `<p class="text-white text-sm mb-2">Valor: R$ ${task.valor_total}</p>`;
-                    html += createInput('Comprovante', 'comprovante_pagamento', 'text', task.comprovante_pagamento);
-                    html += createSelect('Status', 'status', [{v:'aguardando_pagamento',l:'Aguardando'},{v:'liberado_logistica',l:'Pago'}], task.status);
+                    html += `<p class="text-white text-sm mb-2">Valor Total: <strong class="text-green-400">R$ ${task.valor_total || '0,00'}</strong></p>`;
+                    
+                    // NOVO: Input de Arquivo para a Etiqueta
+                    html += `<div class="mb-2">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Foto Etiqueta/Rastreio</label>
+                        <input type="file" id="file_upload_envio" class="w-full glass-input rounded-xl px-4 py-3 text-sm text-gray-400">
+                        ${task.comprovante_envio ? '<p class="text-[10px] text-green-400 mt-1">✓ Já existe um arquivo enviado.</p>' : ''}
+                    </div>`;
+
+                    html += createInput('Comprovante Pagamento (Cliente)', 'comprovante_pagamento', 'text', task.comprovante_pagamento);
+                    html += createSelect('Status', 'status', [{v:'aguardando_pagamento',l:'Aguardando'},{v:'liberado_logistica',l:'Pago / Liberar'}], task.status);
                 }
                 else if (currentSector === 'logistica') {
-                    html += createInput('Rastreio', 'codigo_rastreio', 'text', task.codigo_rastreio);
+                    html += createInput('Rastreio (Código)', 'codigo_rastreio', 'text', task.codigo_rastreio);
                     html += createSelect('Status', 'status', [{v:'liberado_logistica',l:'Em Separação'},{v:'enviado',l:'Enviado'}], task.status);
                 }
                 else if (currentSector === 'mkt') {
@@ -482,17 +490,56 @@
                 content.innerHTML = html;
 
                 btn.onclick = async () => {
+                    // Feedback visual
+                    const originalText = btn.innerText;
+                    btn.innerText = 'Processando Upload...';
+                    btn.disabled = true;
+
                     const payload = {};
-                    content.querySelectorAll('input, select').forEach(el => {
-                        if(el.id) {
+                    
+                    // 1. Coleta dados dos Inputs normais
+                    content.querySelectorAll('input:not([type="file"]), select').forEach(el => {
+                        if(el.id && el.id !== 'file_upload_envio') {
                             if (el.type === 'number') payload[el.id] = el.value === '' ? null : parseFloat(el.value);
                             else payload[el.id] = el.value;
                         }
                     });
+
                     try {
+                        // 2. Lógica Especial de Upload (Apenas se tiver arquivo selecionado)
+                        const fileInput = document.getElementById('file_upload_envio');
+                        if (fileInput && fileInput.files.length > 0) {
+                            const formData = new FormData();
+                            formData.append('file', fileInput.files[0]);
+                            
+                            // Faz upload para a biblioteca do Directus
+                            // IMPORTANTE: Tenta pegar o ID de todas as formas que o Directus pode responder
+                            const uploadResult = await client.request(uploadFiles(formData));
+                            
+                            let fileId = null;
+                            if (uploadResult.id) fileId = uploadResult.id;
+                            else if (uploadResult.data && uploadResult.data.id) fileId = uploadResult.data.id;
+                            else if (Array.isArray(uploadResult) && uploadResult[0]?.id) fileId = uploadResult[0].id;
+
+                            if(!fileId) throw new Error("Falha ao obter ID do arquivo após upload.");
+
+                            // Salva o ID do arquivo no payload
+                            payload.comprovante_envio = fileId;
+                        }
+
+                        // 3. Atualiza o item
                         await client.request(updateItem('solicitacoes', currentTaskId, payload));
                         notify('Atualizado!'); closeModal('action-modal'); loadTasks();
-                    } catch(e) { notify('Erro: ' + e.message, 'error'); }
+                    } catch(e) { 
+                        console.error(e);
+                        // Mensagem de erro amigável para permissão
+                        let msg = e.message;
+                        if(e.errors && e.errors[0]?.message.includes('403')) msg = "Erro 403: Verifique permissão de 'CREATE' em System Collections > Directus Files.";
+                        notify('Erro: ' + msg, 'error'); 
+                    } finally {
+                        btn.innerText = originalText;
+                        btn.disabled = false;
+                    }
                 }
             } catch(e) { content.innerHTML = 'Erro.'; }
         }
