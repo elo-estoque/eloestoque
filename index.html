@@ -1877,13 +1877,15 @@
             notify(`Quantidade de ${massQtd} aplicada a todos.`);
         }
         
-        // NOVO: Atualiza a soma total de QTD (CORRIGIDO PARA BUSCAR O SALDO MAX DO ELEMENTO)
+        // CORREÇÃO 1: Função para atualizar a soma total e validar contra o saldo
         window.updateTotalSumDisplay = function() {
-            const total = window.selectedShipments.reduce((sum, s) => sum + s.quantity, 0);
+            // Calcula a soma das quantidades inseridas
+            const total = window.selectedShipments.reduce((sum, s) => sum + (parseInt(s.quantity) || 0), 0);
             
-            // CORREÇÃO APLICADA AQUI: Busca o saldo total do elemento HTML
-            const saldoMaxStr = document.getElementById('pedido-produto').getAttribute('data-max');
-            const saldoMax = parseInt(saldoMaxStr) || 0;
+            // CORREÇÃO CRÍTICA: Busca o saldo diretamente do elemento visual do modal, que foi preenchido ao abrir
+            // Isso é mais seguro do que depender do select escondido atrás do modal
+            const saldoText = document.getElementById('modal-saldo-total').innerText;
+            const saldoMax = parseInt(saldoText) || 0;
             
             const totalSumDisplay = document.getElementById('qtd-total-sum');
             const btnConfirmSend = document.getElementById('btn-confirm-send');
@@ -1894,24 +1896,28 @@
                 totalSumDisplay.classList.add('text-red-500');
                 totalSumDisplay.classList.remove('text-gray-400');
                 btnConfirmSend.disabled = true;
-                btnConfirmSend.innerText = 'SALDO INSUFICIENTE (' + (total - saldoMax) + ' peças a mais)';
+                btnConfirmSend.innerText = `SALDO INSUFICIENTE (${total - saldoMax} peças a mais)`;
+                btnConfirmSend.classList.add('bg-red-900', 'hover:bg-red-800', 'cursor-not-allowed');
+                btnConfirmSend.classList.remove('bg-brand-wine', 'hover:bg-brand-hover');
             } else {
                 totalSumDisplay.classList.remove('text-red-500');
                 totalSumDisplay.classList.add('text-gray-400');
                 btnConfirmSend.disabled = false;
                 btnConfirmSend.innerText = 'CONFIRMAR E ENVIAR SOLICITAÇÕES';
+                btnConfirmSend.classList.remove('bg-red-900', 'hover:bg-red-800', 'cursor-not-allowed');
+                btnConfirmSend.classList.add('bg-brand-wine', 'hover:bg-brand-hover');
             }
         }
         
-        // NOVO: Finaliza envios em lote (Multiple API Calls)
+        // CORREÇÃO 2: Função de finalização com validação robusta
         window.finalizeShipments = async function() {
-            // VALIDAÇÃO CRÍTICA DE SALDO REFORÇADA
-            const total = window.selectedShipments.reduce((sum, s) => sum + s.quantity, 0);
-            const saldoMaxStr = document.getElementById('pedido-produto').getAttribute('data-max');
-            const saldoMax = parseInt(saldoMaxStr) || 0;
+            // Recalcula totais para garantir (segurança contra edições de HTML)
+            const total = window.selectedShipments.reduce((sum, s) => sum + (parseInt(s.quantity) || 0), 0);
+            const saldoText = document.getElementById('modal-saldo-total').innerText;
+            const saldoMax = parseInt(saldoText) || 0;
             
             if (total > saldoMax) {
-                notify('Erro: Saldo insuficiente. A quantidade total (' + total + ') excede o saldo disponível (' + saldoMax + ').', 'error');
+                notify(`Erro: Saldo insuficiente. Total solicitado: ${total}. Disponível: ${saldoMax}.`, 'error');
                 return;
             }
             
@@ -1926,37 +1932,37 @@
             const dataPostagem = document.getElementById('pedido-data').value;
             const detalheVariacao = window.selectedBatchDescription ? `[${window.selectedBatchDescription}] ` : '';
 
-            // Busca o produto_id do item de estoque
-            const itemEstoque = await client.request(readItems('estoque_cliente', { 
-                filter: { id: { _eq: estoqueId } }, 
-                fields: ['id', 'produto_id'] 
-            }));
-            const produtoId = itemEstoque[0]?.produto_id;
-            
-            if (!produtoId) {
-                 notify('Erro: Produto de estoque não encontrado.', 'error');
-                 btn.innerHTML = originalText;
-                 btn.disabled = false;
-                 return;
-            }
-            
-            const needsApproval = window.currentOrgConfig?.exige_aprovacao === true;
-            const isManager = window.currentUser?.eh_gestor === true;
-            const finalStatus = (needsApproval && !isManager) ? 'aguardando_aprovacao' : 'pendente';
-
-            const promises = window.selectedShipments.map(shipment => {
-                return client.request(createItem('solicitacoes', { 
-                    tipo: 'SOLICITACAO_ENVIO', 
-                    status: finalStatus, 
-                    quantidade: shipment.quantity,
-                    produto_id: produtoId, // Usa o ID do produto
-                    observacoes: `${detalheVariacao}Saída Solicitada. Data Postagem: ${dataPostagem}. Destinatário: ${shipment.addressAC}`, 
-                    endereco_id: shipment.addressId, 
-                    organization_id: window.currentOrgId 
-                }));
-            });
-            
             try {
+                // Busca o produto_id REAL associado a este item de estoque
+                const itemEstoque = await client.request(readItems('estoque_cliente', { 
+                    filter: { id: { _eq: estoqueId } }, 
+                    fields: ['id', 'produto_id'] 
+                }));
+                
+                const produtoId = itemEstoque[0]?.produto_id;
+                
+                if (!produtoId) {
+                     throw new Error('Produto de estoque não encontrado ou ID inválido.');
+                }
+                
+                // Verifica configurações de aprovação
+                const needsApproval = window.currentOrgConfig?.exige_aprovacao === true;
+                const isManager = window.currentUser?.eh_gestor === true;
+                const finalStatus = (needsApproval && !isManager) ? 'aguardando_aprovacao' : 'pendente';
+
+                // Prepara as promessas de envio
+                const promises = window.selectedShipments.map(shipment => {
+                    return client.request(createItem('solicitacoes', { 
+                        tipo: 'SOLICITACAO_ENVIO', 
+                        status: finalStatus, 
+                        quantidade: parseInt(shipment.quantity),
+                        produto_id: produtoId, // ID correto do produto
+                        observacoes: `${detalheVariacao}Saída Solicitada em Lote. Data Postagem: ${dataPostagem}. Destinatário: ${shipment.addressAC}`, 
+                        endereco_id: shipment.addressId, 
+                        organization_id: window.currentOrgId 
+                    }));
+                });
+                
                 await Promise.all(promises);
                 
                 document.getElementById('lot-config-modal').classList.add('hidden');
@@ -1964,102 +1970,26 @@
                 if(finalStatus === 'aguardando_aprovacao') {
                     notify(`${promises.length} Solicitações enviadas para aprovação do gestor.`, 'success');
                 } else {
-                    notify(`${promises.length} Solicitações de envio enviadas!`, 'success'); 
+                    notify(`${promises.length} Solicitações de envio realizadas com sucesso!`, 'success'); 
                 }
                 
-                window.selectedShipments = []; // Limpa
-                window.router('pedidos'); // Redireciona para o histórico
-                window.loadDependencies(); // Recarrega endereços e estoque
+                // Limpa e Redireciona
+                window.selectedShipments = []; 
+                window.router('pedidos'); 
+                
+                // Pequeno delay para garantir que o banco atualize antes de recarregar
+                setTimeout(() => {
+                    window.loadDependencies(); 
+                }, 500);
                 
             } catch (e) {
+                console.error("Erro no envio em lote:", e);
                 let msg = e.message || "Erro desconhecido ao enviar lote.";
                 if(e.errors && e.errors.length > 0) msg = e.errors[0].message;
                 notify('Erro: ' + msg, 'error');
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-            }
-        }
-        
-        // NOVO: Função para lidar com envio manual (mantém a lógica antiga)
-        window.submitManualShipment = async function() {
-            // Reutiliza a lógica do submit antigo para o caso de uso único manual
-            const form = document.getElementById('form-pedido');
-            const btn = form.querySelector('button');
-            const originalText = btn.innerText;
-
-            // Valida campos manuais (se houver algum vazio, o required/navegador já barra)
-            if (!form.checkValidity()) {
-                 notify('Preencha todos os campos obrigatórios do endereço manual.', 'error');
-                 return;
-            }
-
-            btn.disabled = true; 
-            btn.innerHTML = '<div class="loader border-white w-5 h-5"></div>';
-
-            try {
-                let estoqueIdValue = document.getElementById('pedido-produto').value; 
-                let estoqueId = estoqueIdValue.includes('|') ? estoqueIdValue.split('|')[0] : estoqueIdValue;
-                
-                const qtd = parseInt(document.getElementById('pedido-qtd-default').value); // Usa a QTD Padrão
-
-                const itemEstoque = await client.request(readItems('estoque_cliente', { 
-                    filter: { id: { _eq: estoqueId } }, 
-                    fields: ['id', 'quantidade_disponivel', 'produto_id'] 
-                }));
-
-                if (!itemEstoque || !itemEstoque[0]) throw new Error('Estoque não encontrado.');
-                const dadosEstoque = itemEstoque[0];
-
-                // VALIDAÇÃO DE SALDO PARA ENVIO MANUAL
-                if (qtd > dadosEstoque.quantidade_disponivel) {
-                    throw new Error(`Saldo insuficiente no estoque. Disponível: ${dadosEstoque.quantidade_disponivel} unidades.`);
-                }
-                
-                const detalheVariacao = window.selectedBatchDescription ? `[${window.selectedBatchDescription}] ` : '';
-                
-                const cep = document.getElementById('manual-pedido-cep').value;
-                const logradouro = document.getElementById('manual-pedido-logradouro').value;
-                const numero = document.getElementById('manual-pedido-numero').value;
-                const bairro = document.getElementById('manual-pedido-bairro').value;
-                const cidade = document.getElementById('manual-pedido-cidade').value;
-                const uf = document.getElementById('manual-pedido-uf').value;
-                const complemento = document.getElementById('manual-pedido-complemento').value;
-                const ac = document.getElementById('manual-pedido-ac').value;
-
-                const enderecoManualData = `A/C: ${ac} | CEP: ${cep} | Endereço: ${logradouro}, ${numero} - ${complemento} - ${bairro}, ${cidade}/${uf}`;
-                
-                const needsApproval = window.currentOrgConfig?.exige_aprovacao === true;
-                const isManager = window.currentUser?.eh_gestor === true;
-                const finalStatus = (needsApproval && !isManager) ? 'aguardando_aprovacao' : 'pendente';
-
-                await client.request(createItem('solicitacoes', { 
-                    tipo: 'SOLICITACAO_ENVIO', 
-                    status: finalStatus, 
-                    quantidade: qtd,
-                    produto_id: dadosEstoque.produto_id, 
-                    observacoes: `${detalheVariacao}Saída Solicitada. Data Postagem: ${document.getElementById('pedido-data').value}`, 
-                    endereco_id: null, 
-                    endereco_manual: enderecoManualData,
-                    organization_id: window.currentOrgId 
-                }));
-
-                if(finalStatus === 'aguardando_aprovacao') {
-                    notify('Solicitação enviada para aprovação do gestor.');
-                } else {
-                    notify('Solicitação enviada! O estoque será atualizado em breve.'); 
-                }
-                
-                window.router('estoque');
-
-            } catch (e) { 
-                let msg = e.message || "Erro desconhecido";
-                if(e.errors && e.errors.length > 0) msg = e.errors[0].message;
-                notify('Erro: ' + msg, 'error');
-            } finally { 
-                btn.disabled = false; 
-                btn.innerText = originalText;
-                window.selectedBatchDescription = null; 
             }
         }
 
