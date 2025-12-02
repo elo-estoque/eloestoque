@@ -45,13 +45,11 @@
         .modal-enter { animation: modalIn 0.3s ease-out forwards; }
         @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
-        .nav-item-locked { opacity: 0.4; cursor: not-allowed; filter: grayscale(100%); pointer-events: none; }
-        .nav-item-active { background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .nav-item-active i { color: #E31937; }
-        
-        /* Estilos PCP */
+        /* Estilos */
         .pcp-tab { @apply px-4 py-2 rounded-lg text-xs font-bold uppercase transition border border-white/10 bg-white/5 text-gray-400 hover:bg-white/10 cursor-pointer; }
         .pcp-tab.active { @apply bg-brand-wine text-white border-brand-wine; }
+        .org-list-item { @apply w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all text-xs cursor-pointer; }
+        .org-list-item.selected-org { @apply text-white bg-white/10 border-l-4 border-green-500 font-bold; }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden selection:bg-brand-wine selection:text-white">
@@ -80,7 +78,14 @@
         
         <aside class="w-72 glass-panel border-r-0 border-r-white/5 flex flex-col z-20">
             <div class="h-24 py-6 flex flex-col items-center justify-center px-8 border-b border-white/5"><img src="logo.png" class="h-12 w-auto max-w-full object-contain drop-shadow-lg transition-transform hover:scale-105"></div>
-            <div class="p-6 flex-1 overflow-y-auto">
+            
+            <div class="p-4 flex-1 overflow-y-auto">
+                <div id="representative-orgs" class="space-y-2 hidden">
+                    <p class="px-4 text-[10px] uppercase text-gray-500 font-bold tracking-widest mb-2 mt-2 flex items-center gap-1"><i class="ph ph-briefcase text-sm"></i> Empresas Atribuídas</p>
+                    <div id="org-list-container" class="space-y-1"></div>
+                    <div class="py-2"></div>
+                </div>
+
                 <nav class="space-y-2" id="sidebar-menu">
                     <p class="px-4 text-[10px] uppercase text-gray-500 font-bold tracking-widest mb-2">Setores</p>
                     <button id="menu-orcamentos" onclick="switchSector('orcamentos')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-currency-dollar text-xl group-hover:text-brand-wine"></i><span class="font-medium">Orçamentos</span></button>
@@ -90,6 +95,7 @@
                     <button id="menu-pcp" onclick="switchSector('pcp')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-sliders text-xl group-hover:text-orange-400"></i><span class="font-medium">PCP / Admin</span></button>
                 </nav>
             </div>
+            
             <div class="p-4 border-t border-white/5">
                 <div class="flex items-center gap-3 px-2 mb-3"><div class="w-8 h-8 rounded-full bg-brand-wine flex items-center justify-center text-white font-bold shadow-lg"><i class="ph-fill ph-user"></i></div><div class="overflow-hidden"><p class="text-xs font-bold text-white truncate" id="user-name-display">Usuario</p><p class="text-[10px] text-gray-400 truncate uppercase font-bold" id="user-role-display">Cargo</p></div></div>
                 <button onclick="logout()" class="w-full flex items-center gap-2 text-gray-500 hover:text-red-400 text-sm font-medium px-2 cursor-pointer transition"><i class="ph ph-sign-out text-lg"></i> Encerrar Sessão</button>
@@ -98,7 +104,11 @@
 
         <main class="flex-1 flex flex-col relative overflow-hidden z-10">
             <header class="h-24 flex items-center justify-between px-10">
-                <div><h2 class="text-3xl font-bold text-white tracking-tight" id="page-title">Dashboard</h2><p class="text-gray-400 text-sm mt-1" id="page-subtitle">Selecione um setor para começar.</p></div>
+                <div>
+                    <h2 class="text-3xl font-bold text-white tracking-tight" id="page-title">Dashboard</h2>
+                    <p class="text-gray-400 text-sm mt-1" id="page-subtitle">Selecione um setor para começar.</p>
+                    <p class="text-xs text-brand-wine mt-1" id="current-org-display"></p>
+                </div>
                 
                 <div class="flex items-center gap-4">
                     <div class="relative"><input type="text" placeholder="Buscar ID (#123)..." onkeyup="window.searchTasks(this.value)" class="glass-input rounded-lg pl-10 pr-4 py-2 text-sm w-48 focus:w-64 transition-all"><i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-gray-400"></i></div>
@@ -165,6 +175,7 @@
         const API_URL = 'https://admin-entregas.elobrindes.com.br/';
         const client = createDirectus(API_URL).with(authentication()).with(rest());
 
+        let currentUserId = null;
         let currentUserRole = '';
         let currentSector = ''; 
         let currentTaskId = null;
@@ -172,8 +183,16 @@
         let allTasksCache = [];
         let searchTerm = '';
         
-        // VARIÁVEIS PCP
-        window.currentPcpCollection = 'solicitacoes'; // Default
+        window.isRepresentative = false;
+        window.organizations = []; 
+        window.currentOrgId = null; 
+        window.currentOrgName = 'Todos os Clientes'; 
+        window.currentPcpCollection = 'solicitacoes'; 
+        
+        window.allOrgsCache = [];
+        window.allProductsCache = [];
+        window.allRolesCache = [];
+        window.allUsersCache = [];
 
         // === 1. LOGIN ===
         document.getElementById('form-login').addEventListener('submit', async (e) => {
@@ -184,8 +203,10 @@
 
             try {
                 await client.login(document.getElementById('email').value, document.getElementById('password').value);
-                const me = await client.request(readMe({ fields: ['role', 'first_name', 'last_name'] }));
+                const me = await client.request(readMe({ fields: ['role', 'first_name', 'last_name', 'id'] }));
                 const roleData = await client.request(readRoles({ filter: { id: { _eq: me.role } } }));
+                
+                currentUserId = me.id;
                 currentUserRole = roleData[0]?.name || 'Visitante'; 
                 const userName = `${me.first_name} ${me.last_name || ''}`;
 
@@ -205,37 +226,81 @@
             }
         });
 
-        // === 2. MENU & PERMISSÕES ===
-        function setupMenuAccess(role) {
-            const menus = ['orcamentos', 'financeiro', 'mkt', 'logistica', 'pcp'];
-            const accessMap = {
-                'Elo - Orçamentos': ['orcamentos'], 'Elo - Financeiro': ['financeiro'], 'Elo - Marketing': ['mkt'], 
-                'Elo - Logística': ['logistica'], 'Elo - PCP': ['pcp'], 'Administrator': ['orcamentos', 'financeiro', 'mkt', 'logistica', 'pcp']
-            };
-
-            menus.forEach(m => document.getElementById(`menu-${m}`).classList.add('hidden')); // Esconde tudo primeiro
-            
-            // Se for Admin/PCP, mostra tudo
-            if(role === 'Elo - PCP' || role === 'Administrator') {
-                menus.forEach(m => document.getElementById(`menu-${m}`).classList.remove('hidden'));
-            } else {
-                // Se não, mostra só o permitido
-                const allowed = accessMap[role] || [];
-                allowed.forEach(m => document.getElementById(`menu-${m}`).classList.remove('hidden'));
-            }
-
-            const allowed = accessMap[role] || [];
-            if(allowed.length > 0) {
-                if(allowed.includes('pcp') || role === 'Administrator') switchSector('pcp');
-                else switchSector(allowed[0]);
+        // CACHE DE DADOS
+        async function cacheNecessaryData() {
+            try {
+                window.allOrgsCache = await client.request(readItems('organizacoes', { fields: ['id', 'razao_social'], limit: -1 })).catch(() => []);
+                window.allProductsCache = await client.request(readItems('produtos_catalogo', { fields: ['id', 'nome', 'sku'], limit: -1 })).catch(() => []);
+                window.allRolesCache = await client.request(readRoles({ fields: ['id', 'name'], limit: -1 })).catch(() => []);
+                window.allUsersCache = await client.request(readUsers({ fields: ['id', 'first_name', 'last_name'], limit: -1 })).catch(() => []);
+            } catch (e) {
+                console.warn("Aviso: Dados de cache incompletos (Verifique permissões).", e);
             }
         }
 
-        // === 3. NAVEGAÇÃO SECTOR ===
+        async function setupMenuAccess(role) {
+            const menus = ['orcamentos', 'financeiro', 'mkt', 'logistica', 'pcp'];
+            const accessMap = {
+                'Elo - Orçamentos': ['orcamentos'], 'Elo - Financeiro': ['financeiro'], 'Elo - Marketing': ['mkt'], 
+                'Elo - Logística': ['logistica'], 'Elo - PCP': ['orcamentos', 'financeiro', 'mkt', 'logistica', 'pcp'], 
+                'Administrator': ['orcamentos', 'financeiro', 'mkt', 'logistica', 'pcp'],
+                'Elo - Representante': ['orcamentos', 'financeiro', 'mkt', 'logistica'] 
+            };
+            
+            menus.forEach(m => document.getElementById(`menu-${m}`).classList.add('hidden')); 
+            
+            const allowed = accessMap[role] || [];
+            allowed.forEach(m => document.getElementById(`menu-${m}`).classList.remove('hidden'));
+
+            if (role === 'Elo - Representante') {
+                window.isRepresentative = true;
+                await loadOrganizationsAndSwitch(); 
+            } else {
+                if(allowed.length > 0) {
+                    if(role === 'Elo - PCP' || role === 'Administrator') {
+                        await cacheNecessaryData();
+                        switchSector('pcp');
+                    } else {
+                        switchSector(allowed[0]);
+                    }
+                }
+            }
+        }
+        
+        window.loadOrganizationsAndSwitch = async function() {
+            if (!window.isRepresentative || !currentUserId) return;
+            try {
+                const orgs = await client.request(readItems('organizacoes', { 
+                    filter: { representante_id: { _eq: currentUserId } }, fields: ['id', 'razao_social']
+                }));
+                window.organizations = orgs;
+                const container = document.getElementById('org-list-container');
+                const menuBlock = document.getElementById('representative-orgs');
+                if (orgs.length > 0) {
+                    menuBlock.classList.remove('hidden');
+                    let html = `<button id="org-all" onclick="window.setOrganization(null, 'Todos os Clientes')" class="org-list-item selected-org"><i class="ph ph-users text-green-500"></i> Todos os Clientes</button>`;
+                    html += orgs.map(org => `<button id="org-${org.id}" onclick="window.setOrganization('${org.id}', '${org.razao_social}')" class="org-list-item"><i class="ph ph-storefront"></i> ${org.razao_social}</button>`).join('');
+                    container.innerHTML = html;
+                    switchSector('orcamentos');
+                } else {
+                    menuBlock.classList.add('hidden');
+                    switchSector('orcamentos');
+                }
+            } catch (e) { console.error(e); }
+        }
+        
+        window.setOrganization = function(orgId, orgName) {
+            window.currentOrgId = orgId;
+            window.currentOrgName = orgName;
+            document.getElementById('current-org-display').innerText = orgId ? `Cliente Selecionado: ${orgName}` : '';
+            document.querySelectorAll('.org-list-item').forEach(btn => btn.classList.remove('selected-org'));
+            if (orgId) document.getElementById(`org-${orgId}`).classList.add('selected-org');
+            else document.getElementById('org-all').classList.add('selected-org');
+            loadTasks();
+        }
+
         window.switchSector = function(sector) {
             currentSector = sector;
-            
-            // UI Ativa
             document.querySelectorAll('nav button').forEach(b => {
                 b.classList.remove('bg-white/10', 'text-white', 'border-l-4', 'border-brand-wine');
                 b.classList.add('text-gray-400', 'border-transparent');
@@ -245,40 +310,33 @@
                 activeBtn.classList.remove('text-gray-400', 'border-transparent');
                 activeBtn.classList.add('bg-white/10', 'text-white', 'border-l-4', 'border-brand-wine');
             }
-
-            // Títulos
             const titles = { 'orcamentos': 'Orçamentos', 'financeiro': 'Financeiro', 'mkt': 'Marketing', 'logistica': 'Logística', 'pcp': 'Gestão PCP' };
             document.getElementById('page-title').innerText = titles[sector];
 
-            // Lógica PCP vs Outros
             if (sector === 'pcp') {
                 document.getElementById('pcp-controls').classList.remove('hidden');
                 document.getElementById('common-tabs').classList.add('hidden');
-                switchPcpCollection('solicitacoes'); // Default PCP view
+                switchPcpCollection('solicitacoes'); 
             } else {
                 document.getElementById('pcp-controls').classList.add('hidden');
                 document.getElementById('common-tabs').classList.remove('hidden');
-                window.currentPcpCollection = 'solicitacoes'; // Outros setores só veem solicitações
+                window.currentPcpCollection = 'solicitacoes'; 
                 loadTasks();
             }
         }
 
-        // === 4. NAVEGAÇÃO PCP (SUB-ABAS) ===
         window.switchPcpCollection = function(collection) {
             window.currentPcpCollection = collection;
-            
-            // UI Abas PCP
             document.querySelectorAll('.pcp-tab').forEach(b => b.classList.remove('active'));
             const btnId = { 'solicitacoes': 'btn-pcp-solicitacoes', 'organizacoes': 'btn-pcp-organizacoes', 'produtos_catalogo': 'btn-pcp-produtos', 'estoque_cliente': 'btn-pcp-estoque', 'estoque_lotes': 'btn-pcp-lotes', 'directus_users': 'btn-pcp-users', 'enderecos_entrega': 'btn-pcp-ends' }[collection];
             if(document.getElementById(btnId)) document.getElementById(btnId).classList.add('active');
-
             loadTasks();
         }
 
         window.switchTab = function(tab) {
             currentTab = tab;
-            document.getElementById('tab-pending').className = tab==='pending'?'tab-active text-sm pb-2 cursor-pointer':'tab-inactive text-sm pb-2 cursor-pointer';
-            document.getElementById('tab-completed').className = tab==='completed'?'tab-active text-sm pb-2 cursor-pointer':'tab-inactive text-sm pb-2 cursor-pointer';
+            document.getElementById('tab-pending').className = tab==='pending'?'tab-active text-sm pb-2 transition cursor-pointer':'tab-inactive text-sm pb-2 cursor-pointer';
+            document.getElementById('tab-completed').className = tab==='completed'?'tab-active text-sm pb-2 transition cursor-pointer':'tab-inactive text-sm pb-2 cursor-pointer';
             loadTasks();
         }
 
@@ -287,7 +345,7 @@
             renderList();
         }
 
-        // === 5. CARREGAMENTO DE DADOS (GENÉRICO) ===
+        // === 5. LOAD TASKS (CORRIGIDO ORDENAÇÃO) ===
         window.loadTasks = async function() {
             const container = document.getElementById('task-list');
             container.innerHTML = '<div class="text-center py-20"><div class="loader border-brand-wine mx-auto mb-4"></div></div>';
@@ -295,61 +353,69 @@
             try {
                 let data = [];
                 const col = window.currentPcpCollection;
+                const baseFilter = window.currentOrgId ? { organization_id: { _eq: window.currentOrgId } } : {};
+                
+                let fields = ['*'];
+                let sortParam = ['id']; // Default sort para evitar erro em tabelas sem data_criacao
 
                 if (col === 'solicitacoes') {
-                    // ALTERADO: Adicionado 'endereco_id.*' para puxar todos os dados do endereço
-                    data = await client.request(readItems('solicitacoes', { sort: ['-data_criacao'], fields: ['*', 'produto_id.nome', 'endereco_id.*'] }));
-                } else if (col === 'directus_users') {
-                    data = await client.request(readUsers({ fields: ['first_name', 'last_name', 'email', 'role.name', 'id'] }));
+                    fields = ['*', 'produto_id.nome', 'endereco_id.*'];
+                    sortParam = ['-data_criacao']; // Só solicitacoes tem data_criacao garantida
+                } 
+                else if (col === 'estoque_cliente') fields = ['*', 'organization_id.razao_social', 'produto_id.nome']; 
+                else if (col === 'estoque_lotes') fields = ['*', 'estoque_pai_id.produto_id.nome']; 
+                else if (col === 'directus_users') fields = ['first_name', 'last_name', 'email', 'role.name', 'id', 'organization_id.razao_social']; 
+                else if (col === 'enderecos_entrega') {
+                    fields = ['*', 'organization_id.razao_social']; 
+                    sortParam = ['apelido_local'];
+                }
+                else if (col === 'organizacoes') sortParam = ['razao_social'];
+                else if (col === 'produtos_catalogo') sortParam = ['nome'];
+
+                if (col === 'directus_users') {
+                    const userFilter = window.currentOrgId ? { organization_id: { _eq: window.currentOrgId } } : {};
+                    data = await client.request(readUsers({ fields: fields, filter: userFilter })).catch(e => []);
                 } else {
-                    // Genérico para outras tabelas
-                    data = await client.request(readItems(col, { limit: 100 }));
+                    // Usa a ordenação correta para cada tabela
+                    data = await client.request(readItems(col, { sort: sortParam, fields: fields, filter: baseFilter, limit: 100 })).catch(e => {
+                        console.warn("Erro ao ler items:", e);
+                        return []; 
+                    });
                 }
 
-                allTasksCache = data;
+                allTasksCache = data || []; 
                 renderList();
 
             } catch (e) {
-                container.innerHTML = `<div class="p-4 text-red-400 text-center text-xs">Erro: ${e.message}</div>`;
+                container.innerHTML = `<div class="p-4 text-red-400 text-center text-xs">Erro inesperado: ${e.message}</div>`;
             }
         }
 
         function renderList() {
             const container = document.getElementById('task-list');
-            let items = allTasksCache;
+            let items = allTasksCache || [];
 
-            // Filtro de busca
             if(searchTerm) items = items.filter(i => JSON.stringify(i).toLowerCase().includes(searchTerm));
 
-            // LOGICA NOVA DE HISTORICO (Rastro de ações por setor)
-            if (currentSector !== 'pcp' && window.currentPcpCollection === 'solicitacoes') {
+            if (window.currentPcpCollection === 'solicitacoes' && currentSector !== 'pcp') {
                 const sectorFilters = {
-                    'orcamentos': {
-                        active: ['pendente', 'cotado', 'aguardando_aprovacao'],
-                        history: ['aguardando_pagamento', 'faturamento', 'aprovacao_arte', 'liberado_logistica', 'enviado', 'concluido', 'cancelado']
-                    },
-                    'financeiro': {
-                        active: ['aguardando_pagamento', 'faturamento'],
-                        history: ['liberado_logistica', 'enviado', 'concluido', 'cancelado']
-                    },
-                    'mkt': {
-                        active: ['aprovacao_arte'],
-                        history: ['aguardando_pagamento', 'faturamento', 'liberado_logistica', 'enviado', 'concluido', 'cancelado']
-                    },
-                    'logistica': {
-                        active: ['liberado_logistica', 'enviado'],
-                        history: ['concluido', 'cancelado']
-                    }
+                    'orcamentos': { active: ['pendente', 'cotado', 'aguardando_aprovacao'], history: ['aguardando_pagamento', 'faturamento', 'aprovacao_arte', 'liberado_logistica', 'enviado', 'concluido', 'cancelado'] },
+                    'financeiro': { active: ['aguardando_pagamento', 'faturamento'], history: ['liberado_logistica', 'enviado', 'concluido', 'cancelado'] },
+                    'mkt': { active: ['aprovacao_arte'], history: ['aguardando_pagamento', 'faturamento', 'liberado_logistica', 'enviado', 'concluido', 'cancelado'] },
+                    'logistica': { active: ['liberado_logistica', 'enviado'], history: ['concluido', 'cancelado'] }
                 };
-
                 const filters = sectorFilters[currentSector];
                 if (filters) {
                     items = items.filter(t => {
+                        if (t.tipo === 'SOLICITACAO_COMPRA' && t.status === 'aguardando_aprovacao') return false; 
                         if (currentTab === 'pending') return filters.active.includes(t.status);
                         if (currentTab === 'completed') return filters.history.includes(t.status);
                         return false;
                     });
                 }
+            } else if (window.currentPcpCollection === 'solicitacoes' && currentSector === 'pcp') {
+                 if (currentTab === 'pending') items = items.filter(t => !['concluido', 'cancelado'].includes(t.status));
+                 else if (currentTab === 'completed') items = items.filter(t => ['concluido', 'cancelado'].includes(t.status));
             }
 
             if (items.length === 0) {
@@ -364,64 +430,34 @@
             }
         }
 
-        // === 6. RENDERS ===
         function renderSolicitacaoCard(task) {
             const produto = task.produto_id?.nome || 'Produto Indefinido';
-            const tipo = task.tipo.replace('SOLICITACAO_', '');
-            // No PCP, botão abre modal de Registro Completo. Nos outros, abre modal de Processo.
-            const clickAction = currentSector === 'pcp' 
-                ? `window.openRegistryModal('solicitacoes', '${task.id}')` 
-                : `window.openProcessModal('${task.id}')`;
-            
-            // Lógica para mostrar histórico (última atualização e valor) se estiver na aba histórico
+            const tipo = task.tipo ? task.tipo.replace('SOLICITACAO_', '') : 'N/A';
+            const clickAction = currentSector === 'pcp' ? `window.openRegistryModal('solicitacoes', '${task.id}')` : `window.openProcessModal('${task.id}')`;
             const dtUpdate = task.date_updated ? new Date(task.date_updated).toLocaleString('pt-BR') : '-';
             const valDisplay = task.valor_total ? ` • R$ ${task.valor_total}` : '';
 
-            // --- LÓGICA DE DETALHES EXTRAS (ENDEREÇO E OBS) ---
             let detailsHtml = '';
+            const endObject = task.endereco_id && typeof task.endereco_id === 'object' ? task.endereco_id : task;
             
-            // Endereço Completo
-            if (task.endereco_id && typeof task.endereco_id === 'object') {
-                const end = task.endereco_id;
-                // Monta a string do endereço com segurança (verifica se os campos existem)
-                let endStr = end.apelido_local || 'Local Definido';
-                if (end.logradouro) {
-                    endStr = `${end.logradouro}, ${end.numero || 'S/N'}`;
-                    if(end.bairro) endStr += ` - ${end.bairro}`;
-                    if(end.cidade) endStr += ` (${end.cidade}/${end.uf || ''})`;
-                    if(end.cep) endStr += ` - CEP: ${end.cep}`;
+            if (endObject.logradouro || task.endereco_manual || task.endereco) {
+                let endStr = task.endereco_manual || task.endereco;
+                if (!endStr) {
+                     endStr = endObject.apelido_local || 'Local Definido';
+                     if (endObject.logradouro) endStr = `${endObject.logradouro}, ${endObject.numero || 'S/N'}`;
                 }
-                
-                detailsHtml += `<div class="mt-2 p-2 bg-black/20 rounded border border-white/5 text-[11px] text-gray-300">
-                    <i class="ph-bold ph-map-pin text-brand-wine mr-1"></i> <span class="font-bold">Entrega:</span> ${endStr}
-                </div>`;
-            } else if (task.endereco_manual || task.endereco) {
-                // Caso seja endereço manual e não tenha ID vinculado
-                const endManual = task.endereco_manual || task.endereco;
-                detailsHtml += `<div class="mt-2 p-2 bg-black/20 rounded border border-white/5 text-[11px] text-gray-300">
-                    <i class="ph-bold ph-map-pin text-brand-wine mr-1"></i> <span class="font-bold">Entrega (Manual):</span> ${endManual}
-                </div>`;
+                detailsHtml += `<div class="mt-2 p-2 bg-black/20 rounded border border-white/5 text-[11px] text-gray-300"><i class="ph-bold ph-map-pin text-brand-wine mr-1"></i> <span class="font-bold">Entrega:</span> ${endStr}</div>`;
             }
-
-            // Observações do Cliente
-            if (task.observacoes) {
-                 detailsHtml += `<div class="mt-1 text-[10px] text-gray-400 italic border-l-2 border-gray-700 pl-2 ml-1">Obs: " ${task.observacoes} "</div>`;
-            }
-            
-            // Data de Necessidade
-            if (task.data_necessidade) {
-                 detailsHtml += `<div class="mt-1 text-[10px] text-blue-300 font-bold ml-1">📅 Prazo Solicitado: ${new Date(task.data_necessidade).toLocaleDateString('pt-BR')}</div>`;
-            }
+            if (task.observacoes) detailsHtml += `<div class="mt-1 text-[10px] text-gray-400 italic border-l-2 border-gray-700 pl-2 ml-1">Obs: " ${task.observacoes} "</div>`;
+            if (task.data_necessidade) detailsHtml += `<div class="mt-1 text-[10px] text-blue-300 font-bold ml-1">📅 Prazo: ${new Date(task.data_necessidade).toLocaleDateString('pt-BR')}</div>`;
 
             return `
                 <div class="glass-panel p-5 rounded-xl hover:bg-white/5 border-l-4 border-brand-wine flex justify-between items-start gap-4">
                     <div class="flex-1">
                         <div class="flex items-center gap-2 mb-1"><span class="text-[10px] bg-white/10 px-2 rounded text-gray-300">${tipo}</span><span class="text-xs text-gray-500">#${task.id}</span></div>
                         <h3 class="font-bold text-white text-base">${produto}</h3>
-                        <p class="text-xs text-gray-400 mt-1">Qtd: ${task.quantidade} • Status: ${task.status}</p>
-                        
+                        <p class="text-xs text-gray-400 mt-1">Qtd: ${task.quantidade || 0} • Status: ${task.status}</p>
                         ${detailsHtml}
-                        
                         <p class="text-[10px] text-gray-500 mt-2 font-mono border-t border-white/5 pt-1">Ult. Ação: ${dtUpdate}${valDisplay}</p>
                     </div>
                     <button onclick="${clickAction}" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded text-xs font-bold self-center">Gerenciar</button>
@@ -429,10 +465,20 @@
         }
 
         function renderGenericCard(item) {
-            // Tenta adivinhar título e subtítulo
-            let title = item.nome || item.razao_social || item.apelido_local || item.first_name + ' ' + (item.last_name||'');
-            let sub = item.sku || item.cnpj || item.email || item.descricao || item.id;
+            let title = item.nome || item.razao_social || item.apelido_local || ((item.first_name||'') + ' ' + (item.last_name||'')) || 'Sem Nome';
+            let sub = item.sku || item.cnpj || item.email || item.descricao || ('ID: ' + item.id);
             
+            if (window.currentPcpCollection === 'estoque_cliente') {
+                title = item.produto_id?.nome || 'Produto Indefinido';
+                sub = `Org: ${item.organization_id?.razao_social || 'N/A'} • Qtd: ${item.quantidade_disponivel}`;
+            } else if (window.currentPcpCollection === 'estoque_lotes') {
+                title = item.descricao || 'Lote sem descrição';
+                sub = `Produto Pai: ${item.estoque_pai_id?.produto_id?.nome || 'N/A'} • Qtd: ${item.quantidade}`;
+            } else if (window.currentPcpCollection === 'directus_users') {
+                title = `${item.first_name || ''} ${item.last_name || ''}`;
+                sub = `Role: ${item.role?.name || 'N/A'} • Org: ${item.organization_id?.razao_social || 'N/A'}`;
+            }
+
             return `
                 <div class="glass-panel p-4 rounded-xl hover:bg-white/5 border border-white/5 flex justify-between items-center gap-4">
                     <div class="overflow-hidden">
@@ -443,13 +489,12 @@
                 </div>`;
         }
 
-        // === 7. MODAL DE PROCESSO (SETORES NORMAIS) - ATUALIZADO ===
+        // === 7. MODAL DE PROCESSO ===
         window.openProcessModal = async function(id) {
             const modal = document.getElementById('action-modal');
             const content = document.getElementById('modal-form-content');
             const btn = document.getElementById('btn-save-action');
             currentTaskId = id;
-
             content.innerHTML = '<div class="loader border-white mx-auto"></div>';
             modal.classList.remove('hidden'); modal.classList.add('flex');
 
@@ -458,168 +503,95 @@
                 const task = item[0];
                 let html = '';
 
-                // LÓGICA ESPECÍFICA DE SETORES
                 if (currentSector === 'orcamentos') {
                     html += createInput('Obs', 'observacoes', 'text', task.observacoes);
                     html += createInput('Custo Interno', 'custo_interno', 'number', task.custo_interno);
                     html += createInput('Valor', 'valor_total', 'number', task.valor_total);
                     html += createSelect('Status', 'status', [{v:'pendente',l:'Pendente'},{v:'cotado',l:'Cotado'},{v:'aguardando_pagamento',l:'Aprovado'}], task.status);
-                } 
-                else if (currentSector === 'financeiro') {
-                    html += `<p class="text-white text-sm mb-2">Valor Total: <strong class="text-green-400">R$ ${task.valor_total || '0,00'}</strong></p>`;
-                    
-                    // NOVO: Input de Arquivo para a Etiqueta
-                    html += `<div class="mb-2">
-                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Foto Etiqueta/Rastreio</label>
-                        <input type="file" id="file_upload_envio" class="w-full glass-input rounded-xl px-4 py-3 text-sm text-gray-400">
-                        ${task.comprovante_envio ? '<p class="text-[10px] text-green-400 mt-1">✓ Já existe um arquivo enviado.</p>' : ''}
-                    </div>`;
-
-                    html += createInput('Comprovante Pagamento (Cliente)', 'comprovante_pagamento', 'text', task.comprovante_pagamento);
+                } else if (currentSector === 'financeiro') {
+                    html += `<p class="text-white text-sm mb-2">Valor: <strong class="text-green-400">R$ ${task.valor_total || '0,00'}</strong></p>`;
+                    html += `<div class="mb-2"><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Upload Etiqueta</label><input type="file" id="file_upload_envio" class="w-full glass-input rounded-xl px-4 py-3 text-sm text-gray-400">${task.comprovante_envio ? '<p class="text-[10px] text-green-400 mt-1">✓ Arquivo já existe.</p>' : ''}</div>`;
                     html += createSelect('Status', 'status', [{v:'aguardando_pagamento',l:'Aguardando'},{v:'liberado_logistica',l:'Pago / Liberar'}], task.status);
-                }
-                else if (currentSector === 'logistica') {
-                    html += createInput('Rastreio (Código)', 'codigo_rastreio', 'text', task.codigo_rastreio);
+                } else if (currentSector === 'logistica') {
+                    html += createInput('Rastreio', 'codigo_rastreio', 'text', task.codigo_rastreio);
                     html += createSelect('Status', 'status', [{v:'liberado_logistica',l:'Em Separação'},{v:'enviado',l:'Enviado'}], task.status);
-                }
-                else if (currentSector === 'mkt') {
-                     html += createSelect('Aprovação Arte', 'aprovacao_arte', [{v:'true',l:'Aprovado'},{v:'false',l:'Pendente'}], task.aprovacao_arte?.toString());
+                } else if (currentSector === 'mkt') {
                      html += createSelect('Status', 'status', [{v:'aprovacao_arte',l:'Em Aprovação'},{v:'pendente',l:'Devolver p/ Orçamento'}], task.status);
                 }
-
                 content.innerHTML = html;
 
                 btn.onclick = async () => {
-                    // Feedback visual
-                    const originalText = btn.innerText;
-                    btn.innerText = 'Processando Upload...';
-                    btn.disabled = true;
-
                     const payload = {};
-                    
-                    // 1. Coleta dados dos Inputs normais
-                    content.querySelectorAll('input:not([type="file"]), select').forEach(el => {
-                        if(el.id && el.id !== 'file_upload_envio') {
-                            if (el.type === 'number') payload[el.id] = el.value === '' ? null : parseFloat(el.value);
-                            else payload[el.id] = el.value;
-                        }
-                    });
-
+                    content.querySelectorAll('input:not([type="file"]), select').forEach(el => { if(el.id) payload[el.id] = el.type === 'number' ? (el.value === '' ? null : parseFloat(el.value)) : el.value; });
                     try {
-                        // 2. Lógica Especial de Upload (Apenas se tiver arquivo selecionado)
                         const fileInput = document.getElementById('file_upload_envio');
                         if (fileInput && fileInput.files.length > 0) {
-                            const formData = new FormData();
-                            formData.append('file', fileInput.files[0]);
-                            
-                            // Faz upload para a biblioteca do Directus
-                            // IMPORTANTE: Tenta pegar o ID de todas as formas que o Directus pode responder
+                            const formData = new FormData(); formData.append('file', fileInput.files[0]);
                             const uploadResult = await client.request(uploadFiles(formData));
-                            
-                            let fileId = null;
-                            if (uploadResult.id) fileId = uploadResult.id;
-                            else if (uploadResult.data && uploadResult.data.id) fileId = uploadResult.data.id;
-                            else if (Array.isArray(uploadResult) && uploadResult[0]?.id) fileId = uploadResult[0].id;
-
-                            if(!fileId) throw new Error("Falha ao obter ID do arquivo após upload.");
-
-                            // Salva o ID do arquivo no payload
-                            payload.comprovante_envio = fileId;
+                            payload.comprovante_envio = uploadResult.id || uploadResult.data?.id;
                         }
-
-                        // 3. Atualiza o item
                         await client.request(updateItem('solicitacoes', currentTaskId, payload));
                         notify('Atualizado!'); closeModal('action-modal'); loadTasks();
-                    } catch(e) { 
-                        console.error(e);
-                        // Mensagem de erro amigável para permissão
-                        let msg = e.message;
-                        if(e.errors && e.errors[0]?.message.includes('403')) msg = "Erro 403: Verifique permissão de 'CREATE' em System Collections > Directus Files.";
-                        notify('Erro: ' + msg, 'error'); 
-                    } finally {
-                        btn.innerText = originalText;
-                        btn.disabled = false;
-                    }
+                    } catch(e) { notify('Erro: ' + e.message, 'error'); }
                 }
-            } catch(e) { content.innerHTML = 'Erro.'; }
+            } catch(e) { content.innerHTML = 'Erro ao carregar dados.'; }
         }
 
-        // === 8. MODAL DE REGISTRO (PCP CRUD - CRIAR/EDITAR/EXCLUIR) ===
+        // === 8. MODAL DE REGISTRO (PCP) ===
         window.openRegistryModal = async function(collection, id) {
             const modal = document.getElementById('registry-modal');
             const content = document.getElementById('registry-form-content');
             const btnSave = document.getElementById('btn-save-registry');
             const btnDel = document.getElementById('btn-delete-registry');
-            const title = document.getElementById('registry-title');
             
             modal.classList.remove('hidden'); modal.classList.add('flex');
-            btnDel.classList.toggle('hidden', !id); // Só mostra delete se for edição
-            title.innerText = id ? 'Editar Registro' : 'Novo Registro';
+            btnDel.classList.toggle('hidden', !id);
+            document.getElementById('registry-title').innerText = id ? 'Editar Registro' : 'Novo Registro';
             content.innerHTML = '<div class="loader border-white mx-auto"></div>';
 
             try {
+                if (currentSector === 'pcp' && window.allOrgsCache.length === 0) await cacheNecessaryData();
+
                 let data = {};
                 if(id) {
-                     if(collection === 'directus_users') data = await client.request(readUsers({ filter: { id: { _eq: id } } })).then(r => r[0]);
+                     if(collection === 'directus_users') data = await client.request(readUsers({ filter: { id: { _eq: id } }, fields: ['*', 'organization_id', 'role'] })).then(r => r[0]);
+                     else if(collection === 'estoque_cliente') data = await client.request(readItems(collection, { filter: { id: { _eq: id } }, fields: ['*', 'organization_id', 'produto_id'] })).then(r => r[0]);
                      else data = await client.request(readItems(collection, { filter: { id: { _eq: id } } })).then(r => r[0]);
                 }
 
                 let html = '';
-                
-                // FORMULÁRIOS INTELIGENTES
                 if(collection === 'organizacoes') {
                     html += createInput('Razão Social', 'razao_social', 'text', data.razao_social);
                     html += createInput('CNPJ', 'cnpj', 'text', data.cnpj);
-                }
-                else if(collection === 'produtos_catalogo') {
-                    html += createInput('Nome', 'nome', 'text', data.nome);
-                    html += createInput('SKU', 'sku', 'text', data.sku);
-                    html += createInput('Descrição', 'descricao', 'text', data.descricao);
-                    html += createInput('URL Imagem', 'imagem', 'text', data.imagem);
-                }
-                else if(collection === 'estoque_cliente') {
-                    html += createInput('ID Produto', 'produto_id', 'text', data.produto_id);
-                    html += createInput('ID Organização', 'organization_id', 'text', data.organization_id);
+                    html += createSelectFromCache('Representante', 'representante_id', window.allUsersCache, 'id', ['first_name', 'last_name'], data.representante_id);
+                } else if(collection === 'estoque_cliente') {
+                    html += createSelectFromCache('Produto', 'produto_id', window.allProductsCache, 'id', ['nome', 'sku'], data.produto_id);
+                    html += createSelectFromCache('Organização', 'organization_id', window.allOrgsCache, 'id', ['razao_social'], data.organization_id);
                     html += createInput('Qtd', 'quantidade_disponivel', 'number', data.quantidade_disponivel);
-                }
-                else if(collection === 'estoque_lotes') {
-                    html += createInput('ID Estoque Pai', 'estoque_pai_id', 'text', data.estoque_pai_id);
-                    html += createInput('Descrição', 'descricao', 'text', data.descricao);
-                    html += createInput('Qtd', 'quantidade', 'number', data.quantidade);
-                    html += createInput('URL Foto', 'foto_lote', 'text', data.foto_lote);
-                }
-                else if(collection === 'directus_users') {
+                } else if(collection === 'directus_users') {
                     html += createInput('Nome', 'first_name', 'text', data.first_name);
                     html += createInput('Email', 'email', 'text', data.email);
                     if(!id) html += createInput('Senha', 'password', 'password');
-                    html += createInput('Role ID', 'role', 'text', data.role);
-                    html += createInput('Org ID', 'organization_id', 'text', data.organization_id);
-                }
-                else if(collection === 'solicitacoes') {
-                    // PCP pode editar tudo da solicitação
+                    html += createSelectFromCache('Role', 'role', window.allRolesCache, 'id', ['name'], data.role);
+                    html += createSelectFromCache('Organização', 'organization_id', window.allOrgsCache, 'id', ['razao_social'], data.organization_id);
+                } else if(collection === 'solicitacoes') {
                     html += createInput('Qtd', 'quantidade', 'number', data.quantidade);
                     html += createInput('Obs', 'observacoes', 'text', data.observacoes);
                     html += createInput('Valor', 'valor_total', 'number', data.valor_total);
-                    html += createSelect('Status', 'status', [
-                        {v:'pendente',l:'Pendente'}, {v:'cotado',l:'Cotado'}, {v:'aguardando_pagamento',l:'Aguardando'}, {v:'liberado_logistica',l:'Pago'}, {v:'enviado',l:'Enviado'}, {v:'concluido',l:'Concluído'}
-                    ], data.status);
+                    html += createSelect('Status', 'status', [{v:'pendente',l:'Pendente'},{v:'cotado',l:'Cotado'},{v:'enviado',l:'Enviado'}, {v:'aguardando_pagamento',l:'Aguardando Pagamento'}], data.status);
                     if(!id) {
                         html += createInput('ID Org', 'organization_id', 'text');
                         html += createSelect('Tipo', 'tipo', [{v:'SOLICITACAO_ENVIO',l:'Envio'}, {v:'SOLICITACAO_COMPRA',l:'Compra'}]);
                     }
+                } else {
+                    html += `<p class="text-gray-400 text-sm">Edição genérica indisponível para esta coleção.</p>`;
                 }
                 
                 content.innerHTML = html;
 
-                // AÇÃO SALVAR
                 btnSave.onclick = async () => {
                     const payload = {};
-                    content.querySelectorAll('input, select').forEach(el => {
-                        if(el.id) {
-                            if(el.type==='number') payload[el.id] = el.value==='' ? null : parseFloat(el.value);
-                            else payload[el.id] = el.value;
-                        }
-                    });
+                    content.querySelectorAll('input, select').forEach(el => { if(el.id) payload[el.id] = el.type === 'number' ? (el.value === '' ? null : parseFloat(el.value)) : el.value; });
                     try {
                         btnSave.innerText = '...';
                         if(id) {
@@ -632,10 +604,9 @@
                         notify('Salvo!'); closeModal('registry-modal'); loadTasks();
                     } catch(e) { notify('Erro: '+e.message, 'error'); } finally { btnSave.innerText = 'Salvar'; }
                 }
-
-                // AÇÃO DELETAR
+                
                 btnDel.onclick = async () => {
-                    if(!confirm('Tem certeza que deseja EXCLUIR este registro?')) return;
+                    if(!confirm('Excluir?')) return;
                     try {
                         if(collection === 'directus_users') await client.request(deleteUser(id));
                         else await client.request(deleteItem(collection, id));
@@ -643,17 +614,23 @@
                     } catch(e) { notify('Erro ao excluir.', 'error'); }
                 }
 
-            } catch(e) { content.innerHTML = 'Erro ao carregar.'; }
+            } catch(e) { content.innerHTML = 'Erro de carregamento (Verifique permissões).'; }
         }
 
-        // Helpers
-        function createInput(label, id, type, value = '', placeholder = '') {
-            return `<div><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">${label}</label><input id="${id}" type="${type}" value="${value||''}" placeholder="${placeholder}" class="w-full glass-input rounded-xl px-4 py-3 text-sm"></div>`;
+        function createInput(label, id, type, value = '') { return `<div><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">${label}</label><input id="${id}" type="${type}" value="${value||''}" class="w-full glass-input rounded-xl px-4 py-3 text-sm"></div>`; }
+        function createSelect(label, id, opts, selected) { const html = opts.map(o => `<option value="${o.v}" ${o.v===selected?'selected':''} class="bg-black text-gray-300">${o.l}</option>`).join(''); return `<div><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">${label}</label><select id="${id}" class="w-full glass-input rounded-xl px-4 py-3 text-sm bg-[#1a1a1a]">${html}</select></div>`; }
+        
+        function createSelectFromCache(label, id, dataCache, valueKey, displayKeys, selectedValue) {
+            let optionsHtml = '<option value="">-- Selecione --</option>';
+            const actualVal = (typeof selectedValue === 'object' && selectedValue) ? selectedValue[valueKey] : selectedValue;
+            dataCache.forEach(item => {
+                const displayText = displayKeys.map(key => item[key]).filter(Boolean).join(' - ');
+                const selected = (item[valueKey] == actualVal) ? 'selected' : '';
+                optionsHtml += `<option value="${item[valueKey]}" ${selected}>${displayText}</option>`;
+            });
+            return `<div><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">${label}</label><select id="${id}" class="w-full glass-input rounded-xl px-4 py-3 text-sm bg-[#1a1a1a]">${optionsHtml}</select></div>`;
         }
-        function createSelect(label, id, opts, selected) {
-            const html = opts.map(o => `<option value="${o.v}" ${o.v===selected?'selected':''} class="bg-black text-gray-300">${o.l}</option>`).join('');
-            return `<div><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">${label}</label><select id="${id}" class="w-full glass-input rounded-xl px-4 py-3 text-sm bg-[#1a1a1a]">${html}</select></div>`;
-        }
+
         window.closeModal = function(id) { const m = document.getElementById(id) || document.getElementById('action-modal'); m.classList.add('hidden'); m.classList.remove('flex'); }
         window.logout = async () => { try { await client.logout(); } catch (e) {} finally { localStorage.clear(); window.location.reload(); } }
         function notify(msg, type = 'success') { Toastify({ text: msg, duration: 3000, style: { background: type==='success'?"#10B981":"#EF4444" } }).showToast(); }
