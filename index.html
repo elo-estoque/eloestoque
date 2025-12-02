@@ -580,121 +580,6 @@
 
         </div>
     </div>
-// --- VARIÁVEL GLOBAL PARA GUARDAR O ARQUIVO TEMPORARIAMENTE ---
-        window.tempImportFile = null;
-
-        // 1. PRIMEIRA ETAPA: ENVIA PARA ANALISAR COLUNAS E ABRE O MODAL
-        window.handleAddressImport = async function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            window.tempImportFile = file; // Guarda o arquivo na memória
-
-            const API_URL_ANALISAR = 'https://api-entregas.elobrindes.com.br/analisar_colunas';
-            const formData = new FormData();
-            formData.append('file', file);
-
-            // Feedback Visual
-            document.getElementById('import-placeholder').innerHTML = '<div class="loader border-white w-6 h-6 mx-auto mt-4"></div><p class="mt-2">Lendo colunas...</p>';
-
-            try {
-                const response = await fetch(API_URL_ANALISAR, { method: 'POST', body: formData });
-                if (!response.ok) throw new Error('Falha ao ler colunas do arquivo.');
-                
-                const data = await response.json();
-                
-                // Preenche os Selects do Modal com as colunas que vieram do Python
-                const selects = ['map-endereco', 'map-nome', 'map-cidade', 'map-uf'];
-                const sugestoes = data.sugestoes; // Python já manda sugestão!
-
-                selects.forEach(id => {
-                    const el = document.getElementById(id);
-                    el.innerHTML = '<option value="">-- Selecione --</option>' + 
-                                   data.colunas_disponiveis.map(col => `<option value="${col}">${col}</option>`).join('');
-                    
-                    // Tenta selecionar automaticamente o que o Python sugeriu
-                    const key = id.replace('map-', '');
-                    if (sugestoes[key]) el.value = sugestoes[key];
-                });
-
-                // Abre o Modal
-                document.getElementById('mapping-modal').classList.remove('hidden');
-                document.getElementById('mapping-modal').classList.add('flex');
-
-            } catch (error) {
-                notify('Erro ao ler arquivo: ' + error.message, 'error');
-                document.getElementById('import-file').value = ''; // Limpa input
-                document.getElementById('import-placeholder').innerHTML = 'Nenhuma planilha carregada.';
-            }
-        }
-
-        // 2. FUNÇÕES DO MODAL
-        window.closeMappingModal = function() {
-            document.getElementById('mapping-modal').classList.add('hidden');
-            document.getElementById('mapping-modal').classList.remove('flex');
-            document.getElementById('import-file').value = ''; // Reseta input
-            document.getElementById('import-placeholder').innerHTML = 'Cancelado.';
-        }
-
-        // 3. SEGUNDA ETAPA: ENVIA O ARQUIVO + O MAPA ESCOLHIDO
-        window.processarComMapa = async function() {
-            const enderecoCol = document.getElementById('map-endereco').value;
-            
-            if(!enderecoCol) {
-                notify('A coluna de Endereço é obrigatória!', 'error');
-                return;
-            }
-
-            // Fecha o modal de colunas
-            document.getElementById('mapping-modal').classList.add('hidden');
-            document.getElementById('mapping-modal').classList.remove('flex');
-
-            // Prepara o Mapa
-            const mapa = {
-                endereco: enderecoCol,
-                nome: document.getElementById('map-nome').value,
-                cidade: document.getElementById('map-cidade').value,
-                uf: document.getElementById('map-uf').value
-            };
-
-            // Prepara envio final
-            const formData = new FormData();
-            formData.append('file', window.tempImportFile);
-            formData.append('mapa', JSON.stringify(mapa)); // Envia o JSON do mapa
-
-            const API_URL_PREVIEW = 'https://api-entregas.elobrindes.com.br/preview_importacao';
-            const container = document.getElementById('import-preview-container');
-            
-            container.innerHTML = `
-                <div class="flex flex-col items-center justify-center py-10 space-y-3">
-                    <div class="loader border-brand-wine w-8 h-8"></div>
-                    <p class="text-gray-400 text-sm">Inteligência Artificial processando...</p>
-                    <p class="text-gray-600 text-xs">Normalizando dados com base nas colunas escolhidas</p>
-                </div>
-            `;
-
-            try {
-                const response = await fetch(API_URL_PREVIEW, { method: 'POST', body: formData });
-                
-                if (!response.ok) throw new Error('Erro na normalização.');
-                
-                const data = await response.json();
-                
-                if (data.length === 0) throw new Error("Planilha vazia.");
-
-                // Sucesso! Renderiza a tabela
-                window.importedAddresses = data;
-                const hasCriticalErrors = window.importedAddresses.some(a => a.status !== 'OK');
-                window.renderImportPreview(hasCriticalErrors);
-                
-                notify(`Sucesso! ${data.length} endereços processados.`);
-
-            } catch (error) {
-                console.error(error);
-                container.innerHTML = `<p class="text-red-500 text-center py-10">Erro: ${error.message}</p>`;
-                notify('Falha no processamento.', 'error');
-            }
-        }
     <div id="tutorial-modal" class="fixed inset-0 z-[200] hidden items-center justify-center bg-black/95 backdrop-blur-sm">
         <div class="glass-panel p-10 rounded-2xl w-full max-w-lg mx-4 text-center modal-enter relative">
             <div id="tutorial-content" class="mb-8"></div>
@@ -1959,7 +1844,7 @@
             if (!file) return;
 
             // URL DA API PYTHON (Normalizador de Tabelas no Dokploy)
-            const API_URL = 'https://api-entregas.elobrindes.com.br/preview_importacao';
+            const API_URL = 'https://api-entregas.elobrindes.com.br/';
             const container = document.getElementById('import-preview-container');
             const placeholder = document.getElementById('import-placeholder');
             
