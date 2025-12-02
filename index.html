@@ -1996,7 +1996,7 @@
 
         document.getElementById('form-password').addEventListener('submit', async (e) => { e.preventDefault(); const newPass = document.getElementById('new-password').value; try { await client.request(updateMe({ password: newPass })); notify('Senha atualizada!'); document.getElementById('settings-modal').classList.add('hidden'); } catch (e) { notify('Erro ao trocar senha.', 'error'); } });
 
-        // === FUNÇÃO CORRIGIDA PARA EXIBIR COMPROVANTE DE ENVIO ===
+        // === FUNÇÃO CORRIGIDA PARA EXIBIR COMPROVANTE DE ENVIO (INCLUI RASTREIO) ===
         window.toggleHistoryDetails = async function(id, tipo) {
             const existingRow = document.getElementById(`details-${id}`);
             
@@ -2024,7 +2024,7 @@
             rowToInsertAfter.parentNode.insertBefore(detailRow, rowToInsertAfter.nextSibling);
 
             try {
-                // 1. ATUALIZADO: Adicionado 'comprovante_envio' aos campos
+                // 1. ATUALIZADO: Adicionado 'comprovante_envio' E 'codigo_rastreio' aos campos
                 const item = await client.request(readItem('solicitacoes', id, {
                     fields: [
                         '*',
@@ -2034,7 +2034,8 @@
                         'endereco_id.numero',
                         'endereco_id.cidade',
                         'endereco_id.estado',
-                        'comprovante_envio'
+                        'comprovante_envio',
+                        'codigo_rastreio' // ADICIONADO CAMPO DE RASTREIO
                     ]
                 }));
 
@@ -2057,16 +2058,27 @@
                     `;
                 }
                 
-                // 2. NOVO BLOCO: Lógica para o Comprovante de Envio
+                // 2. NOVO BLOCO: Lógica para Rastreio (se status for enviado) E Comprovante
                 let shippingProofHtml = '';
+                
+                // A) Código de Rastreio (Só se enviado E tiver código)
+                if (item.status === 'enviado' && item.codigo_rastreio) {
+                    shippingProofHtml += `
+                        <div class="mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+                            <p class="text-xs text-blue-400 font-bold uppercase">Código de Rastreio</p>
+                            <p class="text-lg font-bold text-white mt-1">${item.codigo_rastreio}</p>
+                        </div>
+                    `;
+                }
+                
+                // B) Arquivo de Comprovante (se houver)
                 if (item.comprovante_envio) {
-                    // Adicionando "?download" no final garante que o navegador baixe ou exiba o arquivo.
                     const proofUrl = `${API_URL}/assets/${item.comprovante_envio}?download`; 
-                    shippingProofHtml = `
+                    shippingProofHtml += `
                         <div class="mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg flex items-center justify-between">
                             <div>
-                                <p class="text-xs text-blue-400 font-bold uppercase">Rastreio / Etiqueta</p>
-                                <p class="text-[10px] text-gray-400">Comprovante anexado pelo financeiro</p>
+                                <p class="text-xs text-blue-400 font-bold uppercase">Etiqueta / Comprovante</p>
+                                <p class="text-[10px] text-gray-400">Arquivo anexado pela logística.</p>
                             </div>
                             <a href="${proofUrl}" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-2 rounded flex items-center gap-2 transition">
                                 <i class="ph-bold ph-download-simple"></i> Ver Arquivo
@@ -2074,6 +2086,7 @@
                         </div>
                     `;
                 }
+
 
                 // Renderização segura do endereço
                 let addressText = 'N/A';
@@ -2341,7 +2354,7 @@
             document.getElementById('import-placeholder').innerHTML = '<div class="loader border-white w-6 h-6 mx-auto mt-4"></div><p class="mt-2">Lendo colunas...</p>';
 
             try {
-                const response = await fetch(`https://api-entregas.elobrindes.com.br/analisar_colunas`, { method: 'POST', body: formData });
+                const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`, { method: 'POST', body: formData });
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ error: 'Erro de rede ao ler colunas.' }));
                     throw new Error(errorData.detail || errorData.error || 'Falha ao ler colunas do arquivo.');
