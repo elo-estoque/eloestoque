@@ -580,6 +580,43 @@
 
         </div>
     </div>
+
+    <div id="mapping-modal" class="fixed inset-0 z-[110] hidden items-center justify-center bg-black/95 backdrop-blur-sm">
+        <div class="glass-panel p-8 rounded-2xl w-full max-w-2xl mx-4 modal-enter border border-white/10">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i class="ph ph-table text-brand-wine"></i> Mapeamento de Colunas
+                </h3>
+                <button onclick="window.closeMappingModal()" class="text-gray-400 hover:text-white"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            
+            <p class="text-sm text-gray-400 mb-6">Identifique as colunas da sua planilha para que a Inteligência Artificial processe corretamente.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <label class="block text-xs font-bold text-brand-wine uppercase tracking-wider mb-2">Endereço Completo (Obrigatório) *</label>
+                    <select id="map-endereco" class="w-full glass-input rounded-lg px-4 py-3 bg-[#0a0a0a] border-brand-wine/50"></select>
+                    <p class="text-[10px] text-gray-500 mt-1">Ex: "Rua das Flores, 123 - Centro, SP"</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Nome / A/C (Opcional)</label>
+                    <select id="map-nome" class="w-full glass-input rounded-lg px-4 py-3 bg-[#0a0a0a]"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Cidade (Se houver coluna separada)</label>
+                    <select id="map-cidade" class="w-full glass-input rounded-lg px-4 py-3 bg-[#0a0a0a]"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Estado / UF (Se houver coluna separada)</label>
+                    <select id="map-uf" class="w-full glass-input rounded-lg px-4 py-3 bg-[#0a0a0a]"></select>
+                </div>
+            </div>
+
+            <button onclick="window.processarComMapa()" class="w-full bg-brand-wine hover:bg-brand-hover text-white py-4 rounded-lg font-bold shadow-lg transition flex items-center justify-center gap-2 group">
+                <i class="ph ph-rocket-launch text-xl group-hover:animate-pulse"></i> PROCESSAR DADOS
+            </button>
+        </div>
+    </div>
     <div id="tutorial-modal" class="fixed inset-0 z-[200] hidden items-center justify-center bg-black/95 backdrop-blur-sm">
         <div class="glass-panel p-10 rounded-2xl w-full max-w-lg mx-4 text-center modal-enter relative">
             <div id="tutorial-content" class="mb-8"></div>
@@ -608,6 +645,8 @@
         window.currentUser = null; 
         window.currentOrgConfig = null;
         window.importedAddresses = []; 
+        // NOVO: Variável global para o arquivo temporário
+        window.tempImportFile = null;
 
         // === INIT FUNCTION: CARREGA DADOS CRÍTICOS AO ABRIR ===
         async function initApp() {
@@ -1837,74 +1876,139 @@
             }
         });
         
-        // --- ABA IMPORTAÇÃO: NORMALIZAÇÃO INTELIGENTE (AGORA CHAMA A API PYTHON) ---
+        // --- NOVO JAVASCRIPT PARA O FLUXO DE MAPEAMENTO ---
         
+        // --- VARIÁVEL GLOBAL PARA GUARDAR O ARQUIVO TEMPORARIAMENTE ---
+        // (Já definida como window.tempImportFile = null; no topo do script)
+
+        // 1. PRIMEIRA ETAPA: ENVIA PARA ANALISAR COLUNAS E ABRE O MODAL
         window.handleAddressImport = async function(event) {
             const file = event.target.files[0];
             if (!file) return;
-
-            // URL DA API PYTHON (Normalizador de Tabelas no Dokploy)
-            const API_URL = 'https://api-entregas.elobrindes.com.br/preview_importacao';
-            const container = document.getElementById('import-preview-container');
-            const placeholder = document.getElementById('import-placeholder');
             
-            // 1. Feedback visual (Substitui placeholder)
-            if(placeholder) placeholder.classList.add('hidden');
-            container.innerHTML = `
-                <div class="flex flex-col items-center justify-center py-10 space-y-3">
-                    <div class="loader border-brand-wine w-8 h-8"></div>
-                    <p class="text-gray-400 text-sm">Enviando para Inteligência Artificial...</p>
-                    <p class="text-gray-600 text-xs">Normalizando endereços e corrigindo formatação</p>
-                </div>
-            `;
+            window.tempImportFile = file; // Guarda o arquivo na memória
 
-            // 2. Prepara o envio (FormData)
+            const API_URL_ANALISAR = 'https://api-entregas.elobrindes.com.br/analisar_colunas';
             const formData = new FormData();
             formData.append('file', file);
 
+            // Feedback Visual
+            document.getElementById('import-placeholder').innerHTML = '<div class="loader border-white w-6 h-6 mx-auto mt-4"></div><p class="mt-2">Lendo colunas...</p>';
+
             try {
-                // 3. Faz o fetch para a API Python
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    body: formData
-                });
-
+                const response = await fetch(API_URL_ANALISAR, { method: 'POST', body: formData });
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: 'Erro de rede ou formato de API inválido.' }));
-                    throw new Error(errorData.error || `Erro HTTP ${response.status}: Falha na normalização do servidor.`);
+                    const errorData = await response.json().catch(() => ({ error: 'Erro de rede ao ler colunas.' }));
+                    throw new Error(errorData.detail || errorData.error || 'Falha ao ler colunas do arquivo.');
                 }
-
-                // 4. Recebe os dados já limpos do Python
+                
                 const data = await response.json();
                 
-                if (data.length === 0) throw new Error("A planilha parece estar vazia ou ilegível.");
+                // Preenche os Selects do Modal com as colunas que vieram do Python
+                const selects = ['map-endereco', 'map-nome', 'map-cidade', 'map-uf'];
+                const sugestoes = data.sugestoes; // Python já manda sugestão!
 
-                // 5. Atualiza a variável global (Chaves: status, cep, logradouro, numero, apelido_local, etc.)
-                window.importedAddresses = data;
-                
-                // Verifica erros críticos baseado no status que o Python definiu
-                const hasCriticalErrors = window.importedAddresses.some(a => a.status !== 'OK');
-                
-                // 6. Chama a função de renderização (mantida inalterada)
-                window.renderImportPreview(hasCriticalErrors);
-                
-                notify(`Processamento concluído! ${window.importedAddresses.length} endereços analisados.`);
+                selects.forEach(id => {
+                    const el = document.getElementById(id);
+                    el.innerHTML = '<option value="">-- Selecione --</option>' + 
+                                   data.colunas_disponiveis.map(col => `<option value="${col}">${col}</option>`).join('');
+                    
+                    // Tenta selecionar automaticamente o que o Python sugeriu
+                    const key = id.replace('map-', '');
+                    if (sugestoes[key]) el.value = sugestoes[key];
+                });
+
+                // Fecha o modal principal e Abre o Modal de Mapeamento
+                document.getElementById('address-manager-modal').classList.add('hidden');
+                document.getElementById('mapping-modal').classList.remove('hidden');
+                document.getElementById('mapping-modal').classList.add('flex');
 
             } catch (error) {
-                console.error("Erro na API Python:", error);
-                container.innerHTML = `
-                    <div class="text-center py-10">
-                        <i class="ph ph-warning-circle text-3xl text-red-500 mb-2"></i>
-                        <p class="text-red-400 mb-2">Erro ao processar planilha.</p>
-                        <p class="text-gray-500 text-xs">${error.message}</p>
-                    </div>
-                `;
-                notify('Falha na importação: ' + error.message, 'error');
+                notify('Erro ao ler arquivo: ' + error.message, 'error');
+                document.getElementById('import-file').value = ''; // Limpa input
+                document.getElementById('import-placeholder').innerHTML = 'Nenhuma planilha carregada.';
             }
-            
-            // 7. Limpa o input
-            event.target.value = ''; 
         }
+
+        // 2. FUNÇÕES DO MODAL
+        window.closeMappingModal = function() {
+            document.getElementById('mapping-modal').classList.add('hidden');
+            document.getElementById('mapping-modal').classList.remove('flex');
+            document.getElementById('import-file').value = ''; // Reseta input
+            document.getElementById('import-placeholder').innerHTML = 'Nenhuma planilha carregada.';
+        }
+
+        // 3. SEGUNDA ETAPA: ENVIA O ARQUIVO + O MAPA ESCOLHIDO
+        window.processarComMapa = async function() {
+            const enderecoCol = document.getElementById('map-endereco').value;
+            
+            if(!enderecoCol) {
+                notify('A coluna de Endereço Completo é obrigatória!', 'error');
+                return;
+            }
+
+            // Fecha o modal de colunas
+            document.getElementById('mapping-modal').classList.add('hidden');
+            document.getElementById('mapping-modal').classList.remove('flex');
+            
+            // Reabre o modal de gerenciamento (na aba de importação) para mostrar o preview
+            document.getElementById('address-manager-modal').classList.remove('hidden');
+            document.getElementById('address-manager-modal').classList.add('flex');
+            window.setAddressTab('import');
+
+            // Prepara o Mapa
+            const mapa = {
+                endereco: enderecoCol,
+                nome: document.getElementById('map-nome').value,
+                cidade: document.getElementById('map-cidade').value,
+                uf: document.getElementById('map-uf').value,
+                bairro: document.getElementById('map-bairro')?.value || '', // Adiciona Bairro
+                regiao: document.getElementById('map-regiao')?.value || '' // Adiciona Regiao
+            };
+
+            // Prepara envio final
+            const formData = new FormData();
+            formData.append('file', window.tempImportFile);
+            formData.append('mapa', JSON.stringify(mapa)); // Envia o JSON do mapa
+
+            const API_URL_PREVIEW = 'https://api-entregas.elobrindes.com.br/preview_importacao';
+            const container = document.getElementById('import-preview-container');
+            
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-10 space-y-3">
+                    <div class="loader border-brand-wine w-8 h-8"></div>
+                    <p class="text-gray-400 text-sm">Inteligência Artificial processando...</p>
+                    <p class="text-gray-600 text-xs">Normalizando dados com base nas colunas escolhidas</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(API_URL_PREVIEW, { method: 'POST', body: formData });
+                
+                if (!response.ok) {
+                     const errorData = await response.json().catch(() => ({ detail: 'Erro de rede ou formato de API inválido.' }));
+                     throw new Error(errorData.detail || `Erro HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.length === 0) throw new Error("Planilha vazia após processamento.");
+
+                // Sucesso! Renderiza a tabela
+                window.importedAddresses = data;
+                const hasCriticalErrors = window.importedAddresses.some(a => a.status.includes('CEP') || a.status.includes('NÚMERO'));
+                window.renderImportPreview(hasCriticalErrors);
+                
+                notify(`Sucesso! ${data.length} endereços processados.`);
+
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = `<p class="text-red-500 text-center py-10">Erro: ${error.message}</p>`;
+                notify('Falha no processamento: ' + error.message, 'error');
+            }
+        }
+        // --- FIM DO NOVO JAVASCRIPT ---
+
 
         window.renderImportPreview = function(hasCriticalErrors) {
             const container = document.getElementById('import-preview-container');
@@ -1938,9 +2042,12 @@
                         ${window.importedAddresses.map(addr => {
                             let statusClass = 'status-dot-green';
                             let icon = '<i class="ph ph-check-circle-fill"></i>';
-                            if (addr.status.includes('FALTA') || addr.status !== 'OK') {
-                                statusClass = addr.status.includes('NÚMERO') || addr.status.includes('CEP') ? 'status-dot-red' : 'status-dot-yellow';
+                            if (addr.status.includes('?') || addr.status !== '✅ OK') {
+                                statusClass = addr.status.includes('🔴 CEP?') || addr.status.includes('⚠️ NÚMERO?') ? 'status-dot-red' : 'status-dot-yellow';
                                 icon = statusClass === 'status-dot-red' ? '<i class="ph ph-x-circle-fill"></i>' : '<i class="ph ph-warning-circle-fill"></i>';
+                            } else {
+                                statusClass = 'status-dot-green';
+                                icon = '<i class="ph ph-check-circle-fill"></i>';
                             }
                             
                             return `
@@ -1963,7 +2070,7 @@
         window.saveImportedAddresses = async function() {
             if (window.importedAddresses.length === 0) return;
 
-            const hasCriticalErrors = window.importedAddresses.some(a => a.status.includes('NÚMERO') || a.status.includes('CEP'));
+            const hasCriticalErrors = window.importedAddresses.some(a => a.status.includes('🔴 CEP?') || a.status.includes('⚠️ NÚMERO?'));
             if (hasCriticalErrors && !confirm("AVISO: Alguns endereços estão com CEP ou NÚMERO ausentes e o registro será incompleto. Deseja continuar?")) {
                 return;
             }
@@ -1973,18 +2080,21 @@
             btn.disabled = true;
             btn.innerHTML = '<div class="loader border-white w-5 h-5"></div> <span class="ml-2">Cadastrando em lote...</span>';
             
-            const addressesToSave = window.importedAddresses.map(addr => ({
-                cep: addr.cep,
-                logradouro: addr.logradouro,
-                numero: addr.numero === 'S/N' ? null : addr.numero,
-                bairro: addr.bairro === 'N/A' ? null : addr.bairro,
-                cidade: addr.cidade === 'N/A' ? null : addr.cidade,
-                estado: addr.estado === 'N/A' ? null : addr.estado,
-                complemento: addr.complemento,
-                apelido_local: addr.apelido_local,
-                observacoes: `Importado via Planilha. Endereço Completo Original: ${addr.fullAddress}`,
-                organization_id: window.currentOrgId
-            })).filter(addr => addr.numero && addr.cep); // Salva APENAS os minimamente válidos
+            // Filtra e prepara os dados para salvar
+            const addressesToSave = window.importedAddresses
+                .filter(addr => addr.status.includes('✅ OK') || addr.status.includes('⚪ S/N')) // Salva os que têm no mínimo status OK ou S/N
+                .map(addr => ({
+                    cep: addr.cep,
+                    logradouro: addr.logradouro,
+                    numero: addr.numero === 'S/N' ? null : addr.numero,
+                    bairro: addr.bairro === 'N/A' ? null : addr.bairro,
+                    cidade: addr.cidade === 'N/A' ? null : addr.cidade,
+                    estado: addr.estado === 'N/A' ? null : addr.estado,
+                    complemento: addr.complemento,
+                    apelido_local: addr.apelido_local,
+                    observacoes: `Importado via Planilha. Endereço Completo Original: ${addr.fullAddress}`,
+                    organization_id: window.currentOrgId
+                })); 
 
             try {
                 // Como não há função batch-create, fazemos um Promise.all
@@ -2007,7 +2117,9 @@
                 window.importedAddresses = [];
                 document.getElementById('import-file').value = '';
                 document.getElementById('import-actions').classList.add('hidden');
+                document.getElementById('import-placeholder').innerHTML = 'Nenhuma planilha carregada.';
                 document.getElementById('import-preview-container').innerHTML = '<p id="import-placeholder" class="text-center text-gray-500 py-10">Nenhuma planilha carregada.</p>';
+
             }
         }
         
