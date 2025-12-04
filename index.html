@@ -796,14 +796,14 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     <script type="module">
-        import { createDirectus, authentication, rest, readItems, createItem, updateItem, readMe, updateMe, readItem } from 'https://esm.sh/@directus/sdk@13.0.0';
+        import { createDirectus, authentication, rest, readItems, createItem, updateItem, readMe, updateMe, readItem, updateItems } from 'https://esm.sh/@directus/sdk@13.0.0';
 
         const API_URL = 'https://admin-entregas.elobrindes.com.br';
         const API_URL_ANALISAR = 'https://api-entregas.elobrindes.com.br/analisar_colunas';
         const API_URL_PREVIEW = 'https://api-entregas.elobrindes.com.br/preview_importacao';
         const client = createDirectus(API_URL).with(authentication()).with(rest());
         
-        window.client = client; window.readItems = readItems; window.createItem = createItem; window.currentOrgId = null;
+        window.client = client; window.readItems = readItems; window.createItem = createItem; window.updateItems = updateItems; window.currentOrgId = null;
         window.allCatalogProducts = []; window.inventoryItems = []; window.historyItems = []; window.activeCategory = 'TODAS';
         window.quoteCart = [];
         window.selectedBatchDescription = null; 
@@ -1081,6 +1081,7 @@
             window.renderQuoteCart();
         }
 
+        // ALTERAÇÃO 3: FUNÇÃO window.finalizeQuote (STATUS POR GESTOR)
         window.finalizeQuote = async function() {
             if(!window.quoteCart.length) return;
             const btn = document.getElementById('btn-finalize-quote');
@@ -1088,15 +1089,14 @@
             btn.disabled = true;
 
             try {
-                // LÓGICA DE APROVAÇÃO
-                const needsApproval = window.currentOrgConfig?.exige_aprovacao === true;
+                // LÓGICA DE APROVAÇÃO (AGORA BASEADA APENAS NO PERFIL DO GESTOR)
                 const isManager = window.currentUser?.eh_gestor === true;
-                const initialStatus = (needsApproval && !isManager) ? 'aguardando_aprovacao' : 'pendente';
+                const initialStatus = isManager ? 'pendente' : 'aguardando_aprovacao';
 
                 const promises = window.quoteCart.map(item => {
                     return client.request(createItem('solicitacoes', { 
                         tipo: 'SOLICITACAO_COMPRA', 
-                        status: initialStatus, 
+                        status: initialStatus, // Status baseado no perfil do usuário
                         quantidade: item.qtd, 
                         produto_id: item.id, 
                         observacoes: `${item.obs} | Data Ideal: ${item.data}`, 
@@ -1415,59 +1415,181 @@
             } 
         }
 
-        // === NOVA FUNÇÃO: CARREGAR APROVAÇÕES ===
+        // === FUNÇÃO REESCRITA: CARREGAR APROVAÇÕES (AGRUPANDO LOTES) ===
         window.loadApprovals = async function() {
             const list = document.getElementById('approvals-list');
-            if(!list) return; // Checagem defensiva
+            if(!list) return;
 
             list.innerHTML = '<p class="text-white text-sm">Carregando...</p>';
             
             try {
-                // ORDENAÇÃO: Garante o mais recente primeiro
-                const pendentes = await client.request(readItems('solicitacoes', { 
+                // 1. Busca Lotes de Envio pendentes de aprovação
+                const lotesPendentes = await client.request(readItems('lotes_envio', { 
                     sort: ['-data_criacao'],
                     filter: { status: { _eq: 'aguardando_aprovacao' } },
-                    fields: ['*', 'produto_id.nome', 'produto_id.imagem', 'user_created.first_name', 'user_created.last_name']
+                    fields: ['*', 'user_created.first_name', 'user_created.last_name']
+                }));
+                
+                // 2. Busca Solicitações Avulsas (sem lote) pendentes de aprovação
+                const avulsasPendentes = await client.request(readItems('solicitacoes', { 
+                    sort: ['-data_criacao'],
+                    filter: { 
+                        _and: [
+                            { status: { _eq: 'aguardando_aprovacao' } },
+                            { lote_id: { _null: true } } // APENAS AVULSAS
+                        ]
+                    },
+                    fields: ['*', 'produto_id.nome', 'user_created.first_name', 'user_created.last_name']
                 }));
 
-                if (pendentes.length === 0) {
+                if (lotesPendentes.length === 0 && avulsasPendentes.length === 0) {
                     list.innerHTML = '<p class="text-gray-500 text-sm">Nenhuma solicitação aguardando aprovação.</p>';
                     return;
                 }
 
-                list.innerHTML = pendentes.map(p => {
-                    const requesterName = `${p.user_created?.first_name || 'Usuário'} ${p.user_created?.last_name || 'Desconhecido'}`;
-                    const createdTime = new Date(p.data_criacao).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-                    const isShipment = p.tipo === 'SOLICITACAO_ENVIO';
-                    
-                    const typeIcon = isShipment ? '<i class="ph ph-paper-plane-tilt text-brand-wine"></i>' : '<i class="ph ph-shopping-cart text-green-500"></i>';
-                    const typeText = isShipment ? 'Envio' : 'Orçamento/Compra';
-                    const statusColor = isShipment ? 'border-brand-wine/50 bg-brand-wine/10' : 'border-green-500/50 bg-green-500/10';
+                let htmlContent = '';
 
+                // --- RENDERIZAÇÃO DE LOTES ---
+                htmlContent += lotesPendentes.map(l => {
+                    const requesterName = `${l.user_created?.first_name || 'Usuário'} ${l.user_created?.last_name || 'Desconhecido'}`;
+                    const createdTime = new Date(l.data_criacao).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+                    
                     return `
-                        <div class="bg-black/30 border ${statusColor} p-4 rounded-xl flex justify-between items-center transition-shadow hover:shadow-lg">
-                            <div class="flex-1">
+                        <div class="bg-black/30 border border-purple-500/50 p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center transition-shadow hover:shadow-lg shadow-purple-900/20 mb-3">
+                            <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 mb-1">
-                                    <span class="text-xs font-bold uppercase tracking-wider ${isShipment ? 'text-brand-wine' : 'text-green-400'}">${typeText}</span>
-                                    ${typeIcon}
+                                    <span class="text-xs font-bold uppercase tracking-wider text-purple-400">LOTE DE ENVIO</span>
+                                    <i class="ph ph-package text-xl text-purple-500"></i>
                                 </div>
-                                <p class="text-white font-bold text-sm truncate">${p.produto_id?.nome || 'Produto Indefinido'} (${p.quantidade} un.)</p>
+                                <p class="text-white font-bold text-sm truncate" title="${l.nome_lote}">
+                                    ${l.nome_lote || `Lote #${l.id}`} (<strong class="text-brand-wine">${l.quantidade_total} itens</strong>)
+                                </p>
                                 <p class="text-gray-400 text-xs mt-1">
-                                    Solicitado por: <strong class="text-white">${requesterName}</strong>
-                                    em ${createdTime}
+                                    Solicitado por: <strong class="text-white">${requesterName}</strong> em ${createdTime}
                                 </p>
                             </div>
-                            <div class="flex gap-2 ml-4 shrink-0">
-                                <button onclick="window.approveRequest('${p.id}')" class="bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition">Aprovar</button>
-                                <button onclick="window.rejectRequest('${p.id}')" class="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition">Reprovar</button>
+                            <div class="flex gap-2 ml-0 md:ml-4 mt-3 md:mt-0 shrink-0">
+                                <button onclick="window.openBatchDetails('${l.id}', '${l.nome_lote}')" class="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-2 rounded-lg transition">Ver Itens</button>
+                                <button onclick="window.approveBatch('${l.id}')" class="bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition">Aprovar Lote</button>
+                                <button onclick="window.rejectBatch('${l.id}')" class="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition">Rejeitar</button>
                             </div>
                         </div>
                     `;
                 }).join('');
 
+                // --- RENDERIZAÇÃO DE SOLICITAÇÕES AVULSAS ---
+                htmlContent += avulsasPendentes.map(p => {
+                    const requesterName = `${p.user_created?.first_name || 'Usuário'} ${p.user_created?.last_name || 'Desconhecido'}`;
+                    const createdTime = new Date(p.data_criacao).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+                    const isShipment = p.tipo === 'SOLICITACAO_ENVIO';
+                    
+                    const typeIcon = isShipment ? '<i class="ph ph-paper-plane-tilt text-brand-wine"></i>' : '<i class="ph ph-shopping-cart text-green-500"></i>';
+                    const typeText = isShipment ? 'Envio Avulso' : 'Orçamento/Compra';
+                    const statusColor = isShipment ? 'border-brand-wine/50 bg-brand-wine/10' : 'border-green-500/50 bg-green-500/10';
+                    
+                    const itemTitle = p.produto_id?.nome || 'Produto Indefinido';
+                    const quantity = p.quantidade || 1;
+
+                    return `
+                        <div class="bg-black/30 border ${statusColor} p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center transition-shadow hover:shadow-lg mb-3">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-xs font-bold uppercase tracking-wider ${isShipment ? 'text-brand-wine' : 'text-green-400'}">${typeText}</span>
+                                    ${typeIcon}
+                                </div>
+                                <p class="text-white font-bold text-sm truncate" title="${itemTitle}">
+                                    ${itemTitle} (<strong class="text-brand-wine">${quantity} un.</strong>)
+                                </p>
+                                <p class="text-gray-400 text-xs mt-1">
+                                    Solicitado por: <strong class="text-white">${requesterName}</strong> em ${createdTime}
+                                </p>
+                            </div>
+                            <div class="flex gap-2 ml-0 md:ml-4 mt-3 md:mt-0 shrink-0">
+                                <button onclick="window.approveRequest('${p.id}')" class="bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition">Aprovar</button>
+                                <button onclick="window.rejectRequest('${p.id}')" class="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition">Rejeitar</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+
+                list.innerHTML = htmlContent;
+
             } catch (e) {
                 console.error(e);
                 list.innerHTML = '<p class="text-red-500 text-sm">Erro ao carregar aprovações. Verifique o console.</p>';
+            }
+        }
+        
+        // === NOVA FUNÇÃO: APROVAR LOTE EM MASSA ===
+        window.approveBatch = async function(loteId) {
+            if(!confirm(`Deseja APROVAR o Lote #${loteId} e todos os seus itens?`)) return;
+
+            const buttons = document.querySelectorAll(`button[onclick*="approveBatch('${loteId}')"], button[onclick*="rejectBatch('${loteId}')"]`);
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.innerHTML = '<div class="loader border-white w-4 h-4"></div>';
+            });
+            
+            try {
+                // 1. Atualiza o registro PAI (lotes_envio)
+                const updateLotePromise = client.request(updateItem('lotes_envio', loteId, { status: 'pendente' }));
+                
+                // 2. Atualiza os registros FILHOS (solicitacoes) em massa
+                const updateSolicitacoesPromise = client.request(updateItems('solicitacoes', { 
+                    filter: { lote_id: { _eq: loteId } }, 
+                    data: { status: 'pendente' } 
+                }));
+
+                await Promise.all([updateLotePromise, updateSolicitacoesPromise]);
+
+                notify(`Lote #${loteId} e seus itens APROVADOS com sucesso!`, 'success');
+                window.loadApprovals(); 
+
+            } catch (e) {
+                console.error("Erro ao aprovar lote:", e);
+                let msg = e.message;
+                if(e.errors && e.errors.length > 0) msg = e.errors[0].message;
+                notify('Erro ao aprovar lote: ' + msg, 'error');
+                
+                // Restaura o estado dos botões em caso de falha grave
+                window.loadApprovals(); 
+            }
+        }
+        
+        // === NOVA FUNÇÃO: REJEITAR LOTE EM MASSA ===
+        window.rejectBatch = async function(loteId) {
+            if(!confirm(`Deseja REJEITAR o Lote #${loteId} e todos os seus itens?`)) return;
+
+            const buttons = document.querySelectorAll(`button[onclick*="approveBatch('${loteId}')"], button[onclick*="rejectBatch('${loteId}')"]`);
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.innerHTML = '<div class="loader border-white w-4 h-4"></div>';
+            });
+            
+            try {
+                // 1. Atualiza o registro PAI (lotes_envio)
+                const updateLotePromise = client.request(updateItem('lotes_envio', loteId, { status: 'cancelado' }));
+                
+                // 2. Atualiza os registros FILHOS (solicitacoes) em massa
+                const updateSolicitacoesPromise = client.request(updateItems('solicitacoes', { 
+                    filter: { lote_id: { _eq: loteId } }, 
+                    data: { status: 'cancelado' } 
+                }));
+
+                await Promise.all([updateLotePromise, updateSolicitacoesPromise]);
+
+                notify(`Lote #${loteId} e seus itens REJEITADOS com sucesso!`, 'error');
+                window.loadApprovals(); 
+
+            } catch (e) {
+                console.error("Erro ao rejeitar lote:", e);
+                let msg = e.message;
+                if(e.errors && e.errors.length > 0) msg = e.errors[0].message;
+                notify('Erro ao rejeitar lote: ' + msg, 'error');
+                
+                // Restaura o estado dos botões em caso de falha grave
+                window.loadApprovals(); 
             }
         }
 
@@ -2156,9 +2278,7 @@
             }
         }
         
-        // *******************************************************************
-        // FUNÇÃO finalizeShipments MODIFICADA PARA CRIAR O LOTE PAI PRIMEIRO
-        // *******************************************************************
+        // ALTERAÇÃO 1: FUNÇÃO window.finalizeShipments (STATUS POR GESTOR)
         window.finalizeShipments = async function() {
             // Recalcula totais para garantir (segurança contra edições de HTML)
             const total = window.selectedShipments.reduce((sum, s) => sum + (parseInt(s.quantity) || 0), 0);
@@ -2199,10 +2319,9 @@
                 }
                 const produtoNome = produtoId.nome || 'Produto'; // Nome para usar no lote
                 
-                // 2. VERIFICA CONFIGURAÇÕES DE APROVAÇÃO
-                const needsApproval = window.currentOrgConfig?.exige_aprovacao === true;
+                // 2. VERIFICA CONFIGURAÇÕES DE APROVAÇÃO (AGORA APENAS NO PERFIL DO GESTOR)
                 const isManager = window.currentUser?.eh_gestor === true;
-                const finalStatus = (needsApproval && !isManager) ? 'aguardando_aprovacao' : 'pendente';
+                const finalStatus = isManager ? 'pendente' : 'aguardando_aprovacao';
                 
                 // 3. CRIA O REGISTRO PAI NA TABELA lotes_envio
                 const nomeLote = `Envio - ${produtoNome} - ${new Date().toLocaleString('pt-BR')}`;
@@ -2221,7 +2340,7 @@
                 const promises = window.selectedShipments.map(shipment => {
                     return client.request(createItem('solicitacoes', { 
                         tipo: 'SOLICITACAO_ENVIO', 
-                        status: finalStatus, 
+                        status: finalStatus, // Status baseado no perfil do usuário
                         quantidade: parseInt(shipment.quantity),
                         produto_id: produtoId, // ID correto do produto
                         endereco_id: shipment.addressId, // ID do endereço
@@ -2577,7 +2696,7 @@
             const importTab = document.getElementById('address-tab-import');
 
             if(manualTab) manualTab.classList.add('hidden');
-            if(importTab) importTab.classList.add('hidden');
+            if (importTab) importTab.classList.add('hidden');
             
             const targetTab = document.getElementById(`address-tab-${tabName}`);
             if(targetTab) targetTab.classList.remove('hidden');
@@ -2870,7 +2989,11 @@
                 if (data.length === 0) throw new Error("Planilha vazia após processamento.");
 
                 // Sucesso! Renderiza a tabela
-                window.importedAddresses = data;
+                window.importedAddresses = data.map(addr => ({ 
+                    ...addr, 
+                    // Inicializa a quantidade individual com a Qtd Padrão (do input)
+                    quantidade_individual: parseInt(document.getElementById('import-lote-qtd')?.value || '1') || 1 
+                }));
                 const hasCriticalErrors = window.importedAddresses.some(a => a.status.includes('CEP') || a.status.includes('NÚMERO'));
                 window.renderImportPreview(hasCriticalErrors);
                 
@@ -2883,7 +3006,78 @@
             }
         }
         
-        // 4. NOVA FUNÇÃO: Criação do Lote a partir do Import
+        // TAREFA 2: CRIAR window.updateImportedRow
+        window.updateImportedRow = function(index, field, value) {
+            if (index < 0 || index >= window.importedAddresses.length) return;
+
+            const address = window.importedAddresses[index];
+            
+            // 1. Atualiza o valor no array
+            if (field === 'quantidade_individual') {
+                const numValue = parseInt(value);
+                address[field] = (isNaN(numValue) || numValue < 1) ? 1 : numValue;
+            } else {
+                address[field] = value;
+            }
+
+            // 2. Lógica de Revalidação de Status (se CEP ou Número for alterado)
+            if (['cep', 'numero', 'logradouro', 'apelido_local'].includes(field)) {
+                const cleanCep = address.cep ? address.cep.replace(/\D/g, '') : '';
+                const cleanNumero = address.numero ? address.numero.replace(/\s/g, '') : '';
+                
+                // Padrão: OK
+                let newStatus = '✅ OK';
+
+                // Checagem 1: CEP (8 dígitos)
+                if (cleanCep.length !== 8) {
+                    newStatus = '🔴 CEP?';
+                }
+                
+                // Checagem 2: Número (obrigatório para ser OK)
+                if (!cleanNumero) {
+                    // Se o CEP estiver faltando, prioriza o erro de CEP. Se o CEP estiver OK, usa o erro de número.
+                    newStatus = (newStatus === '🔴 CEP?') ? '🔴 CEP?' : '⚠️ NÚMERO?';
+                }
+                
+                // Checagem 3: Dados Secundários Faltantes (Aviso)
+                if (newStatus === '✅ OK' && (address.cidade === 'N/A' || address.estado === 'N/A' || !address.apelido_local)) {
+                     newStatus = '⚠️ DADOS?';
+                }
+
+                address.status = newStatus;
+                
+                // 3. Atualiza o feedback visual na linha (bolinha)
+                const statusCell = document.getElementById(`status-cell-${index}`);
+                if (statusCell) {
+                    let statusClass = 'status-dot-green';
+                    let icon = '<i class="ph ph-check-circle-fill"></i>';
+                    
+                    if (newStatus.includes('🔴')) {
+                        statusClass = 'status-dot-red';
+                        icon = '<i class="ph ph-x-circle-fill"></i>';
+                    } else if (newStatus.includes('⚠️')) {
+                        statusClass = 'status-dot-yellow';
+                        icon = '<i class="ph ph-warning-circle-fill"></i>';
+                    }
+
+                    statusCell.innerHTML = `<span class="${statusClass} flex items-center gap-1 font-bold">${icon} ${newStatus}</span>`;
+                }
+            }
+            
+            // Atualiza a contagem de itens válidos no botão "Criar Lote"
+            const addressesToShipCount = window.importedAddresses.filter(addr => 
+                !addr.status.includes('🔴 CEP?') && !addr.status.includes('⚠️ NÚMERO?')
+            ).length;
+            document.getElementById('import-count').textContent = addressesToShipCount;
+
+            // Atualiza a contagem de erros críticos no rodapé (para o botão)
+            const hasCriticalErrors = window.importedAddresses.some(a => a.status.includes('🔴 CEP?') || a.status.includes('⚠️ NÚMERO?'));
+            const warningP = document.getElementById('import-warning');
+            if (warningP) warningP.classList.toggle('hidden', !hasCriticalErrors);
+        }
+
+        
+        // ALTERAÇÃO 2: FUNÇÃO window.createBatchFromImport (STATUS POR GESTOR E QTD INDIVIDUAL)
         window.createBatchFromImport = async function() {
             const nomeLote = document.getElementById('import-lote-nome')?.value;
             const selectElement = document.getElementById('import-lote-produto');
@@ -2891,7 +3085,8 @@
             // Pega o ID do PRODUTO (o value)
             const produtoId = selectElement?.value; 
             
-            const qtdPadrao = parseInt(document.getElementById('import-lote-qtd')?.value || '1') || 1;
+            // NOTA: O qtdPadrao global ainda é necessário para a validação de erros e para o payload final em lote, mas agora será SOBRESCRITO pela quantidade individual de cada item.
+            const qtdPadrao = parseInt(document.getElementById('import-lote-qtd')?.value || '1') || 1; 
 
             // Validações
             if (!nomeLote) return notify('Digite um nome para o Lote.', 'error');
@@ -2899,14 +3094,18 @@
             if (window.importedAddresses.length === 0) return notify('Nenhum endereço importado.', 'error');
 
             const hasCriticalErrors = window.importedAddresses.some(a => a.status.includes('🔴 CEP?') || a.status.includes('⚠️ NÚMERO?'));
-            if (hasCriticalErrors && !confirm("AVISO: Alguns endereços estão incompletos (CEP ou NÚMERO). Deseja continuar e criar o Lote com os endereços disponíveis?")) {
+            if (hasCriticalErrors && !confirm("AVISO: Alguns endereços estão incompletos (CEP ou NÚMERO) e **NÃO SERÃO ENVIADOS**. Deseja continuar e criar o Lote com os endereços válidos?")) {
                 return;
             }
             
-            const addressesToShip = window.importedAddresses.filter(addr => addr.status.includes('✅ OK') || addr.status.includes('⚪ S/N') || addr.status.includes('⚠️ DADOS?'));
+            // Filtra APENAS os endereços que NÃO têm erros críticos
+            const addressesToShip = window.importedAddresses.filter(addr => 
+                !addr.status.includes('🔴 CEP?') && !addr.status.includes('⚠️ NÚMERO?')
+            );
 
             if (addressesToShip.length === 0) return notify('Nenhum endereço válido para envio encontrado.', 'error');
 
+            const totalQuantityToShip = addressesToShip.reduce((sum, addr) => sum + (parseInt(addr.quantidade_individual) || qtdPadrao), 0);
 
             const btn = document.querySelector('#import-actions button');
             if(!btn) return;
@@ -2916,11 +3115,15 @@
             btn.innerHTML = '<div class="loader border-white w-5 h-5"></div> <span class="ml-2">Processando Lote...</span>';
 
             try {
+                // LÓGICA DE APROVAÇÃO (AGORA BASEADA APENAS NO PERFIL DO GESTOR)
+                const isManager = window.currentUser?.eh_gestor === true;
+                const finalStatus = isManager ? 'pendente' : 'aguardando_aprovacao';
+
                 // 1. CRIAR O LOTE PAI
                 const lotePayload = {
                     nome_lote: nomeLote,
-                    status: 'pendente',
-                    quantidade_total: addressesToShip.length * qtdPadrao,
+                    status: finalStatus, // Status baseado no perfil do usuário
+                    quantidade_total: totalQuantityToShip, // Usando a QTD total calculada
                     organization_id: window.currentOrgId,
                     data_criacao: new Date().toISOString()
                 };
@@ -2930,6 +3133,8 @@
 
                 // 2. PROCESSAR CADA LINHA (Cria Endereço -> Cria Solicitação)
                 const promises = addressesToShip.map(async (addr) => {
+                    
+                    const itemQuantity = parseInt(addr.quantidade_individual) || qtdPadrao;
                     
                     // A) Monta o objeto do Endereço para salvar no banco
                     // VINCULAMOS AO LOTE PAI AQUI
@@ -2957,11 +3162,11 @@
                     // B) Cria a Solicitação vinculada ao endereço recém-criado e ao Lote
                     return client.request(createItem('solicitacoes', {
                         tipo: 'SOLICITACAO_ENVIO',
-                        status: 'pendente',
+                        status: finalStatus, // Status baseado no perfil do usuário
                         lote_id: novoLoteId,
                         organization_id: window.currentOrgId,
                         produto_id: produtoId,
-                        quantidade: qtdPadrao,
+                        quantidade: itemQuantity, // Usa a quantidade individual do item
                         
                         // VINCULA AO ENDEREÇO REAL
                         endereco_id: enderecoSalvo.id,
@@ -2974,7 +3179,11 @@
 
                 await Promise.all(promises);
 
-                notify(`Lote "${nomeLote}" criado com sucesso e ${promises.length} endereços salvos no banco!`, 'success');
+                if(finalStatus === 'aguardando_aprovacao') {
+                    notify(`Lote "${nomeLote}" criado e enviado para aprovação do gestor!`, 'success');
+                } else {
+                    notify(`Lote "${nomeLote}" criado com sucesso e ${promises.length} endereços salvos no banco!`, 'success');
+                }
                 
                 // Limpa tudo e atualiza a tela
                 const managerModal = document.getElementById('address-manager-modal');
@@ -2997,6 +3206,7 @@
         }
 
 
+        // TAREFA 1: ATUALIZAR window.renderImportPreview
         window.renderImportPreview = function(hasCriticalErrors) {
             const container = document.getElementById('import-preview-container');
             const actionsDiv = document.getElementById('import-actions');
@@ -3011,42 +3221,76 @@
                 return;
             }
             
-            countSpan.textContent = window.importedAddresses.length;
+            const addressesToShipCount = window.importedAddresses.filter(addr => !addr.status.includes('🔴 CEP?') && !addr.status.includes('⚠️ NÚMERO?')).length;
+
+            countSpan.textContent = addressesToShipCount; // Mostra apenas os que serão enviados
             actionsDiv.classList.remove('hidden');
             warningP.classList.toggle('hidden', !hasCriticalErrors);
+
+            // Classe CSS para os inputs editáveis na tabela (REQUISITO VISUAL)
+            const inputClass = 'bg-transparent border border-transparent hover:border-white/20 focus:border-brand-wine focus:bg-white/5 rounded px-2 py-1 w-full text-white dark:text-gray-300 transition-colors text-xs';
 
             const tableHtml = `
                 <table class="w-full text-left text-gray-300 responsive-table text-sm">
                     <thead class="bg-white/5 text-gray-400 uppercase text-xs sticky top-0 backdrop-blur-sm">
                         <tr>
-                            <th class="p-3">Status</th>
-                            <th class="p-3">A/C</th>
-                            <th class="p-3">CEP</th>
+                            <th class="p-3 w-[100px]">Status</th>
+                            <th class="p-3 w-[120px]">A/C</th>
+                            <th class="p-3 w-[80px]">Qtd</th> <th class="p-3 w-[100px]">CEP</th>
                             <th class="p-3">Rua</th>
-                            <th class="p-3">N°</th>
+                            <th class="p-3 w-[80px]">N°</th>
                             <th class="p-3">Bairro/Cidade</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-white/5">
-                        ${window.importedAddresses.map(addr => {
+                        ${window.importedAddresses.map((addr, index) => {
                             let statusClass = 'status-dot-green';
                             let icon = '<i class="ph ph-check-circle-fill"></i>';
-                            if (addr.status.includes('?') || addr.status !== '✅ OK') {
-                                statusClass = addr.status.includes('🔴 CEP?') || addr.status.includes('⚠️ NÚMERO?') ? 'status-dot-red' : 'status-dot-yellow';
-                                icon = statusClass === 'status-dot-red' ? '<i class="ph ph-x-circle-fill"></i>' : '<i class="ph ph-warning-circle-fill"></i>';
-                            } else {
-                                statusClass = 'status-dot-green';
-                                icon = '<i class="ph ph-check-circle-fill"></i>';
+                            
+                            if (addr.status.includes('🔴')) {
+                                statusClass = 'status-dot-red';
+                                icon = '<i class="ph ph-x-circle-fill"></i>';
+                            } else if (addr.status.includes('⚠️')) {
+                                statusClass = 'status-dot-yellow';
+                                icon = '<i class="ph ph-warning-circle-fill"></i>';
                             }
+
                             
                             return `
-                                <tr class="hover:bg-white/5">
-                                    <td class="p-3" data-label="Status"><span class="${statusClass} flex items-center gap-1 font-bold">${icon} ${addr.status}</span></td>
-                                    <td class="p-3 truncate max-w-[100px] text-white" data-label="A/C">${addr.apelido_local}</td>
-                                    <td class="p-3" data-label="CEP">${addr.cep || 'N/A'}</td>
-                                    <td class="p-3 truncate max-w-[150px]" data-label="Rua">${addr.logradouro}</td>
-                                    <td class="p-3 text-white font-bold" data-label="N°">${addr.numero || 'S/N'}</td>
-                                    <td class="p-3" data-label="Bairro">${addr.bairro || addr.cidade || 'N/A'}</td>
+                                <tr class="hover:bg-white/5 ${addr.status.includes('🔴') ? 'opacity-50 cursor-not-allowed' : ''}">
+                                    <td id="status-cell-${index}" class="p-3" data-label="Status">
+                                        <span class="${statusClass} flex items-center gap-1 font-bold">${icon} ${addr.status}</span>
+                                    </td>
+                                    <td class="p-3" data-label="A/C">
+                                        <input type="text" value="${addr.apelido_local || ''}" 
+                                               onchange="window.updateImportedRow(${index}, 'apelido_local', this.value)"
+                                               class="${inputClass}" title="Nome/Aos Cuidados">
+                                    </td>
+                                    <td class="p-3" data-label="Qtd">
+                                        <input type="number" value="${addr.quantidade_individual || 1}" min="1"
+                                               onchange="window.updateImportedRow(${index}, 'quantidade_individual', this.value)"
+                                               class="${inputClass} text-center w-16">
+                                    </td>
+                                    <td class="p-3" data-label="CEP">
+                                        <input type="text" value="${addr.cep || ''}" 
+                                               onchange="window.updateImportedRow(${index}, 'cep', this.value)"
+                                               class="${inputClass}" title="CEP">
+                                    </td>
+                                    <td class="p-3" data-label="Rua">
+                                        <input type="text" value="${addr.logradouro || ''}" 
+                                               onchange="window.updateImportedRow(${index}, 'logradouro', this.value)"
+                                               class="${inputClass}" title="Logradouro">
+                                    </td>
+                                    <td class="p-3" data-label="N°">
+                                        <input type="text" value="${addr.numero || ''}" 
+                                               onchange="window.updateImportedRow(${index}, 'numero', this.value)"
+                                               class="${inputClass} text-center" title="Número">
+                                    </td>
+                                    <td class="p-3" data-label="Bairro/Cidade">
+                                        <input type="text" value="${addr.bairro || addr.cidade || ''}" 
+                                               onchange="window.updateImportedRow(${index}, 'bairro', this.value)"
+                                               class="${inputClass}" title="Bairro/Cidade">
+                                    </td>
                                 </tr>
                             `;
                         }).join('')}
@@ -3055,6 +3299,7 @@
             `;
             container.innerHTML = tableHtml;
         }
+
 
         window.saveImportedAddresses = async function() {
             // OBS: Esta função não está mais sendo usada, pois foi substituída por createBatchFromImport
