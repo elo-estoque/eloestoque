@@ -124,10 +124,6 @@
         .address-tab-btn.active { border-bottom: 2px solid #E31937; color: #E31937; }
         body.theme-light .address-tab-btn.active { color: #E31937; }
         
-        /* Estilos para o novo sistema de abas do histórico */
-        .history-tab-btn.active { border-bottom: 2px solid #E31937; color: #E31937; }
-        body.theme-light .history-tab-btn.active { color: #E31937; }
-        
         .status-dot-green { color: #10B981; }
         .status-dot-yellow { color: #F59E0B; }
         .status-dot-red { color: #EF4444; }
@@ -159,6 +155,27 @@
             font-size: 1.5rem;
             font-weight: bold;
         }
+        
+        /* NOVO: Estilos para as Abas de Histórico */
+        .history-tab-btn {
+            flex: 1 1 50%; 
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .history-tab-btn:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        .history-tab-btn.active {
+            border-bottom: 2px solid #E31937;
+            color: #E5E7EB;
+            font-weight: bold;
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+        body.theme-light .history-tab-btn.active {
+            color: #171717;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
     </style>
 </head>
 <body class="h-screen flex overflow-hidden text-gray-200 selection:bg-brand-wine selection:text-white">
@@ -370,7 +387,6 @@
                         
                         <div id="box-manual-endereco" class="hidden space-y-4 glass-panel p-4 mt-4">
                             <h4 class="text-lg font-bold text-brand-wine">Envio para Endereço Único (Manual)</h4>
-                            
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">CEP *</label>
@@ -412,8 +428,8 @@
                                     <input type="text" id="manual-pedido-complemento" class="w-full glass-input rounded-lg px-4 py-3" placeholder="Apto, Bloco, etc.">
                                 </div>
                             </div>
-                        </div>
-                        </div>
+                            </div>
+                    </div>
 
                     <div class="mb-6 p-3 bg-yellow-900/20 border border-yellow-700/30 rounded-lg flex gap-3 items-start">
                         <i class="ph-fill ph-info text-yellow-500 text-xl mt-0.5"></i>
@@ -483,22 +499,23 @@
             </div>
 
             <div id="view-pedidos" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-3xl font-bold text-white section-title">Histórico de Movimentações</h2>
-                    <button onclick="window.exportTableToCSV('historico')" class="bg-white/5 hover:bg-white/10 text-white border border-white/10 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition">
-                        <i class="ph ph-download-simple"></i> Exportar CSV
-                    </button>
-                </div>
+                <h2 class="text-3xl font-bold text-white mb-6 section-title">Histórico de Movimentações</h2>
                 
-                <div class="flex border-b border-white/10 mb-6 glass-panel rounded-t-2xl p-2 -mx-2">
-                    <button id="tab-lotes-btn" onclick="window.setHistoryTab('lotes')" class="history-tab-btn px-4 py-2 text-sm font-semibold text-gray-400 hover:text-white transition active">
-                        <i class="ph ph-package mr-1"></i> HISTÓRICO DE ENVIOS (LOTES)
+                <div class="flex border-b border-white/10 mb-6 glass-panel rounded-xl p-1">
+                    <button id="tab-lotes-btn" onclick="window.setHistoryTab('lotes')" class="history-tab-btn active px-4 py-3 rounded-lg flex items-center justify-center gap-2 text-sm text-gray-400">
+                        <i class="ph ph-package text-xl"></i> HISTÓRICO DE ENVIOS (LOTES)
                     </button>
-                    <button id="tab-reposicoes-btn" onclick="window.setHistoryTab('reposicoes')" class="history-tab-btn px-4 py-2 text-sm font-semibold text-gray-400 hover:text-white transition">
-                        <i class="ph ph-shopping-cart mr-1"></i> HISTÓRICO DE REPOSIÇÕES
+                    <button id="tab-reposicoes-btn" onclick="window.setHistoryTab('reposicoes')" class="history-tab-btn px-4 py-3 rounded-lg flex items-center justify-center gap-2 text-sm text-gray-400">
+                        <i class="ph ph-shopping-cart text-xl"></i> HISTÓRICO DE REPOSIÇÕES
                     </button>
                 </div>
+
                 <div id="history-lotes-content" class="glass-panel rounded-2xl overflow-hidden">
+                     <div class="flex justify-end p-4">
+                        <button onclick="window.exportTableToCSV('historico')" class="bg-white/5 hover:bg-white/10 text-white border border-white/10 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition">
+                            <i class="ph ph-download-simple"></i> Exportar CSV
+                        </button>
+                    </div>
                     <table class="w-full text-left text-gray-300 responsive-table">
                         <thead class="bg-white/5 text-gray-400 uppercase text-xs">
                             <tr><th class="p-5">Lote / Identificação</th><th class="p-5">Data</th><th class="p-5">Qtd Total</th><th class="p-5">Status</th></tr>
@@ -506,18 +523,23 @@
                         <tbody id="history-table-body" class="divide-y divide-white/5"></tbody>
                     </table>
                 </div>
+
                 <div id="history-reposicoes-content" class="glass-panel rounded-2xl overflow-hidden hidden">
+                     <div class="flex justify-end p-4">
+                        <button onclick="window.exportTableToCSV('reposicoes')" class="bg-white/5 hover:bg-white/10 text-white border border-white/10 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition">
+                            <i class="ph ph-download-simple"></i> Exportar CSV
+                        </button>
+                    </div>
                     <table class="w-full text-left text-gray-300 responsive-table">
                         <thead class="bg-white/5 text-gray-400 uppercase text-xs">
-                            <tr><th class="p-5">Produto</th><th class="p-5">Qtd</th><th class="p-5">Tipo</th><th class="p-5">Status</th><th class="p-5">Ações</th></tr>
+                            <tr><th class="p-5">Tipo</th><th class="p-5">Data</th><th class="p-5">Detalhes</th><th class="p-5">Status</th></tr>
                         </thead>
-                        <tbody id="reposicoes-table-body" class="divide-y divide-white/5">
-                            <tr><td colspan="5" class="p-4 text-center text-gray-500">Carregando histórico de orçamentos e reposições...</td></tr>
-                        </tbody>
+                        <tbody id="reposition-history-table-body" class="divide-y divide-white/5">
+                            </tbody>
                     </table>
                 </div>
-                </div>
-        </main>
+            </div>
+            </main>
         
         <a href="https://wa.me/5511948171445" target="_blank" class="fixed bottom-8 right-8 bg-[#25D366] hover:bg-[#128C7E] text-white p-4 rounded-full shadow-[0_0_20px_rgba(37,211,102,0.4)] z-50 transition-transform hover:scale-110 group"><i class="ph ph-whatsapp-logo text-3xl"></i></a>
     </div>
@@ -797,6 +819,11 @@
         
         // NOVO: Variável para armazenar a lista de produtos do ESTOQUE para o modal de importação
         window.estoqueOptionsForSelect = [];
+        // NOVO: Variável para controlar a aba de Histórico (padrão é 'lotes')
+        window.activeHistoryTab = 'lotes'; 
+        // NOVO: Variável para itens de reposição (para a nova aba)
+        window.repositionHistoryItems = [];
+
 
         // === INIT FUNCTION: CARREGA DADOS CRÍTICOS AO ABRIR ===
         async function initApp() {
@@ -871,7 +898,19 @@
                     Status: i.status,
                     Quantidade_Total: i.quantidade_total
                 }));
+            } else if (type === 'reposicoes') { // NOVO: Lógica de exportação de reposições
+                 if(!window.repositionHistoryItems?.length) { notify('Sem dados de reposição para exportar.', 'error'); return; }
+                 data = window.repositionHistoryItems.map(i => ({
+                    Tipo: 'SOLICITACAO_COMPRA',
+                    Produto: i.produto_id?.nome || 'N/A',
+                    Quantidade: i.quantidade,
+                    Data_Criacao: new Date(i.data_criacao).toLocaleDateString(),
+                    Status: i.status,
+                    Valor_Estimado: i.valor_total || 'N/A',
+                    Observacoes: i.observacoes || '-'
+                 }));
             }
+
 
             if(!data.length) return;
 
@@ -1076,6 +1115,10 @@
                 window.quoteCart = []; 
                 window.renderQuoteCart();
                 window.router('pedidos'); 
+                // NOVO: Chama a função para garantir a visualização da aba correta
+                if (typeof window.setHistoryTab === 'function') {
+                    window.setHistoryTab('reposicoes');
+                }
             } catch (e) {
                 let msg = e.message || "Erro desconhecido";
                 if(e.errors && e.errors.length > 0) msg = e.errors[0].message;
@@ -1280,33 +1323,46 @@
         window.router = function(view) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             document.getElementById('view-' + view).classList.remove('hidden');
-            updateSidebar('nav-' + view);
+            
+            // ATUALIZADO: Roteamento para garantir a aba correta no histórico
+            if (view === 'pedidos') {
+                 updateSidebar('nav-pedidos');
+                 window.loadBatchHistory(); // Carrega Lotes (Padrão)
+                 window.loadRepositionHistory(); // Carrega Reposições (em paralelo)
+                 window.setHistoryTab(window.activeHistoryTab || 'lotes');
+            } else {
+                 updateSidebar('nav-' + view);
+            }
+            
             if(view === 'dashboard') loadDashboard();
             if(view === 'estoque') loadInventory();
             if(view === 'pedir') { loadDependencies(); setTimeout(window.setMinDates, 100); }
             if(view === 'repor') { loadRepositionDependencies(); setTimeout(window.setMinDates, 100); window.renderQuoteCart(); }
-            if(view === 'pedidos') loadHistory(); // AGORA CARREGA LOTES
             if(view === 'catalogo') loadCatalog();
         }
         
-        // FUNÇÃO DE ALTERNÂNCIA DE ABAS DO HISTÓRICO (NOVA)
+        // NOVO: Função para alternar as abas de Histórico
         window.setHistoryTab = function(tabName) {
-            document.querySelectorAll('.history-tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`tab-${tabName}-btn`).classList.add('active');
-
-            document.getElementById('history-lotes-content').classList.add('hidden');
-            document.getElementById('history-reposicoes-content').classList.add('hidden');
+            window.activeHistoryTab = tabName;
             
-            // A Tabela de Lotes já está carregada no loadHistory() do router.
-            if(tabName === 'lotes') {
-                document.getElementById('history-lotes-content').classList.remove('hidden');
-            } else if (tabName === 'reposicoes') {
-                document.getElementById('history-reposicoes-content').classList.remove('hidden');
-                // Chamada para carregar apenas as solicitações de COMPRA/ORÇAMENTO
-                window.loadReposicoesHistory(); 
+            // 1. Atualiza botões
+            document.querySelectorAll('.history-tab-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById(`tab-${tabName}-btn`);
+            if(activeBtn) activeBtn.classList.add('active');
+
+            // 2. Atualiza Conteúdo
+            const lotesContent = document.getElementById('history-lotes-content');
+            const reposicoesContent = document.getElementById('history-reposicoes-content');
+            
+            if (lotesContent) lotesContent.classList.add('hidden');
+            if (reposicoesContent) reposicoesContent.classList.add('hidden');
+            
+            if (tabName === 'lotes' && lotesContent) {
+                lotesContent.classList.remove('hidden');
+            } else if (tabName === 'reposicoes' && reposicoesContent) {
+                reposicoesContent.classList.remove('hidden');
             }
         }
-        // FIM FUNÇÃO DE ALTERNÂNCIA DE ABAS DO HISTÓRICO (NOVA)
 
 
         window.addEventListener('load', function() {
@@ -1362,12 +1418,16 @@
         // === NOVA FUNÇÃO: CARREGAR APROVAÇÕES ===
         window.loadApprovals = async function() {
             const list = document.getElementById('approvals-list');
+            if(!list) return; // Checagem defensiva
+
             list.innerHTML = '<p class="text-white text-sm">Carregando...</p>';
             
             try {
+                // ORDENAÇÃO: Garante o mais recente primeiro
                 const pendentes = await client.request(readItems('solicitacoes', { 
+                    sort: ['-data_criacao'],
                     filter: { status: { _eq: 'aguardando_aprovacao' } },
-                    fields: ['*', 'produto_id.nome']
+                    fields: ['*', 'produto_id.nome', 'produto_id.imagem', 'user_created.first_name', 'user_created.last_name']
                 }));
 
                 if (pendentes.length === 0) {
@@ -1375,22 +1435,39 @@
                     return;
                 }
 
-                list.innerHTML = pendentes.map(p => `
-                    <div class="bg-black/30 border border-white/5 p-4 rounded-lg flex justify-between items-center">
-                        <div>
-                            <p class="text-white font-bold text-sm">${p.produto_id?.nome || 'Produto'}</p>
-                            <p class="text-gray-400 text-xs">Qtd: ${p.quantidade} | Criado em: ${new Date(p.data_criacao).toLocaleDateString()}</p>
+                list.innerHTML = pendentes.map(p => {
+                    const requesterName = `${p.user_created?.first_name || 'Usuário'} ${p.user_created?.last_name || 'Desconhecido'}`;
+                    const createdTime = new Date(p.data_criacao).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+                    const isShipment = p.tipo === 'SOLICITACAO_ENVIO';
+                    
+                    const typeIcon = isShipment ? '<i class="ph ph-paper-plane-tilt text-brand-wine"></i>' : '<i class="ph ph-shopping-cart text-green-500"></i>';
+                    const typeText = isShipment ? 'Envio' : 'Orçamento/Compra';
+                    const statusColor = isShipment ? 'border-brand-wine/50 bg-brand-wine/10' : 'border-green-500/50 bg-green-500/10';
+
+                    return `
+                        <div class="bg-black/30 border ${statusColor} p-4 rounded-xl flex justify-between items-center transition-shadow hover:shadow-lg">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-xs font-bold uppercase tracking-wider ${isShipment ? 'text-brand-wine' : 'text-green-400'}">${typeText}</span>
+                                    ${typeIcon}
+                                </div>
+                                <p class="text-white font-bold text-sm truncate">${p.produto_id?.nome || 'Produto Indefinido'} (${p.quantidade} un.)</p>
+                                <p class="text-gray-400 text-xs mt-1">
+                                    Solicitado por: <strong class="text-white">${requesterName}</strong>
+                                    em ${createdTime}
+                                </p>
+                            </div>
+                            <div class="flex gap-2 ml-4 shrink-0">
+                                <button onclick="window.approveRequest('${p.id}')" class="bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition">Aprovar</button>
+                                <button onclick="window.rejectRequest('${p.id}')" class="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition">Reprovar</button>
+                            </div>
                         </div>
-                        <div class="flex gap-2">
-                            <button onclick="window.approveRequest('${p.id}')" class="bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-3 py-2 rounded">Aprovar</button>
-                            <button onclick="window.rejectRequest('${p.id}')" class="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-3 py-2 rounded">Reprovar</button>
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
 
             } catch (e) {
                 console.error(e);
-                list.innerHTML = '<p class="text-red-500 text-sm">Erro ao carregar.</p>';
+                list.innerHTML = '<p class="text-red-500 text-sm">Erro ao carregar aprovações. Verifique o console.</p>';
             }
         }
 
@@ -1602,6 +1679,8 @@
 
             const infoDiv = document.getElementById('modal-info-extra'); 
             const actionsDiv = document.getElementById('modal-actions');
+            
+            const estoqueId = id; // O ID de estoque
 
             if (type === 'estoque') {
                 if(lotes.length > 0) {
@@ -1621,6 +1700,9 @@
                             fotoLote = imgPrincipal; // Fallback para a principal
                         }
 
+                        // O valor para seleção agora é o "PIPE"
+                        const selectValue = `${estoqueId}|${lote.descricao}`;
+
                         return `
                         <div class="flex items-center gap-4 p-3 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10 mb-2">
                             <img src="${fotoLote}" class="w-12 h-12 rounded object-cover border border-gray-300 dark:border-white/20">
@@ -1628,7 +1710,7 @@
                                 <p class="text-sm font-bold text-gray-800 dark:text-white">${lote.descricao}</p>
                                 <p class="text-xs text-gray-500">Disponível: <b class="text-brand-wine">${lote.quantidade}</b></p>
                             </div>
-                            <button onclick="window.selectBatchForShipping('${item.id}', '${produto.nome}', '${lote.descricao}', ${lote.quantidade})" class="bg-brand-wine hover:bg-brand-hover text-white text-xs font-bold px-3 py-2 rounded shadow transition">
+                            <button onclick="window.selectBatchForShipping('${estoqueId}', '${produto.nome}', '${lote.descricao}', ${lote.quantidade})" class="bg-brand-wine hover:bg-brand-hover text-white text-xs font-bold px-3 py-2 rounded shadow transition">
                                 ENVIAR ESTE
                             </button>
                         </div>`;
@@ -1638,8 +1720,10 @@
                     actionsDiv.innerHTML = `<button onclick="closeDetails()" class="w-full border border-gray-300 dark:border-white/10 text-gray-500 hover:text-white hover:bg-white/10 py-3 rounded-lg font-bold transition">FECHAR</button>`;
                 
                 } else {
+                    // Valor de seleção é o ID do estoque (sem pipe)
+                    const selectValue = estoqueId;
                     infoDiv.innerHTML = `<div class="bg-gray-100 dark:bg-white/5 p-3 rounded-lg w-full"><p class="text-xs text-gray-500 uppercase">Estoque Total</p><p class="text-xl font-bold text-brand-wine">${item.quantidade_disponivel}</p></div>`;
-                    actionsDiv.innerHTML = `<div class="flex gap-3"><button onclick="closeDetails(); window.prefill('${item.id}', '${produto?.nome} (Geral)', ${item.quantidade_disponivel}, 'pedir')" class="flex-1 bg-brand-wine hover:bg-brand-hover text-white py-3 rounded-lg font-bold shadow-lg transition">ENVIAR GERAL</button></div>`; 
+                    actionsDiv.innerHTML = `<div class="flex gap-3"><button onclick="closeDetails(); window.prefill('${selectValue}', '${produto?.nome} (Geral)', ${item.quantidade_disponivel}, 'pedir')" class="flex-1 bg-brand-wine hover:bg-brand-hover text-white py-3 rounded-lg font-bold shadow-lg transition">ENVIAR GERAL</button></div>`; 
                 }
             } else { 
                 infoDiv.innerHTML = `<div class="bg-gray-100 dark:bg-white/5 p-3 rounded-lg w-full"><p class="text-xs text-gray-500 uppercase">Status</p><p class="text-sm font-bold text-green-500">Sob Encomenda</p></div>`; 
@@ -1703,7 +1787,10 @@
             }
 
             select.setAttribute('data-max', maxQtd);
-            document.getElementById('modal-saldo-total').innerText = maxQtd; // Atualiza o modal
+            // Checagem defensiva antes de setar modal-saldo-total (pode estar hidden)
+            const modalSaldo = document.getElementById('modal-saldo-total');
+            if(modalSaldo) modalSaldo.innerText = maxQtd;
+            
             display.innerText = `Disponível no Estoque: ${maxQtd} unidades`;
         }
 
@@ -1790,18 +1877,24 @@
             } catch(e) { console.error(e); } 
         }
         
-        // NOVO: Renderiza cards de endereço
+        // ***************************************************************
+        // FUNÇÃO renderAddressCards MODIFICADA: Filtra endereços importados
+        // ***************************************************************
         window.renderAddressCards = function() {
             const container = document.getElementById('box-select-endereco');
             
-            if (window.allClientAddresses.length === 0) {
-                container.innerHTML = `<p id="no-addresses-msg" class="text-gray-500 text-sm col-span-2">Nenhum endereço cadastrado. Use o botão "Gerenciar/Importar Endereços".</p>`;
+            // 1. Filtra para exibir SOMENTE endereços manuais (lote_origem === null)
+            const addressesToShow = window.allClientAddresses.filter(e => !e.lote_origem);
+
+            if (!addressesToShow.length) {
+                container.innerHTML = `<p id="no-addresses-msg" class="text-gray-500 text-sm col-span-2">Nenhum endereço cadastrado manualmente. Use o botão "Gerenciar/Importar Endereços".</p>`;
                 window.updateSelectedAddressCount();
                 return;
             }
 
-            container.innerHTML = window.allClientAddresses.map(e => {
+            container.innerHTML = addressesToShow.map(e => {
                 const isSelected = window.selectedShipments.some(s => s.addressId === e.id);
+                
                 // CORREÇÃO: Tratamento de nulos para evitar 'undefined' e barras soltas
                 const bairro = e.bairro || '';
                 const cidade = e.cidade || '';
@@ -1826,6 +1919,8 @@
         // NOVO: Toggle seleção de endereço
         window.toggleAddressSelection = function(addressId) {
             const card = document.getElementById(`address-card-${addressId}`);
+            if(!card) return; // Checagem defensiva
+
             card.classList.toggle('selected');
             
             const isSelected = card.classList.contains('selected');
@@ -1834,10 +1929,14 @@
             // Adiciona/Remove da lista de seleção
             if (isSelected) {
                 const address = window.allClientAddresses.find(a => a.id === addressId);
+                // Acha o texto completo no card para salvar como backup em addressFull
+                const addressCard = document.getElementById(`address-card-${addressId}`);
+                const fullAddressText = addressCard ? addressCard.querySelector('p:last-child').innerText : '';
+
                 window.selectedShipments.push({
                     addressId: addressId,
                     addressAC: address.apelido_local || address.logradouro,
-                    addressFull: `${address.logradouro}, ${address.numero} - ${address.cidade}/${address.estado}`,
+                    addressFull: fullAddressText,
                     quantity: defaultQtd
                 });
             } else {
@@ -1847,19 +1946,27 @@
             window.updateSelectedAddressCount();
             
             // Desativa modo manual
-            document.getElementById('toggle-endereco').checked = false;
-            document.getElementById('box-manual-endereco').classList.add('hidden');
-            document.getElementById('box-select-endereco').classList.remove('hidden');
+            const toggleEndereco = document.getElementById('toggle-endereco');
+            const boxManual = document.getElementById('box-manual-endereco');
+            const boxSelect = document.getElementById('box-select-endereco');
+            
+            if(toggleEndereco) toggleEndereco.checked = false;
+            if(boxManual) boxManual.classList.add('hidden');
+            if(boxSelect) boxSelect.classList.remove('hidden');
         }
         
         // NOVO: Atualiza contador
         window.updateSelectedAddressCount = function() {
-            document.getElementById('count-selected-addresses').innerText = window.selectedShipments.length;
+            const countSpan = document.getElementById('count-selected-addresses');
+            if(countSpan) countSpan.innerText = window.selectedShipments.length;
         }
         
         // NOVO: Selecionar/Deselecionar todos
         window.toggleSelectAllAddresses = function() {
-            const allCards = document.querySelectorAll('.address-card');
+            // Filtra apenas os cartões VISÍVEIS (manuais)
+            const allCards = document.querySelectorAll('#box-select-endereco .address-card');
+            const visibleAddresses = window.allClientAddresses.filter(e => !e.lote_origem);
+            
             const isAllSelected = allCards.length > 0 && allCards.length === window.selectedShipments.length;
             const defaultQtd = parseInt(document.getElementById('pedido-qtd-default').value) || 1;
             
@@ -1868,13 +1975,17 @@
                 window.selectedShipments = [];
                 allCards.forEach(card => card.classList.remove('selected'));
             } else {
-                // Seleciona todos
+                // Seleciona todos os VISÍVEIS
                 window.selectedShipments = [];
-                window.allClientAddresses.forEach(address => {
+                visibleAddresses.forEach(address => {
+                     // Acha o texto completo no card para salvar como backup em addressFull
+                    const addressCard = document.getElementById(`address-card-${address.id}`);
+                    const fullAddressText = addressCard ? addressCard.querySelector('p:last-child').innerText : '';
+                    
                     window.selectedShipments.push({
                         addressId: address.id,
                         addressAC: address.apelido_local || address.logradouro,
-                        addressFull: `${address.logradouro}, ${address.numero} - ${address.cidade}/${address.estado}`,
+                        addressFull: fullAddressText,
                         quantity: defaultQtd
                     });
                     document.getElementById(`address-card-${address.id}`).classList.add('selected');
@@ -1884,9 +1995,13 @@
             window.updateSelectedAddressCount();
 
             // Desativa modo manual
-            document.getElementById('toggle-endereco').checked = false;
-            document.getElementById('box-manual-endereco').classList.add('hidden');
-            document.getElementById('box-select-endereco').classList.remove('hidden');
+            const toggleEndereco = document.getElementById('toggle-endereco');
+            const boxManual = document.getElementById('box-manual-endereco');
+            const boxSelect = document.getElementById('box-select-endereco');
+            
+            if(toggleEndereco) toggleEndereco.checked = false;
+            if(boxManual) boxManual.classList.add('hidden');
+            if(boxSelect) boxSelect.classList.remove('hidden');
         }
 
         async function loadRepositionDependencies() { try { const prods = await client.request(readItems('produtos_catalogo', { sort: ['nome'] })); document.getElementById('repor-produto').innerHTML = prods.map(p => `<option value="${p.id}" class="bg-white dark:bg-black text-gray-800 dark:text-white">${p.nome}</option>`).join(''); } catch(e) { console.error(e); } }
@@ -1928,17 +2043,24 @@
         window.openLotConfigModal = function() {
             const modal = document.getElementById('lot-config-modal');
             const listContainer = document.getElementById('address-lot-list');
-            const productName = document.getElementById('pedido-produto').options[document.getElementById('pedido-produto').selectedIndex].text;
+            const selectElement = document.getElementById('pedido-produto');
+            
+            if(!modal || !listContainer || !selectElement) return; // Checagem defensiva
+
+            const productName = selectElement.options[selectElement.selectedIndex].text;
             
             // CORRIGIDO: Busca o valor correto do data-max
-            const saldoTotalElement = document.getElementById('pedido-produto');
-            const saldoTotal = saldoTotalElement.getAttribute('data-max') || '0';
+            const saldoTotal = selectElement.getAttribute('data-max') || '0';
             
             const defaultQtd = parseInt(document.getElementById('pedido-qtd-default').value) || 1;
             
-            document.getElementById('modal-product-name').innerText = productName;
-            document.getElementById('modal-saldo-total').innerText = saldoTotal;
-            document.getElementById('qtd-mass-input').value = defaultQtd;
+            const modalProductName = document.getElementById('modal-product-name');
+            const modalSaldoTotal = document.getElementById('modal-saldo-total');
+            const qtdMassInput = document.getElementById('qtd-mass-input');
+
+            if(modalProductName) modalProductName.innerText = productName;
+            if(modalSaldoTotal) modalSaldoTotal.innerText = saldoTotal;
+            if(qtdMassInput) qtdMassInput.value = defaultQtd;
 
             // Garante que selectedShipments estão com a QTD padrão atualizada
             window.selectedShipments = window.selectedShipments.map(s => ({ ...s, quantity: defaultQtd }));
@@ -1946,12 +2068,12 @@
             // Renderiza a lista de endereços para edição de quantidade
             listContainer.innerHTML = window.selectedShipments.map((s, index) => {
                 const address = window.allClientAddresses.find(a => a.id === s.addressId);
-                const addressText = `${address.logradouro}, ${address.numero} - ${address.cidade}/${address.estado}`;
+                const addressText = address ? `${address.logradouro}, ${address.numero} - ${address.cidade}/${address.estado}` : s.addressFull || 'Endereço Desconhecido';
                 
                 return `
                     <div class="flex items-center gap-4 bg-white/5 p-3 rounded-lg border border-white/10">
                         <div class="flex-1">
-                            <p class="font-bold text-white text-sm">${address.apelido_local || 'Endereço sem Apelido'}</p>
+                            <p class="font-bold text-white text-sm">${address?.apelido_local || 'Endereço sem Apelido'}</p>
                             <p class="text-xs text-gray-400 truncate">${addressText}</p>
                         </div>
                         <input type="number" data-index="${index}" onchange="window.updateShipmentQuantity(this)" 
@@ -1982,7 +2104,9 @@
         
         // NOVO: Aplica QTD em massa
         window.applyMassQuantity = function() {
-            const massQtd = parseInt(document.getElementById('qtd-mass-input').value);
+            const massQtdInput = document.getElementById('qtd-mass-input');
+            const massQtd = parseInt(massQtdInput ? massQtdInput.value : '0');
+            
             if (isNaN(massQtd) || massQtd < 1) {
                 notify('Quantidade em massa inválida.', 'error');
                 return;
@@ -1991,7 +2115,8 @@
             // Atualiza o array e os inputs no DOM
             window.selectedShipments.forEach((s, index) => {
                 s.quantity = massQtd;
-                document.querySelector(`#address-lot-list input[data-index="${index}"]`).value = massQtd;
+                const inputElement = document.querySelector(`#address-lot-list input[data-index="${index}"]`);
+                if(inputElement) inputElement.value = massQtd;
             });
             
             window.updateTotalSumDisplay();
@@ -2003,14 +2128,15 @@
             // Calcula a soma das quantidades inseridas
             const total = window.selectedShipments.reduce((sum, s) => sum + (parseInt(s.quantity) || 0), 0);
             
-            // CORREÇÃO CRÍTICA: Busca o saldo diretamente do elemento visual do modal, que foi preenchido ao abrir
-            // Isso é mais seguro do que depender do select escondido atrás do modal
-            const saldoText = document.getElementById('modal-saldo-total').innerText;
+            const modalSaldoTotal = document.getElementById('modal-saldo-total');
+            const saldoText = modalSaldoTotal ? modalSaldoTotal.innerText : '0';
             const saldoMax = parseInt(saldoText) || 0;
             
             const totalSumDisplay = document.getElementById('qtd-total-sum');
             const btnConfirmSend = document.getElementById('btn-confirm-send');
             
+            if (!totalSumDisplay || !btnConfirmSend) return; // Checagem defensiva
+
             totalSumDisplay.innerText = `Total: ${total}`;
             
             if (total > saldoMax) {
@@ -2030,11 +2156,15 @@
             }
         }
         
-        // CORREÇÃO 2: Função de finalização com validação robusta
+        // *******************************************************************
+        // FUNÇÃO finalizeShipments MODIFICADA PARA CRIAR O LOTE PAI PRIMEIRO
+        // *******************************************************************
         window.finalizeShipments = async function() {
             // Recalcula totais para garantir (segurança contra edições de HTML)
             const total = window.selectedShipments.reduce((sum, s) => sum + (parseInt(s.quantity) || 0), 0);
-            const saldoText = document.getElementById('modal-saldo-total').innerText;
+            
+            const modalSaldoTotal = document.getElementById('modal-saldo-total');
+            const saldoText = modalSaldoTotal ? modalSaldoTotal.innerText : '0';
             const saldoMax = parseInt(saldoText) || 0;
             
             if (total > saldoMax) {
@@ -2043,6 +2173,8 @@
             }
             
             const btn = document.getElementById('btn-confirm-send');
+            if(!btn) return;
+
             const originalText = btn.innerHTML;
             
             btn.disabled = true; 
@@ -2050,69 +2182,69 @@
             
             const produtoSelect = document.getElementById('pedido-produto').value;
             let estoqueId = produtoSelect.includes('|') ? produtoSelect.split('|')[0] : produtoSelect;
-            const dataPostagem = new Date(document.getElementById('pedido-data').value).toLocaleDateString('pt-BR'); // Formata data
+            const dataPostagem = document.getElementById('pedido-data').value;
             const detalheVariacao = window.selectedBatchDescription ? `[${window.selectedBatchDescription}] ` : '';
 
             try {
-                // 1. BUSCA O PRODUTO ID REAL
+                // 1. BUSCA ID DO PRODUTO REAL
                 const itemEstoque = await client.request(readItems('estoque_cliente', { 
                     filter: { id: { _eq: estoqueId } }, 
                     fields: ['id', 'produto_id'] 
                 }));
                 
                 const produtoId = itemEstoque[0]?.produto_id;
-                const produtoName = document.getElementById('modal-product-name').innerText; // Nome do produto para o lote
                 
                 if (!produtoId) {
                      throw new Error('Produto de estoque não encontrado ou ID inválido.');
                 }
+                const produtoNome = produtoId.nome || 'Produto'; // Nome para usar no lote
                 
                 // 2. VERIFICA CONFIGURAÇÕES DE APROVAÇÃO
                 const needsApproval = window.currentOrgConfig?.exige_aprovacao === true;
                 const isManager = window.currentUser?.eh_gestor === true;
                 const finalStatus = (needsApproval && !isManager) ? 'aguardando_aprovacao' : 'pendente';
                 
-                // 3. CRIA O REGISTRO PAI NA TABELA LOTES_ENVIO
-                const lotePayload = {
-                    nome_lote: `Envio - ${produtoName} - ${new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}`,
-                    status: finalStatus,
-                    quantidade_total: total,
-                    organization_id: window.currentOrgId,
-                    data_criacao: new Date().toISOString()
+                // 3. CRIA O REGISTRO PAI NA TABELA lotes_envio
+                const nomeLote = `Envio - ${produtoNome} - ${new Date().toLocaleString('pt-BR')}`;
+                const lotePayload = { 
+                    nome_lote: nomeLote, 
+                    status: finalStatus, // O status do lote é o mesmo das solicitações filhas
+                    quantidade_total: total, 
+                    organization_id: window.currentOrgId, 
+                    data_criacao: new Date().toISOString() 
                 };
                 
                 const loteCriado = await client.request(createItem('lotes_envio', lotePayload));
-                const novoLoteId = loteCriado.id;
+                const novoLoteId = loteCriado.id; // Captura o ID do novo lote
 
-
-                // 4. PREPARA AS PROMISSES DE ENVIO (COM O ID DO LOTE)
+                // 4. PREPARA AS PROMESSAS DE CRIAÇÃO DAS SOLICITAÇÕES FILHAS
                 const promises = window.selectedShipments.map(shipment => {
                     return client.request(createItem('solicitacoes', { 
                         tipo: 'SOLICITACAO_ENVIO', 
                         status: finalStatus, 
                         quantidade: parseInt(shipment.quantity),
                         produto_id: produtoId, // ID correto do produto
-                        
-                        // NOVO: VINCULA AO LOTE PAI
-                        lote_id: novoLoteId,
-                        
-                        observacoes: `${detalheVariacao}Saída Solicitada em Lote #${novoLoteId}. Data Postagem: ${dataPostagem}. Destinatário: ${shipment.addressAC}`, 
-                        endereco_id: shipment.addressId, // Usa o ID do endereço selecionado (não é o lote)
-                        organization_id: window.currentOrgId 
+                        endereco_id: shipment.addressId, // ID do endereço
+                        lote_id: novoLoteId, // <<< VINCULAÇÃO OBRIGATÓRIA AO NOVO LOTE PAI
+                        organization_id: window.currentOrgId, 
+                        observacoes: `${detalheVariacao}Saída Solicitada em Lote #${novoLoteId}. Data Postagem: ${dataPostagem}. Destinatário: ${shipment.addressAC}`,
+                        endereco_manual: shipment.addressFull // Salva o endereço completo como backup visual
                     }));
                 });
                 
+                // 5. EXECUTA AS SOLICITAÇÕES
                 await Promise.all(promises);
                 
-                document.getElementById('lot-config-modal').classList.add('hidden');
+                const lotConfigModal = document.getElementById('lot-config-modal');
+                if(lotConfigModal) lotConfigModal.classList.add('hidden');
                 
                 if(finalStatus === 'aguardando_aprovacao') {
-                    notify(`${promises.length} Solicitações enviadas para aprovação do gestor (Lote #${novoLoteId}).`, 'success');
+                    notify(`${promises.length} Solicitações enviadas para aprovação do gestor. (Lote #${novoLoteId})`, 'success');
                 } else {
-                    notify(`${promises.length} Solicitações de envio realizadas com sucesso (Lote #${novoLoteId})!`, 'success'); 
+                    notify(`${promises.length} Solicitações de envio realizadas com sucesso! (Lote #${novoLoteId})`, 'success'); 
                 }
                 
-                // 5. Limpa e Redireciona
+                // Limpa e Redireciona
                 window.selectedShipments = []; 
                 window.router('pedidos'); 
                 
@@ -2158,7 +2290,7 @@
             detailRow.className = 'history-detail-row detail-enter border-b border-white/5';
             
             detailRow.innerHTML = `
-                <td colspan="5" class="p-6">
+                <td colspan="4" class="p-6">
                     <div class="flex justify-center items-center py-4">
                         <div class="loader border-brand-wine w-6 h-6 mx-auto"></div>
                         <span class="ml-3 text-gray-400 text-sm">Carregando detalhes...</span>
@@ -2247,7 +2379,7 @@
                 }
 
                 detailRow.innerHTML = `
-                    <td colspan="5" class="p-0">
+                    <td colspan="4" class="p-0">
                         <div class="flex flex-col md:flex-row bg-black/40 dark:bg-gray-100 p-6 gap-6 shadow-inner">
                             <div class="flex-1 space-y-4">
                                 <div>
@@ -2293,16 +2425,15 @@
                 let msg = "Erro de permissão ou conexão.";
                 if(err.errors && err.errors[0]?.message.includes("403")) msg = "Sem permissão para ver detalhes (Endereço/Produto).";
                 
-                detailRow.innerHTML = `<td colspan="5" class="p-4 text-center text-red-500 text-sm bg-red-900/10">${msg}</td>`;
+                detailRow.innerHTML = `<td colspan="4" class="p-4 text-center text-red-500 text-sm bg-red-900/10">${msg}</td>`;
             }
         }
 
-        // NOVO: Função para carregar o Histórico (agora carrega Lotes)
-        async function loadHistory() {
-            // Garante que a aba de lotes está ativa ao carregar a view de pedidos
-            window.setHistoryTab('lotes');
-
+        // NOVO: Função para carregar o Histórico de Lotes (para a nova aba)
+        window.loadBatchHistory = async function() {
             const tbody = document.getElementById('history-table-body'); 
+            if(!tbody) return; // Checagem defensiva
+
             tbody.innerHTML = getRowSkeleton(6); 
             
             try {
@@ -2350,115 +2481,106 @@
             } catch (e) { tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-red-500 text-center">Erro ao carregar lotes.</td></tr>'; }
         }
         
-        // NOVO: Função para carregar o Histórico de Reposições
-        window.loadReposicoesHistory = async function() {
-            const tbody = document.getElementById('reposicoes-table-body'); 
+        // NOVO: Função para carregar o Histórico de Reposição (para a nova aba)
+        window.loadRepositionHistory = async function() {
+            const tbody = document.getElementById('reposition-history-table-body'); 
+            if(!tbody) return; // Checagem defensiva
+
             tbody.innerHTML = getRowSkeleton(6); 
             
             try {
-                // Busca solicitações do tipo COMPRA/ORÇAMENTO
+                // Busca apenas SOLICITACOES_COMPRA
                 const reposicoes = await client.request(readItems('solicitacoes', { 
                     sort: ['-data_criacao'],
                     filter: { 
-                        tipo: { _eq: 'SOLICITACAO_COMPRA' },
-                        organization_id: { _eq: window.currentOrgId }
+                        _and: [
+                            { organization_id: { _eq: window.currentOrgId } },
+                            { tipo: { _eq: 'SOLICITACAO_COMPRA' } }
+                        ]
                     },
-                    fields: ['*', 'produto_id.nome']
+                    fields: ['id', 'status', 'data_criacao', 'quantidade', 'tipo', 'produto_id.nome', 'valor_total', 'observacoes'] 
                 }));
+
+                window.repositionHistoryItems = reposicoes; // Salva para uso no export
                 
                 if(!reposicoes.length) { 
-                    tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Nenhum histórico de reposição/orçamento encontrado.</td></tr>'; 
+                    tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Nenhuma solicitação de reposição encontrada.</td></tr>'; 
                     return; 
                 }
 
-                tbody.innerHTML = reposicoes.map(item => {
-                    const status = item.status || 'pendente';
-                    let statusText = status;
-                    let statusColor = status === 'concluido' ? 'text-green-400 bg-green-900/30' : 
-                                      status === 'cancelado' ? 'text-red-400 bg-red-900/30' : 
-                                      status === 'pendente' ? 'text-yellow-400 bg-yellow-900/30' : 
-                                      'text-gray-400 bg-gray-900/30';
-                    
-                    if(status === 'aguardando_aprovacao') {
-                        statusText = 'AG. APROVAÇÃO';
-                        statusColor = 'text-yellow-400 bg-yellow-900/30';
-                    }
+                tbody.innerHTML = reposicoes.map(i => {
+                    const statusColor = i.status === 'aprovado' ? 'text-green-400' : i.status === 'cancelado' ? 'text-red-400' : 'text-yellow-400';
+                    const detalhesText = `${i.produto_id?.nome || 'Produto'} - Qtd: ${i.quantidade}`;
                     
                     return `
-                    <tr id="row-${item.id}" onclick="window.toggleHistoryDetails('${item.id}', 'REPOSICAO')" class="border-b border-white/5 text-sm hover:bg-white/5 cursor-pointer transition-colors group">
-                        <td class="p-4" data-label="Produto">
-                            <p class="font-bold text-white truncate max-w-[150px]">${item.produto_id?.nome || 'Produto Indefinido'}</p>
-                            <p class="text-xs text-gray-500">${new Date(item.data_criacao).toLocaleDateString()}</p>
-                        </td>
-                        <td class="p-4 text-white font-bold" data-label="Qtd">${item.quantidade || '-'}</td>
-                        <td class="p-4 text-gray-400" data-label="Tipo">ORÇAMENTO/COMPRA</td>
+                    <tr id="row-${i.id}" onclick="window.toggleHistoryDetails('${i.id}', 'SOLICITACAO_COMPRA')" class="border-b border-white/5 text-sm hover:bg-white/5 cursor-pointer transition-colors group">
+                        <td class="p-4 flex items-center gap-2" data-label="Tipo"><i class="ph ph-shopping-cart text-green-500"></i> <span class="font-bold group-hover:text-white transition-colors">Reposição</span></td>
+                        <td class="p-4 text-gray-400 group-hover:text-gray-200" data-label="Data">${new Date(i.data_criacao).toLocaleDateString()}</td>
+                        <td class="p-4 text-gray-300 truncate max-w-[200px] group-hover:text-white" data-label="Detalhes">${detalhesText}</td>
                         <td class="p-4" data-label="Status">
-                            <span class="px-2 py-1 rounded text-xs uppercase font-bold ${statusColor}">${statusText}</span>
-                        </td>
-                        <td class="p-4" data-label="Ações">
-                            <button class="text-brand-wine hover:underline text-xs font-bold">VER DETALHES</button>
+                            <div class="flex items-center justify-between">
+                                <span class="bg-white/10 px-2 py-1 rounded text-xs ${statusColor} uppercase">${i.status}</span>
+                                <i class="ph ph-caret-down text-gray-500 group-hover:text-brand-wine transition-transform"></i>
+                            </div>
                         </td>
                     </tr>`;
                 }).join('');
-
-            } catch (e) { 
-                console.error("Erro ao carregar reposições:", e);
-                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-red-500 text-center">Erro ao carregar histórico de reposições.</td></tr>'; 
-            }
+                
+            } catch (e) { tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-red-500 text-center">Erro ao carregar histórico de reposição.</td></tr>'; }
         }
-        
+
         // =================================================================================
         // === NOVAS FUNÇÕES: GERENCIAMENTO DE ENDEREÇOS (COM ALTERAÇÕES) ===
         // =================================================================================
 
-        // NOVO: Função para limpar o estado de importação (UX)
-        // ⚠️ CORREÇÃO CRÍTICA APLICADA AQUI ⚠️
+        // CORREÇÃO DE ERRO CRÍTICO: Adição de checagens de nulidade (if(element))
         window.resetImportState = function() {
             window.importedAddresses = [];
             window.tempImportFile = null;
-        
-            const importFile = document.getElementById('import-file');
-            if (importFile) {
-                importFile.value = '';
-            }
-        
-            const importPlaceholder = document.getElementById('import-placeholder');
-            if (importPlaceholder) {
-                importPlaceholder.innerHTML = 'Nenhuma planilha carregada.';
-            }
-        
-            const importPreviewContainer = document.getElementById('import-preview-container');
-            if (importPreviewContainer) {
-                // Redefine para o placeholder se for para limpar o conteúdo (prevenção extra)
-                importPreviewContainer.innerHTML = '<p id="import-placeholder" class="text-center text-gray-500 py-10">Nenhuma planilha carregada.</p>';
-            }
             
-            // Opcional, mas limpa o botão/aviso da importação
-            const importActions = document.getElementById('import-actions');
-            if (importActions) {
-                importActions.classList.add('hidden');
-            }
+            const fileInput = document.getElementById('import-file');
+            if(fileInput) fileInput.value = '';
+
+            const placeholder = document.getElementById('import-placeholder');
+            if(placeholder) placeholder.innerHTML = 'Nenhuma planilha carregada.';
             
-            // Limpa o input de nome do lote
-            const importLoteNome = document.getElementById('import-lote-nome');
-            if (importLoteNome) {
-                importLoteNome.value = '';
-            }
+            const container = document.getElementById('import-preview-container');
+            if(container) container.innerHTML = ''; 
+
+            const actionsDiv = document.getElementById('import-actions');
+            if(actionsDiv) actionsDiv.classList.add('hidden');
+            
+            // Também limpar o nome do lote importado
+            const loteNome = document.getElementById('import-lote-nome');
+            if(loteNome) loteNome.value = '';
+            
+            // Também limpar o select
+            const loteProduto = document.getElementById('import-lote-produto');
+            if(loteProduto) loteProduto.value = '';
         }
 
         window.openAddressManager = function() {
-            document.getElementById('address-manager-modal').classList.remove('hidden');
-            document.getElementById('address-manager-modal').classList.add('flex');
+            const modal = document.getElementById('address-manager-modal');
+            if(modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
             window.setAddressTab('manual'); 
         }
 
         window.setAddressTab = function(tabName) {
             document.querySelectorAll('.address-tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`tab-${tabName}-btn`).classList.add('active');
+            const activeBtn = document.getElementById(`tab-${tabName}-btn`);
+            if(activeBtn) activeBtn.classList.add('active');
 
-            document.getElementById('address-tab-manual').classList.add('hidden');
-            document.getElementById('address-tab-import').classList.add('hidden');
-            document.getElementById(`address-tab-${tabName}`).classList.remove('hidden');
+            const manualTab = document.getElementById('address-tab-manual');
+            const importTab = document.getElementById('address-tab-import');
+
+            if(manualTab) manualTab.classList.add('hidden');
+            if(importTab) importTab.classList.add('hidden');
+            
+            const targetTab = document.getElementById(`address-tab-${tabName}`);
+            if(targetTab) targetTab.classList.remove('hidden');
 
             // Limpa o estado da importação ao mudar de aba
             if (tabName === 'manual') {
@@ -2471,12 +2593,18 @@
             const cleanCep = cep.replace(/\D/g, '');
             const feedback = document.getElementById('cep-feedback');
             
-            document.getElementById('manual-logradouro').value = '';
-            document.getElementById('manual-bairro').value = '';
-            document.getElementById('manual-cidade').value = '';
-            document.getElementById('manual-uf').value = '';
+            const logradouro = document.getElementById('manual-logradouro');
+            const bairro = document.getElementById('manual-bairro');
+            const cidade = document.getElementById('manual-cidade');
+            const uf = document.getElementById('manual-uf');
+            
+            if (logradouro) logradouro.value = '';
+            if (bairro) bairro.value = '';
+            if (cidade) cidade.value = '';
+            if (uf) uf.value = '';
             
             if (cleanCep.length !== 8) return;
+            if(!feedback) return; // Checagem defensiva
 
             feedback.textContent = 'Buscando CEP...';
             feedback.classList.remove('hidden');
@@ -2491,14 +2619,15 @@
                     return;
                 }
 
-                document.getElementById('manual-logradouro').value = data.logradouro || '';
-                document.getElementById('manual-bairro').value = data.bairro || '';
-                document.getElementById('manual-cidade').value = data.localidade || '';
-                document.getElementById('manual-uf').value = data.uf || '';
+                if(logradouro) logradouro.value = data.logradouro || '';
+                if(bairro) bairro.value = data.bairro || '';
+                if(cidade) cidade.value = data.localidade || '';
+                if(uf) uf.value = data.uf || '';
                 
                 // Remove a mensagem de feedback se a busca for bem-sucedida
                 feedback.classList.add('hidden');
-                document.getElementById('manual-numero').focus();
+                const numero = document.getElementById('manual-numero');
+                if(numero) numero.focus();
 
             } catch (error) {
                 feedback.textContent = 'Erro na comunicação com o ViaCEP.';
@@ -2511,12 +2640,18 @@
             const cleanCep = cep.replace(/\D/g, '');
             const feedback = document.getElementById('cep-pedido-feedback');
             
-            document.getElementById('manual-pedido-logradouro').value = '';
-            document.getElementById('manual-pedido-bairro').value = '';
-            document.getElementById('manual-pedido-cidade').value = '';
-            document.getElementById('manual-pedido-uf').value = '';
+            const logradouro = document.getElementById('manual-pedido-logradouro');
+            const bairro = document.getElementById('manual-pedido-bairro');
+            const cidade = document.getElementById('manual-pedido-cidade');
+            const uf = document.getElementById('manual-pedido-uf');
+
+            if(logradouro) logradouro.value = '';
+            if(bairro) bairro.value = '';
+            if(cidade) cidade.value = '';
+            if(uf) uf.value = '';
             
             if (cleanCep.length !== 8) return;
+            if(!feedback) return; // Checagem defensiva
 
             feedback.textContent = 'Buscando CEP...';
             feedback.classList.remove('hidden');
@@ -2531,13 +2666,14 @@
                     return;
                 }
 
-                document.getElementById('manual-pedido-logradouro').value = data.logradouro || '';
-                document.getElementById('manual-pedido-bairro').value = data.bairro || '';
-                document.getElementById('manual-pedido-cidade').value = data.localidade || '';
-                document.getElementById('manual-pedido-uf').value = data.uf || '';
+                if(logradouro) logradouro.value = data.logradouro || '';
+                if(bairro) bairro.value = data.bairro || '';
+                if(cidade) cidade.value = data.localidade || '';
+                if(uf) uf.value = data.uf || '';
                 
                 feedback.classList.add('hidden');
-                document.getElementById('manual-pedido-numero').focus();
+                const numero = document.getElementById('manual-pedido-numero');
+                if(numero) numero.focus();
 
             } catch (error) {
                 feedback.textContent = 'Erro na comunicação com o ViaCEP.';
@@ -2549,6 +2685,8 @@
         document.getElementById('form-manual-address').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-save-manual-address');
+            if(!btn) return;
+
             const originalText = btn.innerHTML;
             
             btn.disabled = true;
@@ -2584,7 +2722,10 @@
             try {
                 await client.request(createItem('enderecos_entrega', address));
                 notify(`Endereço "${address.apelido_local}" cadastrado com sucesso!`, 'success');
-                document.getElementById('address-manager-modal').classList.add('hidden');
+                
+                const managerModal = document.getElementById('address-manager-modal');
+                if(managerModal) managerModal.classList.add('hidden');
+                
                 // Recarrega o SELECT de endereços na tela de envio
                 await loadDependencies(); 
             } catch (e) {
@@ -2630,18 +2771,24 @@
 
                 selects.forEach(id => {
                     const el = document.getElementById(id);
-                    el.innerHTML = '<option value="">-- Selecione --</option>' + 
-                                   data.colunas_disponiveis.map(col => `<option value="${col}">${col}</option>`).join('');
-                    
-                    // Tenta selecionar automaticamente o que o Python sugeriu
-                    const key = id.replace('map-', '');
-                    if (sugestoes[key]) el.value = sugestoes[key];
+                    if(el) { // Checagem defensiva
+                        el.innerHTML = '<option value="">-- Selecione --</option>' + 
+                                       data.colunas_disponiveis.map(col => `<option value="${col}">${col}</option>`).join('');
+                        
+                        // Tenta selecionar automaticamente o que o Python sugeriu
+                        const key = id.replace('map-', '');
+                        if (sugestoes[key]) el.value = sugestoes[key];
+                    }
                 });
 
                 // Fecha o modal principal e Abre o Modal de Mapeamento
-                document.getElementById('address-manager-modal').classList.add('hidden');
-                document.getElementById('mapping-modal').classList.remove('hidden');
-                document.getElementById('mapping-modal').classList.add('flex');
+                const managerModal = document.getElementById('address-manager-modal');
+                const mappingModal = document.getElementById('mapping-modal');
+                if(managerModal) managerModal.classList.add('hidden');
+                if(mappingModal) {
+                    mappingModal.classList.remove('hidden');
+                    mappingModal.classList.add('flex');
+                }
 
             } catch (error) {
                 notify('Erro ao ler arquivo: ' + error.message, 'error');
@@ -2651,14 +2798,17 @@
 
         // 2. FUNÇÕES DO MODAL
         window.closeMappingModal = function() {
-            document.getElementById('mapping-modal').classList.add('hidden');
-            document.getElementById('mapping-modal').classList.remove('flex');
+            const mappingModal = document.getElementById('mapping-modal');
+            if(mappingModal) {
+                mappingModal.classList.add('hidden');
+                mappingModal.classList.remove('flex');
+            }
             window.resetImportState(); // NOVO: Limpa o estado ao fechar o modal de mapeamento
         }
 
         // 3. SEGUNDA ETAPA: ENVIA O ARQUIVO + O MAPA ESCOLHIDO (Gera Preview)
         window.processarComMapa = async function() {
-            const enderecoCol = document.getElementById('map-endereco').value;
+            const enderecoCol = document.getElementById('map-endereco')?.value;
             
             if(!enderecoCol) {
                 notify('A coluna de Endereço Completo é obrigatória!', 'error');
@@ -2666,20 +2816,26 @@
             }
 
             // Fecha o modal de colunas
-            document.getElementById('mapping-modal').classList.add('hidden');
-            document.getElementById('mapping-modal').classList.remove('flex');
+            const mappingModal = document.getElementById('mapping-modal');
+            if(mappingModal) {
+                mappingModal.classList.add('hidden');
+                mappingModal.classList.remove('flex');
+            }
             
             // Reabre o modal de gerenciamento (na aba de importação) para mostrar o preview
-            document.getElementById('address-manager-modal').classList.remove('hidden');
-            document.getElementById('address-manager-modal').classList.add('flex');
+            const managerModal = document.getElementById('address-manager-modal');
+            if(managerModal) {
+                managerModal.classList.remove('hidden');
+                managerModal.classList.add('flex');
+            }
             window.setAddressTab('import');
 
             // Prepara o Mapa
             const mapa = {
                 endereco: enderecoCol,
-                nome: document.getElementById('map-nome').value,
-                cidade: document.getElementById('map-cidade').value,
-                uf: document.getElementById('map-uf').value,
+                nome: document.getElementById('map-nome')?.value,
+                cidade: document.getElementById('map-cidade')?.value,
+                uf: document.getElementById('map-uf')?.value,
                 bairro: document.getElementById('map-bairro')?.value || '', 
                 regiao: document.getElementById('map-regiao')?.value || '' 
             };
@@ -2691,13 +2847,15 @@
 
             const container = document.getElementById('import-preview-container');
             
-            container.innerHTML = `
-                <div class="flex flex-col items-center justify-center py-10 space-y-3">
-                    <div class="loader border-brand-wine w-8 h-8"></div>
-                    <p class="text-gray-400 text-sm">Inteligência Artificial processando...</p>
-                    <p class="text-gray-600 text-xs">Normalizando dados com base nas colunas escolhidas</p>
-                </div>
-            `;
+            if(container) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-10 space-y-3">
+                        <div class="loader border-brand-wine w-8 h-8"></div>
+                        <p class="text-gray-400 text-sm">Inteligência Artificial processando...</p>
+                        <p class="text-gray-600 text-xs">Normalizando dados com base nas colunas escolhidas</p>
+                    </div>
+                `;
+            }
 
             try {
                 const response = await fetch(API_URL_PREVIEW, { method: 'POST', body: formData });
@@ -2720,20 +2878,20 @@
 
             } catch (error) {
                 console.error(error);
-                container.innerHTML = `<p class="text-red-500 text-center py-10">Erro: ${error.message}</p>`;
+                if(container) container.innerHTML = `<p class="text-red-500 text-center py-10">Erro: ${error.message}</p>`;
                 notify('Falha no processamento: ' + error.message, 'error');
             }
         }
         
         // 4. NOVA FUNÇÃO: Criação do Lote a partir do Import
         window.createBatchFromImport = async function() {
-            const nomeLote = document.getElementById('import-lote-nome').value;
+            const nomeLote = document.getElementById('import-lote-nome')?.value;
             const selectElement = document.getElementById('import-lote-produto');
             
             // Pega o ID do PRODUTO (o value)
-            const produtoId = selectElement.value; 
+            const produtoId = selectElement?.value; 
             
-            const qtdPadrao = parseInt(document.getElementById('import-lote-qtd').value) || 1;
+            const qtdPadrao = parseInt(document.getElementById('import-lote-qtd')?.value || '1') || 1;
 
             // Validações
             if (!nomeLote) return notify('Digite um nome para o Lote.', 'error');
@@ -2751,12 +2909,14 @@
 
 
             const btn = document.querySelector('#import-actions button');
+            if(!btn) return;
+
             const originalText = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<div class="loader border-white w-5 h-5"></div> <span class="ml-2">Processando Lote...</span>';
 
             try {
-                // 1. CRIA O LOTE PAI
+                // 1. CRIAR O LOTE PAI
                 const lotePayload = {
                     nome_lote: nomeLote,
                     status: 'pendente',
@@ -2792,7 +2952,6 @@
                         observacoes: `Importado via Planilha (Lote #${novoLoteId}). Original: ${addr.fullAddress}`
                     };
 
-                    // Salva o endereço e espera o ID voltar
                     const enderecoSalvo = await client.request(createItem('enderecos_entrega', newAddressPayload));
 
                     // B) Cria a Solicitação vinculada ao endereço recém-criado e ao Lote
@@ -2818,7 +2977,9 @@
                 notify(`Lote "${nomeLote}" criado com sucesso e ${promises.length} endereços salvos no banco!`, 'success');
                 
                 // Limpa tudo e atualiza a tela
-                document.getElementById('address-manager-modal').classList.add('hidden');
+                const managerModal = document.getElementById('address-manager-modal');
+                if(managerModal) managerModal.classList.add('hidden');
+                
                 window.resetImportState(); // NOVO: Limpa o estado após a conclusão do lote
                 
                 // Redireciona para a visão de Histórico (que agora mostrará lotes)
@@ -2842,6 +3003,8 @@
             const countSpan = document.getElementById('import-count');
             const warningP = document.getElementById('import-warning');
             
+            if (!container || !actionsDiv || !countSpan || !warningP) return; // Checagem defensiva
+
             if (window.importedAddresses.length === 0) {
                 container.innerHTML = '<p id="import-placeholder" class="text-center text-gray-500 py-10">Nenhuma planilha carregada.</p>';
                 actionsDiv.classList.add('hidden');
@@ -2850,7 +3013,7 @@
             
             countSpan.textContent = window.importedAddresses.length;
             actionsDiv.classList.remove('hidden');
-            warningP.classList.toggle('hidden', hasCriticalErrors); // CORRIGIDO PARA USAR hasCriticalErrors
+            warningP.classList.toggle('hidden', !hasCriticalErrors);
 
             const tableHtml = `
                 <table class="w-full text-left text-gray-300 responsive-table text-sm">
@@ -2904,6 +3067,8 @@
             }
 
             const btn = document.querySelector('#import-actions button');
+            if(!btn) return;
+            
             const originalText = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<div class="loader border-white w-5 h-5"></div> <span class="ml-2">Cadastrando em lote...</span>';
@@ -2930,7 +3095,10 @@
                 await Promise.all(savePromises);
                 
                 notify(`${savePromises.length} endereços cadastrados com sucesso!`, 'success');
-                document.getElementById('address-manager-modal').classList.add('hidden');
+                
+                const managerModal = document.getElementById('address-manager-modal');
+                if(managerModal) managerModal.classList.add('hidden');
+                
                 // Recarrega o SELECT de endereços na tela de envio
                 await loadDependencies(); 
                 
@@ -2943,11 +3111,12 @@
                 btn.innerHTML = originalText;
                 // Limpa o estado da importação
                 window.importedAddresses = [];
-                document.getElementById('import-file').value = '';
-                document.getElementById('import-actions').classList.add('hidden');
-                document.getElementById('import-placeholder').innerHTML = 'Nenhuma planilha carregada.';
-                document.getElementById('import-preview-container').innerHTML = '<p id="import-placeholder" class="text-center text-gray-500 py-10">Nenhuma planilha carregada.</p>';
-
+                const fileInput = document.getElementById('import-file');
+                if(fileInput) fileInput.value = '';
+                const actionsDiv = document.getElementById('import-actions');
+                if(actionsDiv) actionsDiv.classList.add('hidden');
+                const placeholderContainer = document.getElementById('import-preview-container');
+                if(placeholderContainer) placeholderContainer.innerHTML = '<p id="import-placeholder" class="text-center text-gray-500 py-10">Nenhuma planilha carregada.</p>';
             }
         }
 
@@ -2956,8 +3125,13 @@
             const modal = document.getElementById('batch-details-modal');
             const list = document.getElementById('batch-items-list');
             
-            document.getElementById('batch-modal-title').innerText = nomeLote || 'Detalhes do Lote';
-            document.getElementById('batch-modal-subtitle').innerText = `ID do Lote: ${loteId}`;
+            if (!modal || !list) return; // Checagem defensiva
+
+            const batchModalTitle = document.getElementById('batch-modal-title');
+            const batchModalSubtitle = document.getElementById('batch-modal-subtitle');
+            
+            if(batchModalTitle) batchModalTitle.innerText = nomeLote || 'Detalhes do Lote';
+            if(batchModalSubtitle) batchModalSubtitle.innerText = `ID do Lote: ${loteId}`;
             
             list.innerHTML = '<tr><td colspan="4" class="p-10 text-center"><div class="loader border-brand-wine w-6 h-6 mx-auto"></div></td></tr>';
             
