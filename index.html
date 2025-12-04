@@ -755,10 +755,14 @@
     </div>
     <div id="tutorial-modal" class="fixed inset-0 z-[200] hidden items-center justify-center bg-black/95 backdrop-blur-sm">
         <div class="glass-panel p-10 rounded-2xl w-full max-w-lg mx-4 text-center modal-enter relative">
-            <div id="tutorial-content" class="mb-8"></div>
+            <h2 class="text-2xl font-bold text-white mb-6 flex items-center justify-center gap-2">
+                <i class="ph ph-rocket-launch text-brand-wine"></i> Boas-vindas ao Portal!
+            </h2>
+            <div id="tutorial-content" class="mb-8 text-gray-300 space-y-4 text-left">
+                </div>
             <div class="flex items-center justify-center gap-2 mb-6" id="tutorial-dots"></div>
             <div class="flex gap-3">
-                <button onclick="window.closeTutorial()" class="flex-1 border border-white/10 hover:bg-white/5 text-gray-400 py-3 rounded-lg font-bold text-sm transition">Pular</button>
+                <button onclick="window.closeTutorial(true)" class="flex-1 border border-white/10 hover:bg-white/5 text-gray-400 py-3 rounded-lg font-bold text-sm transition">Pular</button>
                 <button onclick="window.nextStep()" id="btn-next-step" class="flex-1 bg-brand-wine hover:bg-brand-hover text-white py-3 rounded-lg font-bold text-sm transition shadow-lg">Próximo</button>
             </div>
         </div>
@@ -799,6 +803,65 @@
         let keepAliveTimer;
         const KEEP_ALIVE_INTERVAL = 600000; // 10 minutos (em milissegundos)
 
+        // ATUALIZADO: VARIÁVEIS DO TUTORIAL (Negrito corrigido para <strong>)
+        window.currentTutorialStep = 0;
+        window.tutorialSteps = [
+            { title: "Visão Geral (Dashboard)", content: `<p>Esta é a sua <strong>área de trabalho principal</strong>. Aqui você acompanha em tempo real:</p><ul><li>Seu <strong>estoque total</strong>.</li><li>O <strong>consumo mensal</strong> da sua conta.</li><li>Quaisquer <strong>solicitações pendentes</strong> que precisam da sua atenção (ou do seu gestor).</li></ul>`},
+            { title: "Meu Estoque e Catálogo", content: `<p>Na seção <strong>Meu Estoque</strong> você vê todos os brindes disponíveis, suas variações (lotes) e a quantidade.</p><p>Em <strong>Catálogo</strong> você pode explorar novos produtos e solicitar orçamentos para reposição, mesmo de itens que não estão no seu estoque atual.</p>`},
+            { title: "Ações: Enviar e Orçar/Repor", content: `<p>A seção <strong>Enviar Brindes</strong> é usada para solicitar a logística do material que JÁ ESTÁ no seu estoque para o endereço final.</p><p>Em <strong>Orçar/Repor</strong> você cria uma lista de produtos para repor o estoque ou pedir um novo orçamento de produção à Elo Brindes.</p>`},
+            { title: "Gerenciamento de Endereços", content: `<p>Para enviar brindes, use o botão <strong>GERENCIAR / IMPORTAR</strong> na tela de Envio.</p><ul><li>Você pode cadastrar endereços <strong>manualmente</strong>.</li><li>Você pode usar a <strong>Importação Inteligente</strong> subindo uma planilha Excel. Nossa IA tenta normalizar os dados para você!</li></ul>`},
+            { title: "Minha Conta e Personalização", content: `<p>No menu lateral (ícone de <strong>Engrenagem</strong>), você pode:</p><ul><li><strong>Trocar sua senha</strong> para uma de sua preferência.</li><li><strong>Salvar o logo da sua empresa</strong> para personalizar a barra lateral do sistema.</li><li>Alternar o <strong>Tema</strong> entre Dark e Light.</li></ul>`}
+        ];
+
+        // === FUNÇÕES DO TUTORIAL ===
+        window.checkTutorial = function() {
+            const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
+            if (hasSeenTutorial !== 'true') {
+                window.currentTutorialStep = 0;
+                window.renderTutorialStep(window.currentTutorialStep);
+                document.getElementById('tutorial-modal').classList.remove('hidden');
+                document.getElementById('tutorial-modal').classList.add('flex');
+            }
+        }
+
+        window.closeTutorial = function(isSkipping = false) {
+            localStorage.setItem('hasSeenTutorial', 'true');
+            document.getElementById('tutorial-modal').classList.add('hidden');
+            document.getElementById('tutorial-modal').classList.remove('flex');
+            if(isSkipping) notify('Tutorial pulado. Acesse a Configurações para mais ajuda.');
+        }
+
+        window.nextStep = function() {
+            window.currentTutorialStep++;
+            if (window.currentTutorialStep < window.tutorialSteps.length) {
+                window.renderTutorialStep(window.currentTutorialStep);
+            } else {
+                notify('Manual concluído! Agora você pode começar a usar o portal.', 'success');
+                window.closeTutorial();
+            }
+        }
+
+        window.renderTutorialStep = function(stepIndex) {
+            const step = window.tutorialSteps[stepIndex];
+            const contentDiv = document.getElementById('tutorial-content');
+            const dotsDiv = document.getElementById('tutorial-dots');
+            const nextBtn = document.getElementById('btn-next-step');
+
+            if (!step || !contentDiv || !dotsDiv || !nextBtn) return;
+
+            contentDiv.innerHTML = `
+                <h3 class="text-xl font-bold text-brand-wine mb-3 text-center">${step.title}</h3>
+                ${step.content}
+            `;
+            
+            // Renderiza os Dots
+            dotsDiv.innerHTML = Array(window.tutorialSteps.length).fill(0).map((_, i) => 
+                `<span class="step-dot ${i === stepIndex ? 'active' : ''}"></span>`
+            ).join('');
+
+            // Atualiza o botão
+            nextBtn.innerText = (stepIndex === window.tutorialSteps.length - 1) ? 'FINALIZAR' : 'PRÓXIMO';
+        }
 
         // === INIT FUNCTION: CARREGA DADOS CRÍTICOS AO ABRIR ===
         async function initApp() {
@@ -1226,6 +1289,7 @@
                 window.router('dashboard'); 
                 window.updateLogoDisplay(); 
                 
+                // CHAMA O TUTORIAL AQUI!
                 if(typeof window.checkTutorial === 'function') {
                     window.checkTutorial(); 
                 }
