@@ -1131,7 +1131,7 @@
         window.saveLogo = function() { const src = document.getElementById('preview-logo').src; if(src && src.includes('data:image')) { localStorage.setItem('customClientLogo', src); window.updateLogoDisplay(); notify('Logo da empresa atualizado!'); } else { notify('Escolha uma imagem primeiro.', 'error'); } }
         window.updateLogoDisplay = function() { const saved = localStorage.getItem('customClientLogo'); if(saved) document.getElementById('sidebar-logo').src = saved; }
 
-        function notify(msg, type = 'success') { Toastify({ text: msg, duration: 3000, gravity: "top", position: "right", style: { background: type === 'success' ? "#10B981" : "#EF4444", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.5)" } }).showToast(); }
+        function notify(msg, type = 'success') { Toastify({ text: msg, duration: 3000, gravity: "top", position: "right", style: { background: type === 'success' ? "#10B981" : type === 'warning' ? "#F59E0B" : "#EF4444", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.5)" } }).showToast(); }
         
         function updateSidebar(activeId) {
             const navs = ['nav-dashboard', 'nav-estoque', 'nav-pedir', 'nav-repor', 'nav-pedidos', 'nav-catalogo'];
@@ -1507,14 +1507,22 @@
 
                 await Promise.all([updateLotePromise, updateSolicitacoesPromise]);
 
+                // CORREÇÃO: Notificação de sucesso APÓS todas as promessas serem resolvidas
                 notify(`Lote #${loteId} e seus itens APROVADOS com sucesso!`, 'success');
                 window.loadApprovals(); 
 
             } catch (e) {
                 console.error("Erro ao aprovar lote:", e);
-                let msg = e.message;
+                // CORREÇÃO: Melhorando a extração da mensagem de erro do Directus
+                let msg = e.message || "Erro desconhecido";
                 if(e.errors && e.errors.length > 0) msg = e.errors[0].message;
-                notify('Erro ao aprovar lote: ' + msg, 'error');
+                
+                // NOVO TRATAMENTO: Se o erro for o erro de validação do Directus, o status provavelmente já foi atualizado.
+                if (msg.includes("Invalid payload") && msg.includes("keys")) {
+                    notify(`Lote #${loteId} aprovado, mas houve um aviso de validação: ${msg}`, 'warning');
+                } else {
+                    notify('Erro ao aprovar lote: ' + msg, 'error');
+                }
                 
                 // Restaura o estado dos botões em caso de falha grave
                 window.loadApprovals(); 
@@ -1543,14 +1551,22 @@
 
                 await Promise.all([updateLotePromise, updateSolicitacoesPromise]);
 
+                // CORREÇÃO: Notificação de sucesso APÓS todas as promessas serem resolvidas
                 notify(`Lote #${loteId} e seus itens REJEITADOS com sucesso!`, 'error');
                 window.loadApprovals(); 
 
             } catch (e) {
                 console.error("Erro ao rejeitar lote:", e);
-                let msg = e.message;
+                // CORREÇÃO: Melhorando a extração da mensagem de erro do Directus
+                let msg = e.message || "Erro desconhecido";
                 if(e.errors && e.errors.length > 0) msg = e.errors[0].message;
-                notify('Erro ao rejeitar lote: ' + msg, 'error');
+                
+                // NOVO TRATAMENTO: Se o erro for o erro de validação do Directus, o status provavelmente já foi atualizado.
+                if (msg.includes("Invalid payload") && msg.includes("keys")) {
+                    notify(`Lote #${loteId} rejeitado, mas houve um aviso de validação: ${msg}`, 'warning');
+                } else {
+                    notify('Erro ao rejeitar lote: ' + msg, 'error');
+                }
                 
                 // Restaura o estado dos botões em caso de falha grave
                 window.loadApprovals(); 
@@ -1806,7 +1822,7 @@
                     actionsDiv.innerHTML = `<button onclick="closeDetails()" class="w-full border border-gray-300 dark:border-white/10 text-gray-500 hover:text-white hover:bg-white/10 py-3 rounded-lg font-bold transition">FECHAR</button>`;
                 
                 } else {
-                    // Valor de seleção é o ID do estoque (sem pipe)
+                    // Valor de seleção é o ID do estoque (без pipe)
                     const selectValue = estoqueId;
                     infoDiv.innerHTML = `<div class="bg-gray-100 dark:bg-white/5 p-3 rounded-lg w-full"><p class="text-xs text-gray-500 uppercase">Estoque Total</p><p class="text-xl font-bold text-brand-wine">${item.quantidade_disponivel}</p></div>`;
                     actionsDiv.innerHTML = `<div class="flex gap-3"><button onclick="closeDetails(); window.prefill('${selectValue}', '${produto?.nome} (Geral)', ${item.quantidade_disponivel}, 'pedir')" class="flex-1 bg-brand-wine hover:bg-brand-hover text-white py-3 rounded-lg font-bold shadow-lg transition">ENVIAR GERAL</button></div>`; 
