@@ -741,10 +741,10 @@
                 <table class="w-full text-left text-gray-300 text-sm">
                     <thead class="bg-white/5 text-gray-400 uppercase text-xs sticky top-0">
                         <tr>
-                            <th class="p-3">Destinatário / Endereço</th>
-                            <th class="p-3">Produto</th>
-                            <th class="p-3">Status</th>
-                            <th class="p-3">Rastreio</th>
+                            <th class="p-3 w-[40%]">Destinatário / Endereço</th>
+                            <th class="p-3 w-[20%]">Produto</th>
+                            <th class="p-3 w-[20%]">Status</th>
+                            <th class="p-3 w-[20%]">Rastreio</th>
                         </tr>
                     </thead>
                     <tbody id="batch-items-list" class="divide-y divide-white/5">
@@ -794,6 +794,10 @@
         window.activeHistoryTab = 'lotes'; 
         // NOVO: Variável para itens de reposição (para a nova aba)
         window.repositionHistoryItems = [];
+        
+        // NOVO: Variáveis para controle de Keep-Alive
+        let keepAliveTimer;
+        const KEEP_ALIVE_INTERVAL = 600000; // 10 minutos (em milissegundos)
 
 
         // === INIT FUNCTION: CARREGA DADOS CRÍTICOS AO ABRIR ===
@@ -821,6 +825,9 @@
                         document.getElementById('app-screen').classList.remove('hidden');
                         window.router('dashboard');
                         window.updateLogoDisplay();
+                        
+                        // INICIA O KEEP-ALIVE
+                        window.startKeepAlive();
                     }
                 }
             } catch (e) {
@@ -828,6 +835,36 @@
                 console.log('User not logged in or session expired');
             }
         }
+
+        // === NOVO: KEEP-ALIVE FUNCTIONS ===
+        window.refreshSession = async function() {
+            try {
+                await client.refresh();
+                console.log('Sessão renovada com sucesso.');
+            } catch (e) {
+                console.warn('Falha ao renovar a sessão. Usuário pode ser desconectado em breve.');
+                // Pode adicionar um log ou notificação, mas não derruba a sessão forçadamente
+            }
+        };
+
+        window.startKeepAlive = function() {
+            // Limpa qualquer timer existente
+            window.clearTimeout(keepAliveTimer);
+            
+            // Função que agenda a próxima renovação
+            const resetTimer = () => {
+                window.clearTimeout(keepAliveTimer);
+                keepAliveTimer = window.setTimeout(window.refreshSession, KEEP_ALIVE_INTERVAL);
+            };
+
+            // Adiciona listeners para interação do usuário
+            document.addEventListener('mousemove', resetTimer);
+            document.addEventListener('keydown', resetTimer);
+            
+            // Inicia o primeiro ciclo de renovação automática
+            resetTimer(); 
+            console.log("Keep-alive iniciado. A sessão será renovada a cada 10 minutos de inatividade.");
+        };
 
         // === MENU MOBILE TOGGLE ===
         window.toggleSidebar = function() {
@@ -1192,6 +1229,9 @@
                 if(typeof window.checkTutorial === 'function') {
                     window.checkTutorial(); 
                 }
+                
+                // INICIA O KEEP-ALIVE
+                window.startKeepAlive();
 
             } catch (err) { 
                 console.error(err);
@@ -1822,7 +1862,7 @@
                     actionsDiv.innerHTML = `<button onclick="closeDetails()" class="w-full border border-gray-300 dark:border-white/10 text-gray-500 hover:text-white hover:bg-white/10 py-3 rounded-lg font-bold transition">FECHAR</button>`;
                 
                 } else {
-                    // Valor de seleção é o ID do estoque (без pipe)
+                    // Valor de seleção é o ID do estoque (sem pipe)
                     const selectValue = estoqueId;
                     infoDiv.innerHTML = `<div class="bg-gray-100 dark:bg-white/5 p-3 rounded-lg w-full"><p class="text-xs text-gray-500 uppercase">Estoque Total</p><p class="text-xl font-bold text-brand-wine">${item.quantidade_disponivel}</p></div>`;
                     actionsDiv.innerHTML = `<div class="flex gap-3"><button onclick="closeDetails(); window.prefill('${selectValue}', '${produto?.nome} (Geral)', ${item.quantidade_disponivel}, 'pedir')" class="flex-1 bg-brand-wine hover:bg-brand-hover text-white py-3 rounded-lg font-bold shadow-lg transition">ENVIAR GERAL</button></div>`; 
@@ -3342,11 +3382,13 @@
 
                     return `
                         <tr class="hover:bg-white/5 border-b border-white/5">
-                            <td class="p-3">
-                                <p class="text-white font-bold text-xs truncate max-w-[250px]">${displayTitle}</p>
-                                <p class="text-[10px] text-gray-500 truncate max-w-[300px]" title="${displayAddress}">
-                                    ${displayAddress}
-                                </p>
+                            <td class="p-3 max-w-[400px] overflow-x-auto whitespace-nowrap">
+                                <div class="flex flex-col">
+                                    <p class="text-white font-bold text-xs shrink-0">${displayTitle}</p>
+                                    <p class="text-[10px] text-gray-500 shrink-0" title="${displayAddress}">
+                                        ${displayAddress}
+                                    </p>
+                                </div>
                             </td>
                             <td class="p-3 text-xs text-gray-300">
                                 ${item.produto_id?.nome || 'Produto ID: ' + item.produto_id}
