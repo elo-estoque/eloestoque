@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elo Brindes | Soluções Enterprise</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif']
+                    },
+                    colors: {
+                        // CORES AJUSTADAS PARA O ESTILO ADMIN (VINHO/VERMELHO)
+                        primary: {
+                            DEFAULT: '#E31937', // brand-wine
+                            dark: '#C2132F',    // brand-hover
+                            light: '#F87171'    // Red-400 (para degradês leves)
+                        },
+                        accent: {
+                            DEFAULT: '#10B981', // Verde
+                            dark: '#059669',
+                            gold: '#F59E0B'     // Amarelo/Dourado (Master)
+                        },
+                        dark: {
+                            900: '#0A0A0A', // Base mais escura (Preto)
+                            850: '#141414', // Cinza muito escuro (Novo)
+                            800: '#171717', // Card admin
+                            700: '#1A1A24',
+                            600: '#252530'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            /* Gradiente de fundo escuro com toques do dark-900 */
+            background-color: #0A0A0A; /* Dark-900 */
+            color: #fff; 
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* Alterna o background das seções (Hero e CTA ficam com o gradiente principal) */
+        .section-dark {
+            background-color: #0A0A0A; /* Preto */
+        }
+        .section-light {
+            background-color: #141414; /* Dark-850, Cinza Escuro */
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Animated Grid Background - Cor ajustada */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(227, 25, 55, 0.05) 1px, transparent 1px), /* Cor ajustada */
+                linear-gradient(90deg, rgba(227, 25, 55, 0.05) 1px, transparent 1px); /* Cor ajustada */
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        /* Gradient Orbs - Cores ajustadas */
+        .gradient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+            animation: float 20s ease-in-out infinite;
+        }
+        
+        .orb-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, #E31937 0%, transparent 70%); /* Primary */
+            top: -200px;
+            right: -200px;
+        }
+        
+        .orb-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, #F59E0B 0%, transparent 70%); /* Gold/Accent */
+            bottom: -150px;
+            left: -150px;
+            animation-delay: -10s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+        
+        /* Glass Card Effect - Cor de hover ajustada */
+        .glass-card {
+            background: rgba(23, 23, 23, 0.7); /* dark-800 com transparência */
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+            transition: left 0.5s;
+        }
+        
+        .glass-card:hover::before {
+            left: 100%;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(227, 25, 55, 0.3); /* Cor ajustada */
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(227, 25, 55, 0.2), /* Cor ajustada */
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Featured Card - Cor de destaque ajustada */
+        .featured-card {
+            background: linear-gradient(135deg, rgba(227, 25, 55, 0.2) 0%, rgba(23, 23, 23, 0.8) 100%); /* Cor ajustada */
+            border: 1px solid rgba(227, 25, 55, 0.5); /* Cor ajustada */
+            box-shadow: 
+                0 0 80px rgba(227, 25, 55, 0.3), /* Mais brilho */
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Premium Button - Cor principal ajustada */
+        .btn-premium {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        
+        /* Gradient Text - Cor principal ajustada */
+        .gradient-text {
+            background: linear-gradient(135deg, #ffffff 0%, #fca5a5 100%); /* Ajustado para um tom de vermelho claro */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .gradient-text-accent {
+            background: linear-gradient(135deg, #E31937 0%, #F59E0B 100%); /* Primary e Gold */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Chat Container - Cores ajustadas */
+        .chat-glass {
+            background: rgba(10, 10, 10, 0.85); /* dark-900 com transparência */
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        
+        .msg-bot { 
+            background: #171717; /* dark-800 puro */
+            border: 1px solid rgba(227, 25, 55, 0.2);
+            color: #E5E7EB; 
+            border-radius: 16px 16px 16px 4px;
+        }
+        
+        .msg-user { 
+            background: linear-gradient(135deg, #E31937 0%, #C2132F 100%); /* Primary e Dark */
+            color: white;
+            border-radius: 16px 16px 4px 16px;
+            box-shadow: 0 4px 20px rgba(227, 25, 55, 0.3);
+        }
+        
+        /* Badge - Cor principal ajustada */
+        .premium-badge {
+            background: linear-gradient(135deg, #E31937 0%, #C2132F 100%); /* Primary e Dark */
+            box-shadow: 0 0 30px rgba(227, 25, 55, 0.5); /* Cor ajustada */
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        /* Feature Icon - Cor principal ajustada */
+        .feature-icon {
+            background: linear-gradient(135deg, rgba(227, 25, 55, 0.2) 0%, rgba(227, 25, 55, 0.05) 100%); /* Primary com transparência */
+            border: 1px solid rgba(227, 25, 55, 0.3); /* Cor ajustada */
+        }
+
+        /* Tabela - Cor de destaque ajustada */
+        .premium-table .highlight-col {
+             background-color: rgba(227, 25, 55, 0.08);
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #141414; }
+        ::-webkit-scrollbar-thumb { 
+            background: #E31937; /* Cor principal */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: #C2132F; }
+    </style>
+</head>
+<body>
+    <!-- Gradient Orbs -->
+    <div class="gradient-orb orb-1"></div>
+    <div class="gradient-orb orb-2"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 top-0 py-6 px-8 bg-dark-900/80 backdrop-blur-md border-b border-white/5">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
+                    <i class="ph-fill ph-package text-xl text-white"></i>
+                </div>
+                <div>
+                    <span class="font-display font-bold text-lg tracking-tight">Elo Brindes</span>
+                    <span class="block text-xs text-gray-400 font-medium">Logistics Intelligence</span>
+                </div>
+            </div>
+            <button onclick="window.location.href = 'https://admin-entregas.elobrindes.com.br'" class="px-6 py-2.5 rounded-lg border border-white/10 hover:border-primary/50 hover:bg-primary/10 text-sm font-semibold transition-all">
+                Voltar ao Portal
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="section-dark relative min-h-[70vh] flex flex-col items-center justify-center text-center px-4 pt-32 pb-20">
+        <div class="max-w-5xl mx-auto space-y-8">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 animate-in">
+                <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                <span class="text-xs font-semibold text-primary-light tracking-wider uppercase">Soluções Enterprise</span>
+            </div>
+            
+            <h1 class="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.9] gradient-text animate-in delay-100">
+                Logística que<br>evolui com você
+            </h1>
+            
+            <p class="text-gray-400 max-w-2xl mx-auto text-lg md:text-xl font-light leading-relaxed animate-in delay-200">
+                Infraestrutura de armazenamento, manuseio inteligente e tecnologia de ponta para escalar sua operação de brindes sem limites.
+            </p>
+            
+            <div class="flex flex-wrap justify-center gap-4 animate-in delay-300">
+                <button onclick="document.getElementById('planos').scrollIntoView({behavior: 'smooth'})" class="px-8 py-4 rounded-xl bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white font-bold shadow-xl shadow-primary/40 btn-premium transition-all">
+                    Ver Planos e Preços
+                    <i class="ph-bold ph-arrow-down ml-2"></i>
+                </button>
+                <a href="https://wa.me/5511948171445" target="_blank" class="px-8 py-4 rounded-xl border border-white/10 hover:border-accent/50 hover:bg-white/5 text-white font-bold transition-all flex items-center gap-2">
+                    <i class="ph-fill ph-whatsapp-logo text-accent text-xl"></i>
+                    Falar com Especialista
+                </a>
+            </div>
+        </div>
+        
+        <!-- Stats -->
+        <div class="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto animate-in delay-400">
+            <div class="text-center">
+                <div class="text-3xl md:text-4xl font-bold gradient-text-accent">12k+</div>
+                <div class="text-sm text-gray-500 mt-1">Itens Gerenciados</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl md:text-4xl font-bold gradient-text-accent">99.8%</div>
+                <div class="text-sm text-gray-500 mt-1">Precisão</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl md:text-4xl font-bold gradient-text-accent">24/7</div>
+                <div class="text-sm text-gray-500 mt-1">Monitoramento</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl md:text-4xl font-bold gradient-text-accent">4 Planos</div>
+                <div class="text-sm text-gray-500 mt-1">Escaláveis</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Plans Section -->
+    <section id="planos" class="section-light relative max-w-7xl mx-auto px-6 py-20">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-display font-bold mb-4">Escolha seu ecossistema</h2>
+            <p class="text-gray-400 text-lg">Planos desenhados para cada fase da sua operação</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
+            
+            <!-- START -->
+            <div class="glass-card rounded-3xl p-8 flex flex-col h-full lg:h-[610px] animate-in delay-100">
+                <div class="mb-auto space-y-6">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-2xl font-display font-bold text-white">Start</h3>
+                        <div class="feature-icon w-12 h-12 rounded-xl flex items-center justify-center">
+                            <i class="ph-fill ph-rocket-launch text-primary text-xl"></i>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-400 leading-relaxed min-h-[40px]">Base sólida para organizar e estruturar sua operação inicial.</p>
+                    <div class="space-y-1">
+                        <div class="text-5xl font-bold tracking-tight text-white">R$ 400</div>
+                        <div class="text-sm text-gray-500">/mês + impostos</div>
+                    </div>
+                </div>
+                
+                <div class="space-y-4 mb-8 pt-6 border-t border-white/5 flex-grow">
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="ph-bold ph-check text-primary text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-white">300 Itens</div>
+                            <div class="text-xs text-gray-500">Capacidade de armazenamento</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="ph-bold ph-check text-primary text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-white">4 SKUs</div>
+                            <div class="text-xs text-gray-500">Variações de produtos</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="ph-bold ph-check text-primary text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-white">Montagem Simples</div>
+                            <div class="text-xs text-gray-500">Kits padrão (Picking, Packing e Expedição)</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="ph-bold ph-check text-primary text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-white">Acesso Plataforma</div>
+                            <div class="text-xs text-gray-500">Gestão completa e relatórios básicos</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button onclick="selectPlan('Elo Start')" class="w-full py-4 rounded-xl border border-white/10 hover:border-primary/50 hover:bg-primary/10 text-white font-bold text-sm tracking-wide transition-all btn-premium">
+                    Começar com Start
+                </button>
+            </div>
+
+            <!-- MOVE (Featured) -->
+            <div class="glass-card featured-card rounded-3xl p-8 flex flex-col h-full lg:h-[650px] animate-in delay-200 relative">
+                <div class="absolute -top-4 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full premium-badge text-white text-xs font-bold uppercase tracking-wider">
+                    Mais Popular
+                </div>
+                
+                <div class="mb-auto space-y-6 mt-2">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-3xl font-display font-bold text-white">Move</h3>
+                        <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg shadow-primary/30">
+                            <i class="ph-fill ph-lightning text-white text-2xl"></i>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-300 leading-relaxed min-h-[40px]">Otimização completa para operações recorrentes e ágeis.</p>
+                    <div class="space-y-1">
+                        <div class="text-6xl font-bold tracking-tight text-white">R$ 690</div>
+                        <div class="text-sm text-gray-400">/mês + impostos</div>
+                    </div>
+                </div>
+                
+                <div class="space-y-4 mb-8 pt-6 border-t border-primary/20 flex-grow">
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="ph-bold ph-check text-white text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-white">1.000 Itens</div>
+                            <div class="text-xs text-gray-400">Volume profissional</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="ph-bold ph-check text-white text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-white">6 SKUs</div>
+                            <div class="text-xs text-gray-400">Maior diversidade</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="ph-bold ph-check text-white text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-white">Manuseio Otimizado</div>
+                            <div class="text-xs text-gray-400">Processos acelerados (inclui Picking, Packing e Expedição)</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="ph-bold ph-check text-white text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-white">Relatórios Mensais</div>
+                            <div class="text-xs text-gray-400">Inteligência de dados e inventário</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="ph-bold ph-check text-white text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-white">Manuseio de Devolução</div>
+                            <div class="text-xs text-gray-400">Logística reversa simplificada</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button onclick="selectPlan('Elo Move')" class="w-full py-4 rounded-xl bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white font-bold text-sm tracking-wide shadow-lg shadow-primary/40 transition-all btn-premium">
+                    Fazer Upgrade Agora
+                </button>
+            </div>
+
+            <!-- GROW -->
+            <div class="glass-card rounded-3xl p-8 flex flex-col h-full lg:h-[610px] animate-in delay-300">
+                <div class="mb-auto space-y-6">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-2xl font-display font-bold text-white">Grow</h3>
+                        <div class="feature-icon w-12 h-12 rounded-xl flex items-center justify-center">
+                            <i class="ph-fill ph-trend-up text-accent text-xl"></i>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-400 leading-relaxed min-h-[40px]">Alto volume com flexibilidade para produtos de terceiros.</p>
+                    <div class="space-y-1">
+                        <div class="text-5xl font-bold tracking-tight text-white">R$ 1.980</div>
+                        <div class="text-sm text-gray-500">/mês + impostos</div>
+                    </div>
+                </div>
+                
+                <div class="space-y-4 mb-8 pt-6 border-t border-white/5 flex-grow">
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="ph-bold ph-check text-accent text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-white">5.000 Itens</div>
+                            <div class="text-xs text-gray-500">Grande capacidade</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="ph-bold ph-check text-accent text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-white">8 SKUs</div>
+                            <div class="text-xs text-gray-500">Portfólio expandido</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="ph-bold ph-check text-accent text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-white">Produtos Terceiros</div>
+                            <div class="text-xs text-gray-500">Liberdade total para enviar seus brindes</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="ph-bold ph-check text-accent text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-white">Envios Ilimitados</div>
+                            <div class="text-xs text-gray-500">Picking, Packing e Expedição sem restrições de volume</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button onclick="selectPlan('Elo Grow')" class="w-full py-4 rounded-xl border border-white/10 hover:border-accent/50 hover:bg-accent/10 text-white font-bold text-sm tracking-wide transition-all btn-premium">
+                    Escalar com Grow
+                </button>
+            </div>
+
+            <!-- MASTER -->
+            <div class="glass-card rounded-3xl p-8 flex flex-col h-full lg:h-[610px] animate-in delay-400 border-accent-gold/20">
+                <div class="mb-auto space-y-6">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-2xl font-display font-bold text-accent-gold">Master</h3>
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-gold to-yellow-600 flex items-center justify-center shadow-lg shadow-accent-gold/30">
+                            <i class="ph-fill ph-crown text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-400 leading-relaxed min-h-[40px]">Infraestrutura enterprise com SLA dedicado e consultoria premium.</p>
+                    <div class="space-y-1">
+                        <div class="text-5xl font-bold tracking-tight text-white">R$ 3.850</div>
+                        <div class="text-sm text-gray-500">/mês + impostos</div>
+                    </div>
+                </div>
+                
+                <div class="space-y-4 mb-8 pt-6 border-t border-accent-gold/10 flex-grow">
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-accent-gold/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="ph-bold ph-check text-accent-gold text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-white">12.000 Itens</div>
+                            <div class="text-xs text-gray-500">Escala industrial</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-accent-gold/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="ph-bold ph-check text-accent-gold text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-white">20 SKUs</div>
+                            <div class="text-xs text-gray-500">Máxima variedade</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-accent-gold/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="ph-bold ph-check text-accent-gold text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-white">SLA Diferenciado</div>
+                            <div class="text-xs text-gray-500">Prioridade máxima em todos os processos</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded-full bg-accent-gold/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="ph-bold ph-check text-accent-gold text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-white">Logística Dedicada</div>
+                            <div class="text-xs text-gray-500">Consultoria e suporte estratégico exclusivos</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button onclick="selectPlan('Elo Master')" class="w-full py-4 rounded-xl bg-gradient-to-r from-accent-gold to-yellow-600 hover:from-yellow-600 hover:to-accent-gold text-black font-bold text-sm tracking-wide shadow-lg shadow-accent-gold/40 transition-all btn-premium">
+                    Contratar Master
+                </button>
+            </div>
+
+        </div>
+
+        <div class="mt-16 text-center animate-in delay-400">
+            <div class="inline-flex items-center gap-3 px-6 py-4 rounded-2xl glass-card">
+                <i class="ph-fill ph-lightning text-primary text-2xl"></i>
+                <div class="text-left">
+                    <div class="text-sm font-semibold text-white">Precisa de algo pontual?</div>
+                    <div class="text-xs text-gray-400">
+                        <span class="font-bold text-primary">Elo Free</span> (Spot) disponível por <span class="font-bold text-white">R$ 8,50/kit</span> (Picking, Packing e Expedição)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Assistant Section -->
+    <section class="section-dark relative max-w-6xl mx-auto px-6 py-20">
+        <div class="text-center mb-12 animate-in">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
+                <i class="ph-fill ph-sparkle text-primary text-sm"></i>
+                <span class="text-xs font-semibold text-primary-light tracking-wider uppercase">AI-Powered</span>
+            </div>
+            <h2 class="text-4xl md:text-5xl font-display font-bold mb-4">Assistente Inteligente</h2>
+            <p class="text-gray-400 text-lg">Tire suas dúvidas instantaneamente sobre os planos</p>
+        </div>
+        
+        <div class="chat-glass rounded-3xl overflow-hidden flex flex-col md:flex-row min-h-[600px] shadow-2xl animate-in delay-100">
+            <!-- Sidebar -->
+            <div class="bg-dark-800/60 p-8 md:w-2/5 border-r border-white/5 flex flex-col">
+                <div class="mb-8">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary via-primary-dark to-accent flex items-center justify-center shadow-lg shadow-primary/30">
+                        <i class="ph-fill ph-robot text-white text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">Elo Assistant</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">Inteligência artificial treinada para responder todas as suas dúvidas sobre nossos planos de logística.</p>
+                </div>
+                
+                <div class="flex-1 overflow-hidden">
+                    <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Perguntas Frequentes</div>
+                    <div id="quick-questions" class="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                        <!-- Usando onClick para enviar a mensagem e simular o clique -->
+                        <button onclick="sendUserMessage('Posso guardar produtos de terceiros?')" class="text-left w-full text-sm text-gray-400 hover:text-white hover:bg-white/5 p-3 rounded-xl transition-all border border-transparent hover:border-primary/20 group">
+                            <i class="ph-bold ph-chat-circle-dots text-primary opacity-0 group-hover:opacity-100 transition-opacity mr-2"></i>
+                            Posso guardar produtos de terceiros?
+                        </button>
+                        <button onclick="sendUserMessage('O que acontece se passar do limite de itens?')" class="text-left w-full text-sm text-gray-400 hover:text-white hover:bg-white/5 p-3 rounded-xl transition-all border border-transparent hover:border-primary/20 group">
+                            <i class="ph-bold ph-chat-circle-dots text-primary opacity-0 group-hover:opacity-100 transition-opacity mr-2"></i>
+                            O que acontece se passar do limite?
+                        </button>
+                        <button onclick="sendUserMessage('Qual a diferença do Move pro Grow?')" class="text-left w-full text-sm text-gray-400 hover:text-white hover:bg-white/5 p-3 rounded-xl transition-all border border-transparent hover:border-primary/20 group">
+                            <i class="ph-bold ph-chat-circle-dots text-primary opacity-0 group-hover:opacity-100 transition-opacity mr-2"></i>
+                            Qual a diferença Move vs Grow?
+                        </button>
+                        <button onclick="sendUserMessage('O plano Free é gratuito?')" class="text-left w-full text-sm text-gray-400 hover:text-white hover:bg-white/5 p-3 rounded-xl transition-all border border-transparent hover:border-primary/20 group">
+                            <i class="ph-bold ph-chat-circle-dots text-primary opacity-0 group-hover:opacity-100 transition-opacity mr-2"></i>
+                            O plano Free é gratuito?
+                        </button>
+                        <button onclick="sendUserMessage('Qual o custo extra por SKU excedente?')" class="text-left w-full text-sm text-gray-400 hover:text-white hover:bg-white/5 p-3 rounded-xl transition-all border border-transparent hover:border-primary/20 group">
+                            <i class="ph-bold ph-chat-circle-dots text-primary opacity-0 group-hover:opacity-100 transition-opacity mr-2"></i>
+                            Custo extra por SKU excedente?
+                        </button>
+                        <button onclick="sendUserMessage('O Master tem SLA Diferenciado?')" class="text-left w-full text-sm text-gray-400 hover:text-white hover:bg-white/5 p-3 rounded-xl transition-all border border-transparent hover:border-primary/20 group">
+                            <i class="ph-bold ph-chat-circle-dots text-primary opacity-0 group-hover:opacity-100 transition-opacity mr-2"></i>
+                            O que é SLA Diferenciado?
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Area -->
+            <div class="flex-1 flex flex-col bg-dark-900/40">
+                <div id="chat-history" class="flex-1 p-6 overflow-y-auto space-y-4">
+                    <!-- Mensagem inicial do bot -->
+                    <div class="flex flex-col items-start">
+                        <div class="msg-bot p-5 text-sm max-w-[85%] shadow-xl">
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="w-6 h-6 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
+                                    <i class="ph-fill ph-robot text-white text-xs"></i>
+                                </div>
+                                <span class="text-primary font-bold text-xs uppercase tracking-wider">AI Assistant</span>
+                            </div>
+                            Olá! 👋 Sou o assistente inteligente da Elo Brindes, treinado com os dados da nossa planilha de planos Enterprise. Como posso ajudar você a escolher a melhor solução?
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-6 border-t border-white/5 bg-dark-800/40">
+                    <form onsubmit="handleChatSubmit(event)" class="relative">
+                        <input type="text" id="chat-input" placeholder="Pergunte sobre SKUs, limites, terceirizados..." class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-6 pr-14 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary/50 focus:bg-white/10 transition-all">
+                        <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark hover:from-primary-dark hover:to-primary flex items-center justify-center transition-all btn-premium shadow-lg shadow-primary/30">
+                            <i class="ph-bold ph-paper-plane-tilt text-white text-lg"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Comparison Table -->
+    <section class="section-light relative max-w-6xl mx-auto px-6 py-20">
+        <div class="text-center mb-16 animate-in">
+            <h2 class="text-4xl md:text-5xl font-display font-bold mb-4">Comparativo Detalhado</h2>
+            <p class="text-gray-400 text-lg">Analise todos os recursos lado a lado</p>
+        </div>
+        
+        <div class="overflow-x-auto animate-in delay-100">
+            <div class="premium-table rounded-3xl border border-white/5 overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-dark-800/60">
+                        <tr>
+                            <th class="p-6 text-sm font-semibold text-gray-400 w-1/4">Recursos</th>
+                            <th class="p-6 text-center font-bold text-white w-[18.75%]">
+                                <div class="flex flex-col items-center gap-1">
+                                    <span>Start</span>
+                                    <span class="text-xs font-normal text-gray-500">R$ 400/mês</span>
+                                </div>
+                            </th>
+                            <th class="p-6 text-center font-bold text-primary w-[18.75%] highlight-col">
+                                <div class="flex flex-col items-center gap-1">
+                                    <span>Move</span>
+                                    <span class="text-xs font-normal text-gray-400">R$ 690/mês</span>
+                                </div>
+                            </th>
+                            <th class="p-6 text-center font-bold text-white w-[18.75%]">
+                                <div class="flex flex-col items-center gap-1">
+                                    <span>Grow</span>
+                                    <span class="text-xs font-normal text-gray-500">R$ 1.980/mês</span>
+                                </div>
+                            </th>
+                            <th class="p-6 text-center font-bold text-accent-gold w-[18.75%]">
+                                <div class="flex flex-col items-center gap-1">
+                                    <span>Master</span>
+                                    <span class="text-xs font-normal text-gray-500">R$ 3.850/mês</span>
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm text-gray-300">
+                        <!-- Linhas de Preço (já no cabeçalho) -->
+                        <tr>
+                            <td class="p-4 text-gray-400 font-medium border-t border-white/5">Limite de Itens</td>
+                            <td class="p-4 text-center border-t border-white/5">300</td>
+                            <td class="p-4 text-center font-bold text-white highlight-col border-t border-white/5">1.000</td>
+                            <td class="p-4 text-center">5.000</td>
+                            <td class="p-4 text-center">12.000</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 text-gray-400 font-medium">Quantidade SKUs</td>
+                            <td class="p-4 text-center">4</td>
+                            <td class="p-4 text-center font-bold text-white highlight-col">6</td>
+                            <td class="p-4 text-center">8</td>
+                            <td class="p-4 text-center">20</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 text-gray-400 font-medium">Investimento por item excedente</td>
+                            <td class="p-4 text-center text-gray-400">R$ 1,00/item</td>
+                            <td class="p-4 text-center text-white highlight-col">R$ 1,00/item</td>
+                            <td class="p-4 text-center">R$ 1,00/item</td>
+                            <td class="p-4 text-center">R$ 1,00/item</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 text-gray-400 font-medium">Investimento por SKU excedente</td>
+                            <td class="p-4 text-center text-gray-400">R$ 18,50</td>
+                            <td class="p-4 text-center text-white highlight-col">R$ 18,50</td>
+                            <td class="p-4 text-center">R$ 18,50</td>
+                            <td class="p-4 text-center">R$ 18,50</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 text-gray-400 font-medium border-t border-white/5">Acesso Plataforma</td>
+                            <td class="p-4 text-center"><i class="ph-bold ph-check text-accent text-lg"></i></td>
+                            <td class="p-4 text-center highlight-col"><i class="ph-bold ph-check text-accent text-lg"></i></td>
+                            <td class="p-4 text-center"><i class="ph-bold ph-check text-accent text-lg"></i></td>
+                            <td class="p-4 text-center"><i class="ph-bold ph-check text-accent text-lg"></i></td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 text-gray-400 font-medium">Produtos de Terceiros (Enviar seus brindes)</td>
+                            <td class="p-4 text-center text-primary-dark opacity-50"><i class="ph-bold ph-x text-lg"></i></td>
+                            <td class="p-4 text-center text-primary-dark opacity-50 highlight-col"><i class="ph-bold ph-x text-lg"></i></td>
+                            <td class="p-4 text-center text-gray-300">✓</td>
+                            <td class="p-4 text-center text-gray-300">✓</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 text-gray-400 font-medium">Envios Ilimitados (Picking, Packing e Expedição)</td>
+                            <td class="p-4 text-center text-primary-dark opacity-50"><i class="ph-bold ph-x text-lg"></i></td>
+                            <td class="p-4 text-center text-primary-dark opacity-50 highlight-col"><i class="ph-bold ph-x text-lg"></i></td>
+                            <td class="p-4 text-center text-gray-300">✓</td>
+                            <td class="p-4 text-center text-gray-300">✓</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 text-gray-400 font-medium">Manuseio de Devolução (Logística Reversa)</td>
+                            <td class="p-4 text-center text-primary-dark opacity-50"><i class="ph-bold ph-x text-lg"></i></td>
+                            <td class="p-4 text-center text-gray-300 highlight-col">✓</td>
+                            <td class="p-4 text-center text-gray-300">✓</td>
+                            <td class="p-4 text-center text-gray-300">✓</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 text-gray-400 font-medium">Relatórios Mensais de Inventário</td>
+                            <td class="p-4 text-center text-primary-dark opacity-50"><i class="ph-bold ph-x text-lg"></i></td>
+                            <td class="p-4 text-center text-gray-300 highlight-col">✓</td>
+                            <td class="p-4 text-center text-gray-300">✓</td>
+                            <td class="p-4 text-center text-gray-300">✓</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 text-gray-400 font-medium border-t border-white/5">SLA Diferenciado</td>
+                            <td class="p-4 text-center text-primary-dark opacity-50"><i class="ph-bold ph-x text-lg"></i></td>
+                            <td class="p-4 text-center text-primary-dark opacity-50 highlight-col"><i class="ph-bold ph-x text-lg"></i></td>
+                            <td class="p-4 text-center text-primary-dark opacity-50"><i class="ph-bold ph-x text-lg"></i></td>
+                            <td class="p-4 text-center"><i class="ph-bold ph-crown text-accent-gold text-lg"></i></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section-dark relative py-32 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-accent/10 pointer-events-none"></div>
+        
+        <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
+            <div class="animate-in">
+                <h2 class="text-5xl md:text-6xl font-display font-bold mb-6 gradient-text">
+                    Pronto para<br>revolucionar sua logística?
+                </h2>
+                <p class="text-gray-400 text-lg md:text-xl mb-12 max-w-2xl mx-auto">
+                    Junte-se às empresas que já confiam na infraestrutura Elo para escalar suas operações.
+                </p>
+                
+                <div class="flex flex-col sm:flex-row justify-center gap-4 mb-16">
+                    <button onclick="selectPlan('Elo Move')" class="px-10 py-5 rounded-2xl bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white font-bold text-lg shadow-2xl shadow-primary/40 btn-premium transition-all transform hover:scale-105">
+                        <i class="ph-bold ph-rocket-launch mr-2"></i>
+                        Fazer Upgrade Agora
+                    </button>
+                    <a href="https://wa.me/5511948171445" target="_blank" class="px-10 py-5 rounded-2xl border-2 border-white/10 hover:border-accent/50 hover:bg-white/5 text-white font-bold text-lg transition-all flex items-center justify-center gap-3 transform hover:scale-105">
+                        <i class="ph-fill ph-whatsapp-logo text-accent text-2xl"></i>
+                        Falar com Especialista
+                    </a>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+                    <div class="glass-card rounded-2xl p-6 text-center">
+                        <i class="ph-fill ph-shield-check text-accent text-3xl mb-3"></i>
+                        <div class="font-bold text-white mb-1">Segurança Total</div>
+                        <div class="text-xs text-gray-500">Monitoramento 24/7</div>
+                    </div>
+                    <div class="glass-card rounded-2xl p-6 text-center">
+                        <i class="ph-fill ph-chart-line-up text-primary text-3xl mb-3"></i>
+                        <div class="font-bold text-white mb-1">Escalabilidade</div>
+                        <div class="text-xs text-gray-500">Cresça sem limites</div>
+                    </div>
+                    <div class="glass-card rounded-2xl p-6 text-center">
+                        <i class="ph-fill ph-headset text-accent-gold text-3xl mb-3"></i>
+                        <div class="font-bold text-white mb-1">Suporte Premium</div>
+                        <div class="text-xs text-gray-500">Time dedicado</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="section-light relative border-t border-white/5 py-12">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <div class="flex items-center justify-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
+                    <i class="ph-fill ph-package text-white text-xl"></i>
+                </div>
+                <span class="font-display font-bold text-xl">Elo Brindes</span>
+            </div>
+            <p class="text-gray-500 text-sm mb-6">Transformando logística em vantagem competitiva</p>
+            <div class="flex justify-center gap-6 text-gray-400 text-xs">
+                <a href="#" class="hover:text-primary transition">Termos de Uso</a>
+                <a href="#" class="hover:text-primary transition">Privacidade</a>
+                <a href="#" class="hover:text-primary transition">Suporte</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Knowledge Base para o Chatbot - Refinado para consistência da planilha
+        const knowledgeBase = {
+            saudacao: "Olá! 👋 Sou o assistente inteligente da Elo Brindes. Estou aqui para esclarecer suas dúvidas sobre nossos planos Enterprise (Start, Move, Grow, Master) com base em nossa planilha de dados. Pergunte sobre limites, SKUs, ou serviços!",
+            terceiros: "Produtos de terceiros (não comprados na Elo) são permitidos apenas nos planos <strong>Elo Grow</strong> e <strong>Elo Master</strong>. Nesses planos, você tem a liberdade de enviar seus próprios brindes.",
+            limite: "Se exceder o limite de itens do seu plano (300 no Start, 1000 no Move, etc.), aplicamos a taxa de <strong>R$ 1,00 por item excedente</strong>, conforme a planilha.",
+            diferenca: "A diferença principal está na **escala** e **flexibilidade**.\n- O **Move** (R$ 690) é para volume profissional com processos otimizados, mas não aceita terceirizados.\n- O **Grow** (R$ 1.980) aceita **Produtos Terceirizados** e oferece **Envios Ilimitados** de kits, ideal para alto volume.",
+            free: "O plano **Elo Free** é um serviço Spot (pontual) que custa <strong>R$ 8,50 por kit montado</strong> (Picking, Packing e Expedição). Não há mensalidade, mas não inclui armazenagem contínua nem acesso à plataforma.",
+            skus: "SKUs são as variações de produtos que você gerencia. Os limites são: **Start:** 4 SKUs | **Move:** 6 SKUs | **Grow:** 8 SKUs | **Master:** 20 SKUs.",
+            custo_sku: "O custo extra se você exceder a quantidade de SKUs do seu plano é de <strong>R$ 18,50 por SKU excedente</strong>.",
+            envios_ilimitados: "Sim! Nos planos <strong>Elo Grow e Elo Master</strong>, o serviço de picking, packing e expedição é coberto pela mensalidade, independente do volume de envios.",
+            sla_diferenciado: "O **SLA Diferenciado** é um benefício exclusivo do plano **Master** e garante prioridade máxima nos processos de logística, além de suporte dedicado/consultoria.",
+            master_skus: "O plano **Master** tem a maior capacidade de SKUs, com um limite de <strong>20 variações de produtos</strong>.",
+            montagem_move: "O **Move** inclui Manuseio Otimizado, que cobre as etapas de Picking, Packing e Expedição de forma eficiente para kits padronizados.",
+            relatorios: "Relatórios mensais de inventário e performance estão incluídos nos planos **Elo Move, Grow e Master**.",
+            capacidade_grow: "O plano Grow tem uma capacidade de armazenamento de <strong>5.000 itens</strong> e <strong>8 SKUs</strong>."
+        };
+
+        const chatHistory = document.getElementById('chat-history');
+        const chatInput = document.getElementById('chat-input');
+        
+        // Função para simular o clique nos botões de perguntas rápidas e enviar a mensagem
+        window.sendUserMessage = function(message) {
+            if (!message) return;
+            
+            // 1. Adiciona a mensagem do usuário
+            const userHtml = `
+                <div class="flex flex-col items-end">
+                    <div class="msg-user p-4 text-sm max-w-[85%]">${message}</div>
+                </div>
+            `;
+            chatHistory.innerHTML += userHtml;
+            chatInput.value = '';
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            // 2. Processa e simula a resposta do bot após um pequeno delay
+            setTimeout(() => {
+                const answer = getBotAnswer(message);
+                const botHtml = `
+                    <div class="flex flex-col items-start">
+                        <div class="msg-bot p-5 text-sm max-w-[85%] shadow-xl">
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="w-6 h-6 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
+                                    <i class="ph-fill ph-robot text-white text-xs"></i>
+                                </div>
+                                <span class="text-primary font-bold text-xs uppercase tracking-wider">AI Assistant</span>
+                            </div>
+                            ${answer}
+                        </div>
+                    </div>
+                `;
+                chatHistory.innerHTML += botHtml;
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            }, 800);
+        }
+
+        window.handleChatSubmit = function(event) {
+            event.preventDefault();
+            const message = chatInput.value.trim();
+            sendUserMessage(message);
+        }
+
+        function getBotAnswer(message) {
+            const msgLower = message.toLowerCase();
+            
+            // Tratamento de saudações
+            if (msgLower.includes('oi') || msgLower.includes('olá') || msgLower.includes('ola') || msgLower.includes('bom dia') || msgLower.includes('boa tarde')) {
+                return knowledgeBase.saudacao;
+            }
+
+            // Mapeamento de palavras-chave para respostas específicas
+            if (msgLower.includes('terceiros') || msgLower.includes('seus brindes')) {
+                return knowledgeBase.terceiros;
+            } else if (msgLower.includes('limite') && !msgLower.includes('sku')) {
+                return knowledgeBase.limite;
+            } else if (msgLower.includes('diferença') && (msgLower.includes('move') || msgLower.includes('grow'))) {
+                return knowledgeBase.diferenca;
+            } else if (msgLower.includes('free') || msgLower.includes('gratuito') || msgLower.includes('spot')) {
+                return knowledgeBase.free;
+            } else if (msgLower.includes('custo extra') && msgLower.includes('sku')) {
+                 return knowledgeBase.custo_sku;
+            } else if (msgLower.includes('envios ilimitados') || msgLower.includes('picking') || msgLower.includes('packing')) {
+                return knowledgeBase.envios_ilimitados;
+            } else if (msgLower.includes('sla diferenciado') || msgLower.includes('master')) {
+                 return knowledgeBase.sla_diferenciado;
+            } else if (msgLower.includes('sku') && msgLower.includes('master')) {
+                return knowledgeBase.master_skus;
+            } else if (msgLower.includes('sku')) {
+                 return knowledgeBase.skus;
+            } else if (msgLower.includes('montagem') && msgLower.includes('move')) {
+                return knowledgeBase.montagem_move;
+            } else if (msgLower.includes('relatórios') || msgLower.includes('mensais')) {
+                return knowledgeBase.relatorios;
+            } else if (msgLower.includes('capacidade') && msgLower.includes('grow')) {
+                 return knowledgeBase.capacidade_grow;
+            } else {
+                return 'Desculpe, não encontrei uma resposta direta na nossa base de dados. Por favor, reformule sua pergunta ou entre em contato com um especialista via WhatsApp para um atendimento personalizado.';
+            }
+        }
+        
+        // Simulação de função de seleção de plano
+        window.selectPlan = function(planName) {
+             // Como não é permitido usar alert(), vamos simular uma notificação visual
+             const modalMessage = document.createElement('div');
+             modalMessage.innerHTML = `
+                <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm">
+                    <div class="glass-card p-8 rounded-2xl w-full max-w-sm mx-4 text-center border-l-4 border-primary">
+                        <i class="ph-fill ph-check-circle text-accent text-5xl mb-4"></i>
+                        <h3 class="text-xl font-bold text-white mb-2">Plano ${planName} Selecionado</h3>
+                        <p class="text-gray-400 text-sm mb-6">Você seria redirecionado para a página de contratação ou para o contato com um especialista.</p>
+                        <button onclick="this.parentNode.parentNode.remove()" class="px-6 py-3 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl transition-all">
+                            Fechar
+                        </button>
+                    </div>
+                </div>
+             `;
+             document.body.appendChild(modalMessage);
+        }
+    </script>
+</body>
+</html>
