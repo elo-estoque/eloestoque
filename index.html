@@ -1163,7 +1163,9 @@
             window.renderQuoteCart();
         }
 
-        // ALTERAÇÃO 3: FUNÇÃO window.finalizeQuote (STATUS POR GESTOR)
+        // ***************************************************************
+        // CORREÇÃO DE LÓGICA 1: window.finalizeQuote
+        // ***************************************************************
         window.finalizeQuote = async function() {
             if(!window.quoteCart.length) return;
             const btn = document.getElementById('btn-finalize-quote');
@@ -1171,14 +1173,15 @@
             btn.disabled = true;
 
             try {
-                // LÓGICA DE APROVAÇÃO (AGORA BASEADA APENAS NO PERFIL DO GESTOR)
-                const isManager = window.currentUser?.eh_gestor === true;
-                const initialStatus = isManager ? 'pendente' : 'aguardando_aprovacao';
+                // NOVA LÓGICA DE NEGÓCIO: Define o status com base na necessidade de aprovação da ORG e no perfil do USUÁRIO.
+                const exigeAprovacao = window.currentOrgConfig?.exige_aprovacao === true;
+                const ehGestor = window.currentUser?.eh_gestor === true;
+                const initialStatus = (!exigeAprovacao || ehGestor) ? 'pendente' : 'aguardando_aprovacao';
 
                 const promises = window.quoteCart.map(item => {
                     return client.request(createItem('solicitacoes', { 
                         tipo: 'SOLICITACAO_COMPRA', 
-                        status: initialStatus, // Status baseado no perfil do usuário
+                        status: initialStatus, // Status definido pela nova lógica
                         quantidade: item.qtd, 
                         produto_id: item.id, 
                         observacoes: `${item.obs} | Data Ideal: ${item.data}`, 
@@ -2342,7 +2345,9 @@
             }
         }
         
-        // ALTERAÇÃO 1: FUNÇÃO window.finalizeShipments (STATUS POR GESTOR)
+        // ***************************************************************
+        // CORREÇÃO DE LÓGICA 2: window.finalizeShipments
+        // ***************************************************************
         window.finalizeShipments = async function() {
             // Recalcula totais para garantir (segurança contra edições de HTML)
             const total = window.selectedShipments.reduce((sum, s) => sum + (parseInt(s.quantity) || 0), 0);
@@ -2383,9 +2388,10 @@
                 }
                 const produtoNome = produtoId.nome || 'Produto'; // Nome para usar no lote
                 
-                // 2. VERIFICA CONFIGURAÇÕES DE APROVAÇÃO (AGORA APENAS NO PERFIL DO GESTOR)
-                const isManager = window.currentUser?.eh_gestor === true;
-                const finalStatus = isManager ? 'pendente' : 'aguardando_aprovacao';
+                // 2. NOVA LÓGICA DE NEGÓCIO: Define o status com base na necessidade de aprovação da ORG e no perfil do USUÁRIO.
+                const exigeAprovacao = window.currentOrgConfig?.exige_aprovacao === true;
+                const ehGestor = window.currentUser?.eh_gestor === true;
+                const finalStatus = (!exigeAprovacao || ehGestor) ? 'pendente' : 'aguardando_aprovacao';
                 
                 // 3. CRIA O REGISTRO PAI NA TABELA lotes_envio
                 const nomeLote = `Envio - ${produtoNome} - ${new Date().toLocaleString('pt-BR')}`;
@@ -2404,7 +2410,7 @@
                 const promises = window.selectedShipments.map(shipment => {
                     return client.request(createItem('solicitacoes', { 
                         tipo: 'SOLICITACAO_ENVIO', 
-                        status: finalStatus, // Status baseado no perfil do usuário
+                        status: finalStatus, // Status definido pela nova lógica
                         quantidade: parseInt(shipment.quantity),
                         produto_id: produtoId, // ID correto do produto
                         endereco_id: shipment.addressId, // ID do endereço
@@ -3097,7 +3103,9 @@
         }
 
         
-        // ALTERAÇÃO 2: FUNÇÃO window.createBatchFromImport (STATUS POR GESTOR E QTD INDIVIDUAL)
+        // ***************************************************************
+        // CORREÇÃO DE LÓGICA 3: window.createBatchFromImport
+        // ***************************************************************
         window.createBatchFromImport = async function() {
             const nomeLote = document.getElementById('import-lote-nome')?.value;
             const selectElement = document.getElementById('import-lote-produto');
@@ -3135,14 +3143,15 @@
             btn.innerHTML = '<div class="loader border-white w-5 h-5"></div> <span class="ml-2">Processando Lote...</span>';
 
             try {
-                // LÓGICA DE APROVAÇÃO (AGORA BASEADA APENAS NO PERFIL DO GESTOR)
-                const isManager = window.currentUser?.eh_gestor === true;
-                const finalStatus = isManager ? 'pendente' : 'aguardando_aprovacao';
+                // NOVA LÓGICA DE NEGÓCIO: Define o status com base na necessidade de aprovação da ORG e no perfil do USUÁRIO.
+                const exigeAprovacao = window.currentOrgConfig?.exige_aprovacao === true;
+                const ehGestor = window.currentUser?.eh_gestor === true;
+                const finalStatus = (!exigeAprovacao || ehGestor) ? 'pendente' : 'aguardando_aprovacao';
 
                 // 1. CRIAR O LOTE PAI
                 const lotePayload = {
                     nome_lote: nomeLote,
-                    status: finalStatus, // Status baseado no perfil do usuário
+                    status: finalStatus, // Status definido pela nova lógica
                     quantidade_total: totalQuantityToShip, // Usando a QTD total calculada
                     organization_id: window.currentOrgId,
                     data_criacao: new Date().toISOString()
@@ -3182,7 +3191,7 @@
                     // B) Cria a Solicitação vinculada ao endereço recém-criado e ao Lote
                     return client.request(createItem('solicitacoes', {
                         tipo: 'SOLICITACAO_ENVIO',
-                        status: finalStatus, // Status baseado no perfil do usuário
+                        status: finalStatus, // Status definido pela nova lógica
                         lote_id: novoLoteId,
                         organization_id: window.currentOrgId,
                         produto_id: produtoId,
