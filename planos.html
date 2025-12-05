@@ -224,16 +224,12 @@
     </style>
 </head>
 <body>
-    <!-- Gradient Orbs -->
     <div class="gradient-orb orb-1"></div>
     <div class="gradient-orb orb-2"></div>
 
-    <!-- Navigation -->
-    <!-- Fundo da nav alterado para um cinza mais escuro (#141414) -->
     <nav class="fixed w-full z-50 top-0 py-6 px-8 bg-dark-850/90 backdrop-blur-md border-b border-white/5">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <!-- Ícone substituído por tag <img> para carregar logo.png -->
                 <div class="w-10 h-10 rounded-xl flex items-center justify-center">
                     <img src="logo.png" alt="Logo Elo Brindes" class="h-10 w-10 object-contain" onerror="this.onerror=null; this.src='https://placehold.co/40x40/0A0A0A/E31937?text=ELO'">
                 </div>
@@ -248,7 +244,6 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
     <section class="section-dark relative min-h-[70vh] flex flex-col items-center justify-center text-center px-4 pt-32 pb-20">
         <div class="max-w-5xl mx-auto space-y-8">
             <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 animate-in">
@@ -276,7 +271,6 @@
             </div>
         </div>
         
-        <!-- Stats -->
         <div class="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto animate-in delay-400">
             <div class="text-center">
                 <div class="text-3xl md:text-4xl font-bold gradient-text-accent">12k+</div>
@@ -297,7 +291,6 @@
         </div>
     </section>
 
-    <!-- Plans Section -->
     <section id="planos" class="section-light relative max-w-7xl mx-auto px-6 py-20">
         <div class="text-center mb-16">
             <h2 class="text-4xl md:text-5xl font-display font-bold mb-4">Escolha seu ecossistema</h2>
@@ -306,7 +299,6 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
             
-            <!-- START -->
             <div class="glass-card rounded-3xl p-8 flex flex-col h-full lg:h-[610px] animate-in delay-100">
                 <div class="mb-auto space-y-6">
                     <div class="flex items-center justify-between">
@@ -366,7 +358,6 @@
                 </button>
             </div>
 
-            <!-- MOVE (Featured) -->
             <div class="glass-card featured-card rounded-3xl p-8 flex flex-col h-full lg:h-[650px] animate-in delay-200 relative">
                 <div class="absolute -top-4 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full premium-badge text-white text-xs font-bold uppercase tracking-wider">
                     Mais Popular
@@ -439,7 +430,6 @@
                 </button>
             </div>
 
-            <!-- GROW -->
             <div class="glass-card rounded-3xl p-8 flex flex-col h-full lg:h-[610px] animate-in delay-300">
                 <div class="mb-auto space-y-6">
                     <div class="flex items-center justify-between">
@@ -499,7 +489,6 @@
                 </button>
             </div>
 
-            <!-- MASTER -->
             <div class="glass-card rounded-3xl p-8 flex flex-col h-full lg:h-[610px] animate-in delay-400 border-accent-gold/20">
                 <div class="mb-auto space-y-6">
                     <div class="flex items-center justify-between">
@@ -574,7 +563,6 @@
         </div>
     </section>
 
-    <!-- AI Assistant Section -->
     <section class="section-dark relative max-w-6xl mx-auto px-6 py-20">
         <div class="text-center mb-12 animate-in">
             <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
@@ -586,7 +574,6 @@
         </div>
         
         <div class="chat-glass rounded-3xl overflow-hidden flex flex-col md:flex-row min-h-[600px] shadow-2xl animate-in delay-100">
-            <!-- Sidebar -->
             <div class="bg-dark-800/60 p-8 md:w-2/5 border-r border-white/5 flex flex-col">
                 <div class="mb-8">
                     <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary via-primary-dark to-accent flex items-center justify-center shadow-lg shadow-primary/30">
@@ -599,7 +586,6 @@
                 <div class="flex-1 overflow-hidden">
                     <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Perguntas Frequentes</div>
                     <div id="quick-questions" class="space-y-2 max-h-[400px] overflow-y-auto pr-2">
-                        <!-- Usando onClick para enviar a mensagem e simular o clique -->
                         <button onclick="sendUserMessage('Posso guardar produtos de terceiros?')" class="text-left w-full text-sm text-gray-400 hover:text-white hover:bg-white/5 p-3 rounded-xl transition-all border border-transparent hover:border-primary/20 group">
                             <i class="ph-bold ph-chat-circle-dots text-primary opacity-0 group-hover:opacity-100 transition-opacity mr-2"></i>
                             Posso guardar produtos de terceiros?
@@ -628,10 +614,8 @@
                 </div>
             </div>
 
-            <!-- Chat Area -->
             <div class="flex-1 flex flex-col bg-dark-900/40">
                 <div id="chat-history" class="flex-1 p-6 overflow-y-auto space-y-4">
-                    <!-- Mensagem inicial do bot -->
                     <div class="flex flex-col items-start">
                         <div class="msg-bot p-5 text-sm max-w-[85%] shadow-xl">
                             <div class="flex items-center gap-2 mb-2">
@@ -657,7 +641,6 @@
         </div>
     </section>
 
-    <!-- Comparison Table -->
     <section class="section-light relative max-w-6xl mx-auto px-6 py-20">
         <div class="text-center mb-16 animate-in">
             <h2 class="text-4xl md:text-5xl font-display font-bold mb-4">Comparativo Detalhado</h2>
@@ -697,7 +680,6 @@
                         </tr>
                     </thead>
                     <tbody class="text-sm text-gray-300">
-                        <!-- Linhas de Preço (já no cabeçalho) -->
                         <tr>
                             <td class="p-4 text-gray-400 font-medium border-t border-white/5">Limite de Itens</td>
                             <td class="p-4 text-center border-t border-white/5">300</td>
@@ -774,7 +756,6 @@
         </div>
     </section>
 
-    <!-- CTA Section -->
     <section class="section-dark relative py-32 overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-accent/10 pointer-events-none"></div>
         
@@ -819,7 +800,6 @@
         </div>
     </section>
 
-    <!-- Footer -->
     <footer class="section-light relative border-t border-white/5 py-12">
         <div class="max-w-7xl mx-auto px-6 text-center">
             <div class="flex items-center justify-center gap-3 mb-4">
@@ -840,11 +820,11 @@
     <script>
         // Knowledge Base para o Chatbot - Refinado para consistência da planilha
         const knowledgeBase = {
-            saudacao: "Olá! 👋 Sou o assistente inteligente da Elo Brindes. Estou aqui para esclarecer suas dúvidas sobre nossos planos Enterprise (Start, Move, Grow, Master) com base em nossa planilha de dados. Pergunte sobre limites, SKUs, ou serviços!",
+            saudacao: "Olá! 👋 Sou o assistente inteligente da Elo Brindes, treinado com os dados da nossa planilha de planos Enterprise. Pergunte sobre limites, SKUs, ou serviços!",
             terceiros: "Produtos de terceiros (não comprados na Elo) são permitidos apenas nos planos <strong>Elo Grow</strong> e <strong>Elo Master</strong>. Nesses planos, você tem a liberdade de enviar seus próprios brindes.",
             limite: "Se exceder o limite de itens do seu plano (300 no Start, 1000 no Move, etc.), aplicamos a taxa de <strong>R$ 1,00 por item excedente</strong>, conforme a planilha.",
             diferenca: "A diferença principal está na **escala** e **flexibilidade**.\n- O **Move** (R$ 690) é para volume profissional com processos otimizados, mas não aceita terceirizados.\n- O **Grow** (R$ 1.980) aceita **Produtos Terceirizados** e oferece **Envios Ilimitados** de kits, ideal para alto volume.",
-            free: "O plano **Elo Free** é um serviço Spot (pontual) que custa <strong>R$ 8,50 por kit montado</strong> (Picking, Packing e Expedição). Não há mensalidade, mas não inclui armazenagem contínua nem acesso à plataforma.",
+            free: "O plano **Elo Free** é um serviço Spot (pontual) que custa <strong>R$ 8,50/kit</strong> (Picking, Packing e Expedição). Não há mensalidade, mas não inclui armazenagem contínua nem acesso à plataforma.",
             skus: "SKUs são as variações de produtos que você gerencia. Os limites são: **Start:** 4 SKUs | **Move:** 6 SKUs | **Grow:** 8 SKUs | **Master:** 20 SKUs.",
             custo_sku: "O custo extra se você exceder a quantidade de SKUs do seu plano é de <strong>R$ 18,50 por SKU excedente</strong>.",
             envios_ilimitados: "Sim! Nos planos <strong>Elo Grow e Elo Master</strong>, o serviço de picking, packing e expedição é coberto pela mensalidade, independente do volume de envios.",
