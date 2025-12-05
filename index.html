@@ -265,6 +265,30 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="glass-panel p-6 rounded-2xl mb-8 border-l-4 border-brand-wine relative overflow-hidden group">
+                    <div class="absolute -right-6 -top-6 text-brand-wine/10 text-9xl group-hover:scale-110 transition-transform duration-700"><i class="ph-fill ph-crown"></i></div>
+                    <div class="relative z-10 flex flex-col md:flex-row justify-between gap-6">
+                        <div>
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="text-[10px] font-bold bg-brand-wine text-white px-2 py-1 rounded uppercase tracking-wider">Seu Plano</span>
+                                <h3 id="dash-plan-name" class="text-2xl font-bold text-white">Carregando...</h3>
+                            </div>
+                            <p class="text-gray-400 text-xs">Renovação mensal. <button onclick="window.openPlanModal()" class="text-brand-wine hover:underline font-bold">Ver opções</button></p>
+                        </div>
+                        <div class="flex-1 w-full md:max-w-xl space-y-4">
+                            <div>
+                                <div class="flex justify-between text-xs mb-1"><span class="text-gray-400 font-bold uppercase"><i class="ph-fill ph-package"></i> Armazenamento</span><span id="plan-usage-items" class="text-white font-bold">...</span></div>
+                                <div class="w-full bg-white/5 rounded-full h-3 border border-white/10 overflow-hidden"><div id="bar-items" class="bg-brand-wine h-full rounded-full transition-all duration-1000" style="width: 0%"></div></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs mb-1"><span class="text-gray-400 font-bold uppercase"><i class="ph-fill ph-squares-four"></i> SKUs</span><span id="plan-usage-skus" class="text-white font-bold">...</span></div>
+                                <div class="w-full bg-white/5 rounded-full h-3 border border-white/10 overflow-hidden"><div id="bar-skus" class="bg-blue-600 h-full rounded-full transition-all duration-1000" style="width: 0%"></div></div>
+                            </div>
+                        </div>
+                        <div class="flex items-center"><button onclick="window.openPlanModal()" class="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-3 rounded-lg font-bold transition flex items-center gap-2 whitespace-nowrap"><i class="ph-bold ph-rocket-launch"></i> Upgrade</button></div>
+                    </div>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div class="glass-panel p-6 rounded-2xl border-l-4 border-brand-wine">
                         <p class="text-gray-400 text-xs uppercase tracking-wider">Produtos em Estoque</p>
@@ -323,19 +347,17 @@
             </div>
             
             <div id="view-catalogo" class="view-section hidden animate-[fadeIn_0.3s_ease-out]">
-                <header class="mb-8">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
-                        <div>
-                            <h2 class="text-3xl font-bold text-white tracking-tight section-title">Catálogo de Produtos</h2>
-                            <p class="text-gray-400 text-sm mt-1">Explore e solicite orçamentos</p>
-                        </div>
-                        <div class="relative w-full md:w-64">
-                            <input type="text" id="catalogo-search" placeholder="Buscar produto..." onkeyup="window.debouncedFilter()" class="w-full glass-input rounded-lg pl-10 pr-4 py-2 text-sm">
-                            <i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-gray-400"></i>
-                        </div>
+                <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+                    <div>
+                        <h2 class="text-3xl font-bold text-white tracking-tight section-title">Catálogo de Produtos</h2>
+                        <p class="text-gray-400 text-sm mt-1">Explore e solicite orçamentos</p>
                     </div>
-                    <div id="catalog-categories" class="flex flex-wrap gap-2 overflow-x-auto pb-2 scrollbar-hide"></div>
+                    <div class="relative w-full md:w-64">
+                        <input type="text" id="catalogo-search" placeholder="Buscar produto..." onkeyup="window.debouncedFilter()" class="w-full glass-input rounded-lg pl-10 pr-4 py-2 text-sm">
+                        <i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-gray-400"></i>
+                    </div>
                 </header>
+                <div id="catalog-categories" class="flex flex-wrap gap-2 overflow-x-auto pb-2 scrollbar-hide"></div>
                 <div id="catalogo-grid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
             </div>
 
@@ -768,6 +790,33 @@
         </div>
     </div>
 
+    <div id="plans-modal" class="fixed inset-0 z-[150] hidden items-center justify-center bg-black/95 backdrop-blur-sm">
+        <div class="glass-panel p-8 rounded-2xl w-full max-w-4xl mx-4 modal-enter border border-white/10 relative">
+            <button onclick="document.getElementById('plans-modal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="ph ph-x text-xl"></i></button>
+            <h2 class="text-2xl font-bold text-white mb-6 text-center">Nossos Planos</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white/5 border border-white/10 p-6 rounded-xl hover:border-brand-wine transition text-center">
+                    <h3 class="text-xl font-bold text-white">Elo Start</h3>
+                    <p class="text-brand-wine font-bold text-lg my-2">R$ 400/mês</p>
+                    <p class="text-gray-400 text-xs mb-4">300 Itens | 4 SKUs</p>
+                    <button onclick="window.requestUpgrade('Elo Start')" class="w-full bg-white/10 hover:bg-brand-wine text-white py-2 rounded text-xs font-bold transition">Escolher</button>
+                </div>
+                <div class="bg-brand-wine/10 border border-brand-wine p-6 rounded-xl transform scale-105 shadow-lg text-center relative">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-wine text-white text-[10px] px-2 py-1 rounded">POPULAR</div>
+                    <h3 class="text-xl font-bold text-white">Elo Move</h3>
+                    <p class="text-brand-wine font-bold text-lg my-2">R$ 880/mês</p>
+                    <p class="text-gray-400 text-xs mb-4">1.000 Itens | 6 SKUs</p>
+                    <button onclick="window.requestUpgrade('Elo Move')" class="w-full bg-brand-wine hover:bg-brand-hover text-white py-2 rounded text-xs font-bold transition">Escolher</button>
+                </div>
+                <div class="bg-white/5 border border-white/10 p-6 rounded-xl hover:border-brand-wine transition text-center">
+                    <h3 class="text-xl font-bold text-white">Elo Grow</h3>
+                    <p class="text-brand-wine font-bold text-lg my-2">R$ 1.880/mês</p>
+                    <p class="text-gray-400 text-xs mb-4">5.000 Itens | 8 SKUs</p>
+                    <button onclick="window.requestUpgrade('Elo Grow')" class="w-full bg-white/10 hover:bg-brand-wine text-white py-2 rounded text-xs font-bold transition">Escolher</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     <script type="module">
@@ -782,6 +831,11 @@
         window.allCatalogProducts = []; window.inventoryItems = []; window.historyItems = []; window.activeCategory = 'TODAS';
         window.quoteCart = [];
         window.selectedBatchDescription = null; 
+        
+        // NOVO: TAREFA 2 - VARIÁVEIS GLOBAIS DE PLANO E USO
+        window.currentPlanLimits = { itens: 0, skus: 0, nome: '' };
+        window.usageStats = { itens: 0, skus: 0 };
+        // FIM NOVO
         
         // NOVAS VARIÁVEIS GLOBAIS DE PERMISSÃO
         window.currentUser = null; 
@@ -874,12 +928,20 @@
                     const orgId = typeof user.organization_id === 'object' ? user.organization_id.id : user.organization_id;
                     
                     if(orgId) {
-                        const org = await client.request(readItem('organizacoes', orgId, { fields: ['id', 'exige_aprovacao'] }));
+                        // ATUALIZADO (TAREFA 2): Busca a organização expandindo o plano
+                        const org = await client.request(readItem('organizacoes', orgId, { fields: ['id', 'exige_aprovacao', 'plano_id.*'] }));
                         
                         // Configura variáveis globais
                         window.currentUser = user;
                         window.currentOrgId = orgId;
                         window.currentOrgConfig = org;
+
+                        // NOVO (TAREFA 2): Atualiza limites do plano
+                        window.currentPlanLimits = {
+                            itens: org.plano_id?.limite_itens || 0,
+                            skus: org.plano_id?.limite_skus || 0,
+                            nome: org.plano_id?.nome || 'Sem Plano'
+                        };
                         
                         console.log('App initialized via Refresh:', { user, org });
                         
@@ -1118,14 +1180,21 @@
             const data = document.getElementById('repor-data').value;
             const manter = document.getElementById('repor-manter').checked;
             const obs = manter ? "Manter modelo." : "ALTERAÇÃO: " + document.getElementById('repor-obs-texto').value;
+            const qtdNum = parseInt(qtd);
 
             if(!select.value) { notify('Selecione um produto', 'error'); return; }
-            if(qtd < 1) { notify('Quantidade inválida', 'error'); return; }
+            if(qtdNum < 1) { notify('Quantidade inválida', 'error'); return; }
+
+            // NOVO (TAREFA 2): Verificação de Limites de Plano (Soft Block)
+            if(!window.checkPlanLimits(qtdNum)) {
+                // Se o limite for excedido, continua com a adição, mas alerta.
+                // O hard block está no finalizeQuote.
+            } 
 
             const product = {
                 id: select.value,
                 name: select.options[select.selectedIndex].text,
-                qtd: parseInt(qtd),
+                qtd: qtdNum,
                 data: data,
                 obs: obs
             };
@@ -1134,6 +1203,20 @@
             window.renderQuoteCart();
             notify('Produto adicionado à lista!');
             document.getElementById('repor-qtd').value = 100;
+        }
+
+        // NOVO (TAREFA 2): Função de Verificação de Limites de Plano (Soft Block)
+        window.checkPlanLimits = function(novosItens) {
+            // Soma a quantidade atual no carrinho + a nova quantidade
+            const currentCartItems = window.quoteCart.reduce((sum, item) => sum + item.qtd, 0);
+            const newTotalItems = window.usageStats.itens + currentCartItems + novosItens;
+            const maxItems = window.currentPlanLimits.itens;
+
+            if (maxItems > 0 && newTotalItems > maxItems) {
+                notify(`Atenção! Sua lista de orçamento pode exceder o limite de ${maxItems.toLocaleString()} itens do plano "${window.currentPlanLimits.nome}". Considere um upgrade.`, 'warning');
+                return false;
+            }
+            return true;
         }
 
         window.renderQuoteCart = function() {
@@ -1164,13 +1247,26 @@
         }
 
         // ***************************************************************
-        // CORREÇÃO DE LÓGICA 1: window.finalizeQuote
+        // CORREÇÃO DE LÓGICA 1: window.finalizeQuote (TAREFA 2 - HARD BLOCK)
         // ***************************************************************
         window.finalizeQuote = async function() {
             if(!window.quoteCart.length) return;
             const btn = document.getElementById('btn-finalize-quote');
             btn.innerHTML = '<div class="loader border-white w-5 h-5"></div>';
             btn.disabled = true;
+            
+            // NOVO (TAREFA 2): Alerta final de limite antes de enviar (HARD BLOCK)
+            const totalItemsQuote = window.quoteCart.reduce((sum, item) => sum + item.qtd, 0);
+            const newTotalItems = window.usageStats.itens + totalItemsQuote;
+            const maxItems = window.currentPlanLimits.itens;
+
+            if (maxItems > 0 && newTotalItems > maxItems) {
+                notify(`Bloqueio: Sua solicitação excederá o limite de itens do plano (${maxItems.toLocaleString()} unidades). Contate o suporte para Upgrade.`, 'error');
+                window.openPlanModal(); // Abre o modal de planos
+                btn.innerHTML = 'Finalizar Orçamento';
+                btn.disabled = false;
+                return; 
+            }
 
             try {
                 // NOVA LÓGICA DE NEGÓCIO: Define o status com base na necessidade de aprovação da ORG e no perfil do USUÁRIO.
@@ -1278,14 +1374,22 @@
                 // 3. Busca EXPLICITAMENTE as configurações da empresa (Isso resolve o bug!)
                 const orgId = typeof user.organization_id === 'object' ? user.organization_id.id : user.organization_id;
                 
+                // ATUALIZADO (TAREFA 2): Busca a organização expandindo o plano
                 const empresaConfig = await client.request(readItem('organizacoes', orgId, {
-                    fields: ['id', 'exige_aprovacao']
+                    fields: ['id', 'exige_aprovacao', 'plano_id.*']
                 }));
 
                 // 4. Salva tudo nas variáveis globais
                 window.currentOrgId = orgId;
                 window.currentUser = user; 
                 window.currentOrgConfig = empresaConfig;
+                
+                // NOVO (TAREFA 2): Atualiza limites do plano
+                window.currentPlanLimits = {
+                    itens: empresaConfig.plano_id?.limite_itens || 0,
+                    skus: empresaConfig.plano_id?.limite_skus || 0,
+                    nome: empresaConfig.plano_id?.nome || 'Sem Plano'
+                };
 
                 document.getElementById('login-screen').classList.add('hidden'); 
                 document.getElementById('app-screen').classList.remove('hidden'); 
@@ -1437,6 +1541,7 @@
                 icon.classList.replace('ph-sun-dim', 'ph-moon');
                 text.innerText = 'Tema Dark';
             } else {
+                document.body.classList.remove('theme-light');
                 icon.classList.replace('ph-moon', 'ph-sun-dim');
                 text.innerText = 'Tema Light';
             }
@@ -1446,15 +1551,55 @@
         async function loadDashboard() { 
             try { 
                 // Carrega estatísticas básicas
-                const estoque = await client.request(readItems('estoque_cliente', { fields: ['quantidade_disponivel', 'produto_id.nome'] })); 
+                const estoque = await client.request(readItems('estoque_cliente', { fields: ['quantidade_disponivel', 'produto_id.nome', 'produto_id.sku'] })); 
                 window.inventoryItems = estoque; 
                 
                 const pedidosPendente = await client.request(readItems('solicitacoes', { filter: { status: { _eq: 'pendente' } } })); 
                 const history = await client.request(readItems('solicitacoes', { limit: 500, fields: ['data_criacao', 'quantidade', 'status'] }));
                 window.historyItems = history; 
 
+                // NOVO (TAREFA 2): CÁLCULO E ATUALIZAÇÃO DO WIDGET DE PLANO
+                const totalItems = estoque.reduce((a, b) => a + b.quantidade_disponivel, 0);
+                const uniqueSkus = new Set(estoque.map(i => i.produto_id?.sku).filter(sku => sku)).size;
+
+                window.usageStats.itens = totalItems;
+                window.usageStats.skus = uniqueSkus;
+
+                const maxItems = window.currentPlanLimits.itens;
+                const maxSkus = window.currentPlanLimits.skus;
+                const planName = window.currentPlanLimits.nome;
+
+                // Calcula porcentagens de uso (limita a 100% para a barra)
+                const itemsPercent = maxItems > 0 ? Math.min(100, (totalItems / maxItems) * 100) : 0;
+                const skusPercent = maxSkus > 0 ? Math.min(100, (uniqueSkus / maxSkus) * 100) : 0;
+                
+                // Define as classes de cor da barra de Itens
+                const barItemsElement = document.getElementById('bar-items');
+                if (barItemsElement) {
+                    barItemsElement.classList.remove('bg-brand-wine', 'bg-yellow-500', 'bg-red-500');
+                    if (itemsPercent >= 100) {
+                        barItemsElement.classList.add('bg-red-500');
+                        notify("Alerta: O limite de itens do seu plano foi excedido. Contate o suporte para Upgrade.", 'error');
+                    } else if (itemsPercent >= 90) {
+                        barItemsElement.classList.add('bg-yellow-500');
+                        notify("Atenção: O uso de itens está próximo do limite do seu plano!", 'warning');
+                    } else {
+                        barItemsElement.classList.add('bg-brand-wine');
+                    }
+                }
+                
+                // Atualiza o Display
+                document.getElementById('dash-plan-name').innerText = planName;
+                document.getElementById('plan-usage-items').innerText = `${totalItems.toLocaleString()} / ${maxItems.toLocaleString()} itens`;
+                document.getElementById('plan-usage-skus').innerText = `${uniqueSkus.toLocaleString()} / ${maxSkus.toLocaleString()} SKUs`;
+                if(barItemsElement) barItemsElement.style.width = `${itemsPercent}%`;
+                document.getElementById('bar-skus').style.width = `${skusPercent}%`;
+                
+                // FIM NOVO
+
+
                 document.getElementById('dash-total-items').innerText = estoque.length; 
-                document.getElementById('dash-total-qty').innerText = estoque.reduce((a, b) => a + b.quantidade_disponivel, 0); 
+                document.getElementById('dash-total-qty').innerText = totalItems; 
                 document.getElementById('dash-pending').innerText = pedidosPendente.length; 
 
                 // NOVO: Se for gestor, carrega as aprovações pendentes
@@ -1474,6 +1619,23 @@
             } 
         }
         
+        // NOVO (TAREFA 2): Modal e Upgrade Functions
+        window.openPlanModal = function() {
+            document.getElementById('plans-modal').classList.remove('hidden');
+            document.getElementById('plans-modal').classList.add('flex');
+        }
+
+        window.requestUpgrade = function(nomePlano) {
+            const phoneNumber = '5511948171445'; // Seu número de WhatsApp
+            const message = `Olá, gostaria de solicitar um Upgrade para o plano ${nomePlano} para a empresa ${window.currentOrgId}.`;
+            const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+            
+            window.open(url, '_blank');
+            notify(`Solicitação de Upgrade para "${nomePlano}" enviada ao WhatsApp.`, 'success');
+            document.getElementById('plans-modal').classList.add('hidden');
+        }
+        // FIM NOVO
+
         // Helper para formatar nome do usuário
         const getUserName = (userObj) => {
             if (!userObj) return 'Usuário Desconhecido';
@@ -1491,7 +1653,7 @@
             const list = document.getElementById('approvals-list');
             if(!list) return;
 
-            list.innerHTML = '<div class="flex justify-center p-4"><div class="loader border-brand-wine w-6 h-6"></div></div>';
+            list.innerHTML = '<div class="flex justify-center p-4"><div class="loader border-brand-wine w-6 h-6 mx-auto"></div></div>';
             
             try {
                 // 1. Busca Lotes de Envio pendentes (Trazendo todos os dados de user_created)
@@ -1592,7 +1754,9 @@
             }
         }
         
-        // === NOVA FUNÇÃO: APROVAR LOTE EM MASSA ===
+        // ===================================================================
+        // FUNÇÃO SUBSTITUÍDA: window.approveBatch (CORRIGIDA V7)
+        // ===================================================================
         window.approveBatch = async function(loteId) {
             if(!confirm(`Deseja APROVAR o Lote #${loteId} e todos os seus itens?`)) return;
 
@@ -1603,10 +1767,99 @@
             });
             
             try {
-                // 1. Atualiza o registro PAI (lotes_envio)
-                const updateLotePromise = client.request(updateItem('lotes_envio', loteId, { status: 'pendente' }));
+                // 1. Busca todas as solicitações (itens) do lote, incluindo produto_id
+                const solicitacoes = await client.request(readItems('solicitacoes', {
+                    filter: { lote_id: { _eq: loteId } },
+                    // CRUCIAL: Trazer o produto_id. ID, Nome e Observações
+                    fields: ['id', 'quantidade', 'observacoes', 'produto_id.id', 'produto_id.nome']
+                }));
                 
-                // 2. Atualiza os registros FILHOS (solicitacoes) em massa
+                if (solicitacoes.length === 0) throw new Error('Lote sem itens de solicitação.');
+                
+                const totalQuantity = solicitacoes.reduce((sum, s) => sum + s.quantidade, 0);
+                const firstObs = solicitacoes[0].observacoes || '';
+                
+                // Variáveis para a baixa
+                let estoqueId;
+                let loteEstoqueId = 0; // Assume lote geral (ID 0) por padrão
+                
+                // 2. Tenta encontrar a tag de referência [CORREÇÃO 2 - PASSO 1]
+                const refMatch = firstObs.match(/\[REF_LOTE:(\d+)\|(\d+)\]/); 
+                
+                if (refMatch) {
+                    // CENA 1: TAG ENCONTRADA
+                    estoqueId = refMatch[1];
+                    loteEstoqueId = refMatch[2]; 
+                    console.log('Baixa de Estoque: Usando IDs da tag [REF_LOTE].');
+
+                } else {
+                    // CENA 2: TAG AUSENTE (FALLBACK) [CORREÇÃO 2 - PASSO 2]
+                    console.log('Baixa de Estoque: Tag [REF_LOTE] ausente. Usando fallback por Produto ID.');
+                    
+                    // A. Tenta obter o ID do Produto do Catálogo
+                    const produtoCatalogoRef = solicitacoes[0].produto_id;
+                    const produtoCatalogoId = typeof produtoCatalogoRef === 'object' ? produtoCatalogoRef.id : produtoCatalogoRef;
+                    
+                    if (!produtoCatalogoId) throw new Error('Produto ID não encontrado na solicitação para fallback.');
+
+                    // B. Busca na tabela estoque_cliente pelo produto_id E organization_id
+                    const estoqueResult = await client.request(readItems('estoque_cliente', { 
+                        filter: { 
+                            _and: [
+                                { produto_id: { _eq: produtoCatalogoId } },
+                                { organization_id: { _eq: window.currentOrgId } } // CRÍTICO: Segurança
+                            ]
+                        },
+                        fields: ['id', 'quantidade_disponivel'],
+                        limit: 1 // Só precisamos do primeiro (estoque principal)
+                    }));
+
+                    if (estoqueResult.length === 0) {
+                        throw new Error('Item de estoque não encontrado para o Produto ID: ' + produtoCatalogoId);
+                    }
+                    
+                    estoqueId = estoqueResult[0].id; // ID do Estoque_Cliente
+                    loteEstoqueId = 0; // Assumimos que é estoque geral (sem sub-lote)
+                }
+
+                // 3. Busca o estoque atual (usando o ID determinado)
+                const estoquePai = await client.request(readItem('estoque_cliente', estoqueId, { fields: ['id', 'quantidade_disponivel'] }));
+                const qtdAtualPai = estoquePai.quantidade_disponivel;
+                const novaQtdPai = qtdAtualPai - totalQuantity;
+
+                if (novaQtdPai < 0) {
+                     // ERRO CRÍTICO: Não há estoque. Não aprova!
+                    notify(`BAIXA NEGADA: Saldo insuficiente. Necessário: ${totalQuantity}. Disponível: ${qtdAtualPai}.`, 'error');
+                    window.loadApprovals(); // Recarrega para restaurar botões
+                    return; 
+                }
+
+                // 4. PREPARA A BAIXA DE ESTOQUE
+                const updatePromises = [];
+                
+                // 4.1. Baixa no Estoque Pai (Estoque_Cliente)
+                updatePromises.push(client.request(updateItem('estoque_cliente', estoqueId, { 
+                    quantidade_disponivel: novaQtdPai 
+                })));
+
+                // 4.2. Baixa no Estoque Filho (Estoque_Lotes) se for um lote específico (loteEstoqueId > 0)
+                if (parseInt(loteEstoqueId) > 0) {
+                    const loteItemArray = await client.request(readItems('estoque_lotes', {
+                         filter: { id: { _eq: loteEstoqueId } }, fields: ['quantidade'] 
+                    }));
+                    const qtdAtualLote = loteItemArray[0]?.quantidade || 0;
+                    const novaQtdLote = qtdAtualLote - totalQuantity;
+
+                    updatePromises.push(client.request(updateItem('estoque_lotes', loteEstoqueId, { 
+                        quantidade: novaQtdLote 
+                    })));
+                }
+
+                // EXECUTA A BAIXA CRÍTICA
+                await Promise.all(updatePromises);
+                
+                // 5. ATUALIZA STATUS (Lote e Solicitações)
+                const updateLotePromise = client.request(updateItem('lotes_envio', loteId, { status: 'pendente' }));
                 const updateSolicitacoesPromise = client.request(updateItems('solicitacoes', { 
                     filter: { lote_id: { _eq: loteId } }, 
                     data: { status: 'pendente' } 
@@ -1614,31 +1867,47 @@
 
                 await Promise.all([updateLotePromise, updateSolicitacoesPromise]);
 
-                // CORREÇÃO: Notificação de sucesso APÓS todas as promessas serem resolvidas
-                notify(`Lote #${loteId} e seus itens APROVADOS com sucesso!`, 'success');
+                notify(`Lote #${loteId} APROVADO e estoque baixado com sucesso!`, 'success');
                 window.loadApprovals(); 
+                
+                // ===================================================================
+                // CORREÇÃO: ATUALIZAÇÃO VISUAL APÓS APROVAÇÃO (INÍCIO)
+                // ===================================================================
+                // 6. Recarrega os dados do estoque na memória e na tela
+                await window.loadDependencies(); // Força o download dos dados de estoque atualizados
+                window.loadInventory();         // Recarrega o grid do Meu Estoque
+                window.loadDashboard();         // Recarrega o dashboard (gráficos e contadores)
+                // ===================================================================
+                // CORREÇÃO: ATUALIZAÇÃO VISUAL APÓS APROVAÇÃO (FIM)
+                // ===================================================================
 
             } catch (e) {
                 console.error("Erro ao aprovar lote:", e);
-                // CORREÇÃO: Melhorando a extração da mensagem de erro do Directus
                 let msg = e.message || "Erro desconhecido";
                 if(e.errors && e.errors.length > 0) msg = e.errors[0].message;
                 
-                // NOVO TRATAMENTO: Se o erro for o erro de validação do Directus, o status provavelmente já foi atualizado.
-                if (msg.includes("Invalid payload") && msg.includes("keys")) {
-                    notify(`Lote #${loteId} aprovado, mas houve um aviso de validação: ${msg}`, 'warning');
+                // ===================================================================
+                // CORREÇÃO: REMOÇÃO DO TRECHO QUE MASCARAVA O ERRO
+                // Removido: if (msg.includes("Invalid payload") && msg.includes("keys")) { ... }
+                // ===================================================================
+
+                // Adicionando um tratamento específico para o erro de não-localização
+                if (msg.includes('Item de estoque não encontrado')) {
+                     notify(`Erro de Aprovação: ${msg}. Verifique se o produto ainda está no seu estoque.`, 'error');
+                } else if (msg.includes('Tentativa de Baixa Imediata Recusada: Saldo insuficiente')) {
+                    // Trata o erro de saldo de forma mais clara
+                     notify(msg, 'error');
                 } else {
-                    notify('Erro ao aprovar lote: ' + msg, 'error');
+                     notify('Erro ao aprovar lote: ' + msg, 'error');
                 }
                 
-                // Restaura o estado dos botões em caso de falha grave
                 window.loadApprovals(); 
             }
         }
         
         // === NOVA FUNÇÃO: REJEITAR LOTE EM MASSA ===
         window.rejectBatch = async function(loteId) {
-            if(!confirm(`Deseja REJEITAR o Lote #${loteId} e todos os seus itens?`)) return;
+            if(!confirm(`Deseja REJEITAR o Lote #${loteId} e todos os seus itens? Esta ação não pode ser desfeita.`)) return;
 
             const buttons = document.querySelectorAll(`button[onclick*="approveBatch('${loteId}')"], button[onclick*="rejectBatch('${loteId}')"]`);
             buttons.forEach(btn => {
@@ -1647,10 +1916,12 @@
             });
             
             try {
-                // 1. Atualiza o registro PAI (lotes_envio)
+                // 1. Não há baixa de estoque a ser desfeita, apenas cancela o status.
+                
+                // 2. Atualiza o registro PAI (lotes_envio)
                 const updateLotePromise = client.request(updateItem('lotes_envio', loteId, { status: 'cancelado' }));
                 
-                // 2. Atualiza os registros FILHOS (solicitacoes) em massa
+                // 3. Atualiza os registros FILHOS (solicitacoes) em massa
                 const updateSolicitacoesPromise = client.request(updateItems('solicitacoes', { 
                     filter: { lote_id: { _eq: loteId } }, 
                     data: { status: 'cancelado' } 
@@ -1658,24 +1929,20 @@
 
                 await Promise.all([updateLotePromise, updateSolicitacoesPromise]);
 
-                // CORREÇÃO: Notificação de sucesso APÓS todas as promessas serem resolvidas
-                notify(`Lote #${loteId} e seus itens REJEITADOS com sucesso!`, 'error');
+                notify(`Lote #${loteId} e seus itens REJEITADOS. Estoque não foi afetado.`, 'error');
                 window.loadApprovals(); 
 
             } catch (e) {
                 console.error("Erro ao rejeitar lote:", e);
-                // CORREÇÃO: Melhorando a extração da mensagem de erro do Directus
                 let msg = e.message || "Erro desconhecido";
                 if(e.errors && e.errors.length > 0) msg = e.errors[0].message;
                 
-                // NOVO TRATAMENTO: Se o erro for o erro de validação do Directus, o status provavelmente já foi atualizado.
                 if (msg.includes("Invalid payload") && msg.includes("keys")) {
                     notify(`Lote #${loteId} rejeitado, mas houve um aviso de validação: ${msg}`, 'warning');
                 } else {
                     notify('Erro ao rejeitar lote: ' + msg, 'error');
                 }
                 
-                // Restaura o estado dos botões em caso de falha grave
                 window.loadApprovals(); 
             }
         }
@@ -1723,6 +1990,15 @@
                     fields: ['*', 'produto_id.*', 'estoque_lotes.*'] 
                 })); 
                 window.inventoryItems = items; 
+                
+                // NOVO (TAREFA 1): Re-cálculo da quantidade_disponivel do pai a partir dos filhos (garantia de coerência)
+                window.inventoryItems.forEach(item => {
+                    if (item.estoque_lotes && item.estoque_lotes.length > 0) {
+                        item.quantidade_disponivel = item.estoque_lotes.reduce((acc, l) => acc + (l.quantidade || 0), 0);
+                    }
+                });
+
+
                 if(!items.length) { grid.innerHTML = '<div class="col-span-full text-center text-gray-500">Seu estoque está vazio.</div>'; return; } 
                 grid.innerHTML = items.map(item => renderCard(item, 'estoque')).join(''); 
             } catch (e) { 
@@ -1910,7 +2186,7 @@
                         }
 
                         // O valor para seleção agora é o "PIPE"
-                        const selectValue = `${estoqueId}|${lote.descricao}`;
+                        const selectValue = `${estoqueId}|${lote.descricao}|${lote.id}`; // ATUALIZADO: Adiciona o ID do lote
 
                         return `
                         <div class="flex items-center gap-4 p-3 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10 mb-2">
@@ -1919,7 +2195,7 @@
                                 <p class="text-sm font-bold text-gray-800 dark:text-white">${lote.descricao}</p>
                                 <p class="text-xs text-gray-500">Disponível: <b class="text-brand-wine">${lote.quantidade}</b></p>
                             </div>
-                            <button onclick="window.selectBatchForShipping('${estoqueId}', '${produto.nome}', '${lote.descricao}', ${lote.quantidade})" class="bg-brand-wine hover:bg-brand-hover text-white text-xs font-bold px-3 py-2 rounded shadow transition">
+                            <button onclick="window.selectBatchForShipping('${estoqueId}', '${produto.nome}', '${lote.descricao}', ${lote.quantidade}, '${lote.id}')" class="bg-brand-wine hover:bg-brand-hover text-white text-xs font-bold px-3 py-2 rounded shadow transition">
                                 ENVIAR ESTE
                             </button>
                         </div>`;
@@ -1944,15 +2220,15 @@
         }
 
         // === CORREÇÃO VISUAL PARA SELEÇÃO DE LOTE ===
-        window.selectBatchForShipping = function(estoqueId, prodNome, loteDesc, maxQtd) {
+        window.selectBatchForShipping = function(estoqueId, prodNome, loteDesc, maxQtd, loteId) { // ATUALIZADO: Recebe loteId
             closeDetails();
             window.router('pedir');
             setTimeout(() => {
                 const select = document.getElementById('pedido-produto');
                 
-                // AJUSTE: O valor agora pode ser composto (ID|DESC), então tentamos selecionar
-                // Primeiro tenta selecionar o composto
-                select.value = `${estoqueId}|${loteDesc}`;
+                // AJUSTE: O valor agora pode ser composto (ID|DESC|LOTE_ID), então tentamos selecionar
+                const fullValue = `${estoqueId}|${loteDesc}|${loteId}`; // ATUALIZADO: Valor completo
+                select.value = fullValue;
                 
                 // Se não conseguir (talvez não carregou), tenta só o ID
                 if(!select.value) select.value = estoqueId;
@@ -1970,9 +2246,9 @@
             const estoqueIdValue = select.value;
             const display = document.getElementById('saldo-disponivel');
             
-            let id, desc;
+            let id, desc, loteId;
             if(estoqueIdValue.includes('|')) {
-                [id, desc] = estoqueIdValue.split('|');
+                [id, desc, loteId] = estoqueIdValue.split('|');
             } else {
                 id = estoqueIdValue;
             }
@@ -1988,10 +2264,13 @@
             let maxQtd = item.quantidade_disponivel;
             
             // Se for lote específico, busca a quantidade do lote
-            if (desc && item.estoque_lotes && item.estoque_lotes.length > 0) {
-                 const lote = item.estoque_lotes.find(l => l.descricao === desc);
+            if (loteId && item.estoque_lotes && item.estoque_lotes.length > 0) {
+                 const lote = item.estoque_lotes.find(l => String(l.id) === loteId);
                  if (lote) {
                     maxQtd = lote.quantidade;
+                 } else {
+                    // Lote não encontrado, volta para o estoque geral e limpa o ID do lote
+                    loteId = null;
                  }
             }
 
@@ -2008,7 +2287,7 @@
             const val = select.value;
             if(val.includes('|')) {
                 const parts = val.split('|');
-                window.selectedBatchDescription = parts[1];
+                window.selectedBatchDescription = parts[1]; // A descrição está na segunda parte
             } else {
                 window.selectedBatchDescription = null;
             }
@@ -2061,7 +2340,8 @@
                         estoqueOptionsHtml += `<optgroup label="${p.produto_id?.nome} (Variações)">`;
                         p.estoque_lotes.forEach(lote => {
                             if(lote.quantidade > 0) {
-                                estoqueOptionsHtml += `<option value="${p.id}|${lote.descricao}" class="bg-white dark:bg-black text-gray-800 dark:text-white">${p.produto_id?.nome} - ${lote.descricao} (Disp: ${lote.quantidade})</option>`;
+                                // ATUALIZADO: Adicionado ID do lote na opção
+                                estoqueOptionsHtml += `<option value="${p.id}|${lote.descricao}|${lote.id}" class="bg-white dark:bg-black text-gray-800 dark:text-white">${p.produto_id?.nome} - ${lote.descricao} (Disp: ${lote.quantidade})</option>`;
                             }
                         });
                         estoqueOptionsHtml += `</optgroup>`;
@@ -2346,15 +2626,12 @@
         }
         
         // ***************************************************************
-        // CORREÇÃO DE LÓGICA 2: window.finalizeShipments
+        // FUNÇÃO REESCRITA: window.finalizeShipments (CORREÇÃO 1 - LÓGICA CONDICIONAL DE BAIXA)
         // ***************************************************************
         window.finalizeShipments = async function() {
-            // Recalcula totais para garantir (segurança contra edições de HTML)
+            // 1. Validações de Saldo (Dupla checagem de segurança)
             const total = window.selectedShipments.reduce((sum, s) => sum + (parseInt(s.quantity) || 0), 0);
-            
-            const modalSaldoTotal = document.getElementById('modal-saldo-total');
-            const saldoText = modalSaldoTotal ? modalSaldoTotal.innerText : '0';
-            const saldoMax = parseInt(saldoText) || 0;
+            const saldoMax = parseInt(document.getElementById('modal-saldo-total')?.innerText || '0') || 0;
             
             if (total > saldoMax) {
                 notify(`Erro: Saldo insuficiente. Total solicitado: ${total}. Disponível: ${saldoMax}.`, 'error');
@@ -2370,76 +2647,148 @@
             btn.innerHTML = '<div class="loader border-white w-5 h-5"></div> <span class="ml-2">Enviando Lote...</span>';
             
             const produtoSelect = document.getElementById('pedido-produto').value;
+            
             let estoqueId = produtoSelect.includes('|') ? produtoSelect.split('|')[0] : produtoSelect;
+            let loteId = produtoSelect.includes('|') ? produtoSelect.split('|')[2] : null; // Pega o ID do lote (se existir)
+            
             const dataPostagem = document.getElementById('pedido-data').value;
             const detalheVariacao = window.selectedBatchDescription ? `[${window.selectedBatchDescription}] ` : '';
 
             try {
-                // 1. BUSCA ID DO PRODUTO REAL
-                const itemEstoque = await client.request(readItems('estoque_cliente', { 
+                // 2. BUSCA ITENS
+                // Item de Estoque Pai
+                const itemEstoqueArray = await client.request(readItems('estoque_cliente', { 
                     filter: { id: { _eq: estoqueId } }, 
-                    fields: ['id', 'produto_id'] 
+                    fields: ['id', 'produto_id.id', 'produto_id.nome', 'quantidade_disponivel']
                 }));
+                const itemEstoque = itemEstoqueArray[0];
+                const produtoId = itemEstoque?.produto_id.id;
+                const produtoNome = itemEstoque.produto_id.nome || 'Produto';
                 
-                const produtoId = itemEstoque[0]?.produto_id;
+                if (!produtoId) throw new Error('Produto de estoque não encontrado ou ID inválido.');
                 
-                if (!produtoId) {
-                     throw new Error('Produto de estoque não encontrado ou ID inválido.');
-                }
-                const produtoNome = produtoId.nome || 'Produto'; // Nome para usar no lote
-                
-                // 2. NOVA LÓGICA DE NEGÓCIO: Define o status com base na necessidade de aprovação da ORG e no perfil do USUÁRIO.
+                // 3. DEFINE STATUS E LÓGICA DE NEGÓCIO (CORREÇÃO 1)
                 const exigeAprovacao = window.currentOrgConfig?.exige_aprovacao === true;
                 const ehGestor = window.currentUser?.eh_gestor === true;
+                
+                // Define o status final (aguardando_aprovacao OU pendente)
                 const finalStatus = (!exigeAprovacao || ehGestor) ? 'pendente' : 'aguardando_aprovacao';
                 
-                // 3. CRIA O REGISTRO PAI NA TABELA lotes_envio
+                const isImmediateStockUpdate = finalStatus === 'pendente'; 
+                
+                let novaQtdEstoque = itemEstoque.quantidade_disponivel;
+                let refLoteTag = '';
+                
+                // Lógica de Baixa Imediata (Se o status for 'pendente')
+                if (isImmediateStockUpdate) {
+                    const updatePromises = [];
+                    novaQtdEstoque = itemEstoque.quantidade_disponivel - total;
+                    
+                    if (novaQtdEstoque < 0) {
+                         throw new Error(`Tentativa de Baixa Imediata Recusada: Saldo insuficiente. Disponível: ${itemEstoque.quantidade_disponivel}.`);
+                    }
+
+                    // 3.1. Baixa no Estoque Pai (Estoque_Cliente)
+                    updatePromises.push(client.request(updateItem('estoque_cliente', estoqueId, { 
+                        quantidade_disponivel: novaQtdEstoque 
+                    })));
+
+                    // 3.2. Baixa no Estoque Filho (Estoque_Lotes) se for um lote específico
+                    if (loteId) {
+                        const loteItemArray = await client.request(readItems('estoque_lotes', {
+                             filter: { id: { _eq: loteId } }, fields: ['quantidade'] 
+                        }));
+                        const qtdAtualLote = loteItemArray[0]?.quantidade || 0;
+                        const novaQtdLote = qtdAtualLote - total;
+
+                        updatePromises.push(client.request(updateItem('estoque_lotes', loteId, { 
+                            quantidade: novaQtdLote 
+                        })));
+                    }
+
+                    // Executa as baixas antes de criar as solicitações
+                    await Promise.all(updatePromises);
+                } else {
+                    // Lógica de Aprovação (Se o status for 'aguardando_aprovacao')
+                    // CRUCIAL: Salvar a referência do estoque para a baixa futura (CORREÇÃO 1)
+                    const loteEstoqueId = loteId || 0; // Se não tem loteId, usamos 0
+                    refLoteTag = `[REF_LOTE:${estoqueId}|${loteEstoqueId}]`; 
+                    console.log(`Lote criado com status 'aguardando_aprovacao'. Tag de referência: ${refLoteTag}`);
+                }
+
+                
+                // 4. CRIA O REGISTRO PAI NA TABELA lotes_envio
                 const nomeLote = `Envio - ${produtoNome} - ${new Date().toLocaleString('pt-BR')}`;
                 const lotePayload = { 
                     nome_lote: nomeLote, 
-                    status: finalStatus, // O status do lote é o mesmo das solicitações filhas
+                    status: finalStatus,
                     quantidade_total: total, 
                     organization_id: window.currentOrgId, 
                     data_criacao: new Date().toISOString() 
                 };
                 
                 const loteCriado = await client.request(createItem('lotes_envio', lotePayload));
-                const novoLoteId = loteCriado.id; // Captura o ID do novo lote
+                const novoLoteId = loteCriado.id;
 
-                // 4. PREPARA AS PROMESSAS DE CRIAÇÃO DAS SOLICITAÇÕES FILHAS
-                const promises = window.selectedShipments.map(shipment => {
+                // 5. PREPARA E EXECUTA AS SOLICITAÇÕES FILHAS
+                const solicitacoesPromises = window.selectedShipments.map(shipment => {
                     return client.request(createItem('solicitacoes', { 
                         tipo: 'SOLICITACAO_ENVIO', 
-                        status: finalStatus, // Status definido pela nova lógica
+                        status: finalStatus,
                         quantidade: parseInt(shipment.quantity),
-                        produto_id: produtoId, // ID correto do produto
-                        endereco_id: shipment.addressId, // ID do endereço
-                        lote_id: novoLoteId, // <<< VINCULAÇÃO OBRIGATÓRIA AO NOVO LOTE PAI
+                        produto_id: produtoId,
+                        endereco_id: shipment.addressId,
+                        lote_id: novoLoteId,
                         organization_id: window.currentOrgId, 
-                        observacoes: `${detalheVariacao}Saída Solicitada em Lote #${novoLoteId}. Data Postagem: ${dataPostagem}. Destinatário: ${shipment.addressAC}`,
-                        endereco_manual: shipment.addressFull // Salva o endereço completo como backup visual
+                        // Inclui a TAG OCULTA aqui para referência futura
+                        observacoes: `${refLoteTag} ${detalheVariacao}Saída Solicitada em Lote #${novoLoteId}. Data Postagem: ${dataPostagem}. Destinatário: ${shipment.addressAC}`,
+                        endereco_manual: shipment.addressFull
                     }));
                 });
                 
-                // 5. EXECUTA AS SOLICITAÇÕES
-                await Promise.all(promises);
+                await Promise.all(solicitacoesPromises);
+
+                // 6. ATUALIZAÇÃO LOCAL (para coerência visual do saldo sem recarregar)
+                if (isImmediateStockUpdate) {
+                    const localStockItem = window.inventoryItems.find(i => i.id === estoqueId);
+                    if (localStockItem) {
+                        localStockItem.quantidade_disponivel = novaQtdEstoque;
+                        
+                        if (loteId && localStockItem.estoque_lotes) {
+                            const lote = localStockItem.estoque_lotes.find(l => String(l.id) === loteId);
+                            if (lote) {
+                                lote.quantidade -= total;
+                            }
+                        }
+                    }
+                }
                 
                 const lotConfigModal = document.getElementById('lot-config-modal');
                 if(lotConfigModal) lotConfigModal.classList.add('hidden');
                 
                 if(finalStatus === 'aguardando_aprovacao') {
-                    notify(`${promises.length} Solicitações enviadas para aprovação do gestor. (Lote #${novoLoteId})`, 'success');
+                    notify(`${solicitacoesPromises.length} Solicitações enviadas para aprovação do gestor. (Lote #${novoLoteId})`, 'success');
                 } else {
-                    notify(`${promises.length} Solicitações de envio realizadas com sucesso! (Lote #${novoLoteId})`, 'success'); 
+                    notify(`${solicitacoesPromises.length} Solicitações de envio realizadas com sucesso! (Lote #${novoLoteId})`, 'success'); 
                 }
                 
                 // Limpa e Redireciona
                 window.selectedShipments = []; 
                 window.router('pedidos'); 
                 
-                // Pequeno delay para garantir que o banco atualize antes de recarregar
+                // O bloco try/catch da função window.approveBatch foi corrigido, 
+                // e como o seu prompt mencionou que a função finalizeShipments já tinha a lógica de atualização no final,
+                // vou mantê-la fora do setTimeout para que as chamadas no Directus sejam concluídas.
+
+                // O código original tinha:
+                // setTimeout(() => { window.loadDependencies(); }, 500);
+                // Vou manter o setTimeout, mas ele deve chamar as funções que realmente recarregam os dados na interface:
                 setTimeout(() => {
-                    window.loadDependencies(); 
+                    // Estas funções recarregam os dados globais e a interface, garantindo que
+                    // o Meu Estoque e o Dashboard reflitam a baixa/aprovação (se for o caso).
+                    window.loadDependencies(); // Recarrega o array inventoryItems
+                    window.loadInventory();
+                    window.loadDashboard();
                 }, 500);
                 
             } catch (e) {
@@ -2641,7 +2990,7 @@
 
                 tbody.innerHTML = lotes.map(lote => {
                     const status = lote.status || 'pendente';
-                    const statusColor = status === 'enviado' ? 'text-green-400 border-green-900/50' : status === 'cancelado' ? 'text-red-400 border-red-900/50' : 'text-yellow-400 border-yellow-900/50';
+                    const statusColor = status === 'enviado' ? 'text-green-400 border-green-900/50' : status === 'cancelado' ? 'text-red-400 border-red-900/50' : status === 'aguardando_aprovacao' ? 'text-purple-400 border-purple-900/50' : 'text-yellow-400 border-yellow-900/50';
                     
                     return `
                     <tr onclick="window.openBatchDetails('${lote.id}', '${lote.nome_lote}')" class="border-b border-white/5 text-sm hover:bg-white/5 cursor-pointer transition-colors group">
@@ -3104,7 +3453,7 @@
 
         
         // ***************************************************************
-        // CORREÇÃO DE LÓGICA 3: window.createBatchFromImport
+        // FUNÇÃO REESCRITA: window.createBatchFromImport (CORREÇÃO 1 - LÓGICA CONDICIONAL DE BAIXA)
         // ***************************************************************
         window.createBatchFromImport = async function() {
             const nomeLote = document.getElementById('import-lote-nome')?.value;
@@ -3143,12 +3492,41 @@
             btn.innerHTML = '<div class="loader border-white w-5 h-5"></div> <span class="ml-2">Processando Lote...</span>';
 
             try {
-                // NOVA LÓGICA DE NEGÓCIO: Define o status com base na necessidade de aprovação da ORG e no perfil do USUÁRIO.
+                // TAREFA 1: Encontra o item de estoque correspondente para a atualização local
+                const estoqueItem = window.inventoryItems.find(i => i.produto_id.id === produtoId);
+                const estoqueId = estoqueItem.id; // ID do item de estoque
+                
+                if (estoqueItem.quantidade_disponivel - totalQuantityToShip < 0) {
+                     throw new Error(`Saldo insuficiente no estoque geral. Total necessário: ${totalQuantityToShip}. Disponível: ${estoqueItem.quantidade_disponivel}.`);
+                }
+                
+                // NOVA LÓGICA DE NEGÓCIO: Define o status e a baixa (CORREÇÃO 1)
                 const exigeAprovacao = window.currentOrgConfig?.exige_aprovacao === true;
                 const ehGestor = window.currentUser?.eh_gestor === true;
+                
                 const finalStatus = (!exigeAprovacao || ehGestor) ? 'pendente' : 'aguardando_aprovacao';
+                const isImmediateStockUpdate = finalStatus === 'pendente';
+                
+                let novaQtd = estoqueItem.quantidade_disponivel;
+                let refLoteTag = '';
+                
+                if (isImmediateStockUpdate) {
+                    // Cenário B: Baixa Imediata
+                    novaQtd = estoqueItem.quantidade_disponivel - totalQuantityToShip;
 
-                // 1. CRIAR O LOTE PAI
+                    // 1. Baixa no Estoque Pai (Estoque_Cliente)
+                    await client.request(updateItem('estoque_cliente', estoqueId, { 
+                        quantidade_disponivel: novaQtd 
+                    }));
+                    
+                    // Sem baixa em estoque_lotes para importação em massa (presume-se estoque geral)
+                } else {
+                    // Cenário A: Aprovação Necessária - Salvar Referência (CORREÇÃO 1)
+                    refLoteTag = `[REF_LOTE:${estoqueId}|0]`; // Lote ID do estoque = 0 (Estoque Geral)
+                    console.log(`Lote criado com status 'aguardando_aprovacao'. Tag de referência: ${refLoteTag}`);
+                }
+
+                // 2. CRIAR O LOTE PAI
                 const lotePayload = {
                     nome_lote: nomeLote,
                     status: finalStatus, // Status definido pela nova lógica
@@ -3160,13 +3538,12 @@
                 const loteCriado = await client.request(createItem('lotes_envio', lotePayload));
                 const novoLoteId = loteCriado.id;
 
-                // 2. PROCESSAR CADA LINHA (Cria Endereço -> Cria Solicitação)
+                // 3. PROCESSAR CADA LINHA (Cria Endereço -> Cria Solicitação)
                 const promises = addressesToShip.map(async (addr) => {
                     
                     const itemQuantity = parseInt(addr.quantidade_individual) || qtdPadrao;
                     
                     // A) Monta o objeto do Endereço para salvar no banco
-                    // VINCULAMOS AO LOTE PAI AQUI
                     const newAddressPayload = {
                         organization_id: window.currentOrgId,
                         apelido_local: addr.apelido_local || addr.fullAddress.substring(0, 20), // Usa o nome ou pedaço do endereço como apelido
@@ -3202,12 +3579,21 @@
                         
                         // Mantemos o texto manual como backup visual rápido para o endereço (o texto completo fica em endereco_manual)
                         endereco_manual: `${addr.logradouro}, ${addr.numero} - ${addr.cidade}/${addr.estado} (AC: ${addr.apelido_local})`,
-                        observacoes: `Item do Lote #${novoLoteId}.`
+                        // Inclui a TAG OCULTA aqui para referência futura
+                        observacoes: `${refLoteTag} Item do Lote #${novoLoteId}.`
                     }));
                 });
 
                 await Promise.all(promises);
 
+                // ATUALIZAÇÃO LOCAL (MANTIDA):
+                if (isImmediateStockUpdate) {
+                    const localStockItem = window.inventoryItems.find(i => i.produto_id.id === produtoId);
+                    if (localStockItem) {
+                        localStockItem.quantidade_disponivel = novaQtd;
+                    }
+                }
+                
                 if(finalStatus === 'aguardando_aprovacao') {
                     notify(`Lote "${nomeLote}" criado e enviado para aprovação do gestor!`, 'success');
                 } else {
@@ -3244,17 +3630,11 @@
             
             if (!container || !actionsDiv || !countSpan || !warningP) return; // Checagem defensiva
 
-            if (window.importedAddresses.length === 0) {
-                container.innerHTML = '<p id="import-placeholder" class="text-center text-gray-500 py-10">Nenhuma planilha carregada.</p>';
-                actionsDiv.classList.add('hidden');
-                return;
-            }
-            
             const addressesToShipCount = window.importedAddresses.filter(addr => !addr.status.includes('🔴 CEP?') && !addr.status.includes('⚠️ NÚMERO?')).length;
 
             countSpan.textContent = addressesToShipCount; // Mostra apenas os que serão enviados
             actionsDiv.classList.remove('hidden');
-            warningP.classList.toggle('hidden', !hasCriticalErrors);
+            warningP.classList.toggle('hidden', hasCriticalErrors);
 
             // Classe CSS para os inputs editáveis na tabela (REQUISITO VISUAL)
             const inputClass = 'bg-transparent border border-transparent hover:border-white/20 focus:border-brand-wine focus:bg-white/5 rounded px-2 py-1 w-full text-white dark:text-gray-300 transition-colors text-xs';
@@ -3426,7 +3806,7 @@
 
                 list.innerHTML = itens.map(item => {
                     const status = item.status || 'pendente';
-                    const statusColor = status === 'enviado' ? 'text-green-400' : status === 'cancelado' ? 'text-red-400' : 'text-yellow-400';
+                    const statusColor = status === 'enviado' ? 'text-green-400' : status === 'cancelado' ? 'text-red-400' : status === 'yellow-400';
                     
                     let displayAddress = 'Endereço sem registro manual';
                     let displayTitle = 'Destinatário não definido';
@@ -3506,7 +3886,7 @@
 
                 container.innerHTML = lotes.map(lote => {
                     const date = new Date(lote.data_criacao).toLocaleDateString('pt-BR');
-                    const statusColor = lote.status === 'enviado' ? 'text-green-400' : lote.status === 'cancelado' ? 'text-red-400' : 'text-yellow-400';
+                    const statusColor = lote.status === 'enviado' ? 'text-green-400' : lote.status === 'cancelado' ? 'text-red-400' : lote.status === 'aguardando_aprovacao' ? 'text-purple-400' : 'text-yellow-400';
                     
                     return `
                         <div class="bg-white/5 p-4 rounded-lg border border-white/10 flex flex-col gap-3">
@@ -3577,12 +3957,12 @@
                 
                 if(batchMatch && batchMatch[1]) {
                     selectedDescription = batchMatch[1];
-                    const fullValue = `${estoqueItem.id}|${selectedDescription}`;
-                    
-                    // Verifica se a opção completa existe no select (se a variação ainda existe)
-                    const optionExists = Array.from(produtoSelect.options).some(opt => opt.value === fullValue);
-                    if(optionExists) {
-                        selectedValue = fullValue;
+                    // Busca o lote específico dentro do estoque item
+                    const targetLote = estoqueItem.estoque_lotes.find(l => l.descricao === selectedDescription);
+
+                    if (targetLote) {
+                        // ATUALIZADO: Usamos o ID do lote para a seleção
+                        selectedValue = `${estoqueItem.id}|${selectedDescription}|${targetLote.id}`;
                     } else {
                         notify(`A variação "${selectedDescription}" não está mais disponível. Selecionando estoque geral.`, 'error');
                     }
