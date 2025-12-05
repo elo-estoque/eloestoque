@@ -274,7 +274,7 @@
                                 <span class="text-[10px] font-bold bg-brand-wine text-white px-2 py-1 rounded uppercase tracking-wider">Seu Plano</span>
                                 <h3 id="dash-plan-name" class="text-2xl font-bold text-white">Carregando...</h3>
                             </div>
-                            <p class="text-gray-400 text-xs">Renovação mensal. <button onclick="window.openPlanModal()" class="text-brand-wine hover:underline font-bold">Ver opções</button></p>
+                            <p class="text-gray-400 text-xs">Renovação mensal. <a href="https://entregas.elobrindes.com.br/planos.html" target="_blank" class="text-brand-wine hover:underline font-bold">Ver opções</a></p>
                         </div>
                         <div class="flex-1 w-full md:max-w-xl space-y-4">
                             <div>
@@ -286,7 +286,7 @@
                                 <div class="w-full bg-white/5 rounded-full h-3 border border-white/10 overflow-hidden"><div id="bar-skus" class="bg-blue-600 h-full rounded-full transition-all duration-1000" style="width: 0%"></div></div>
                             </div>
                         </div>
-                        <div class="flex items-center"><button onclick="window.openPlanModal()" class="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-3 rounded-lg font-bold transition flex items-center gap-2 whitespace-nowrap"><i class="ph-bold ph-rocket-launch"></i> Upgrade</button></div>
+                        <div class="flex items-center"><a href="https://entregas.elobrindes.com.br/planos.html" target="_blank" class="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-3 rounded-lg font-bold transition flex items-center gap-2 whitespace-nowrap"><i class="ph-bold ph-rocket-launch"></i> Upgrade</a></div>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -967,8 +967,11 @@
                 await client.refresh();
                 console.log('Sessão renovada com sucesso.');
             } catch (e) {
+                window.openSettings(); // ATUALIZADO: Abre o modal de configurações (que tem a opção de Sair)
                 console.warn('Falha ao renovar a sessão. Usuário pode ser desconectado em breve.');
-                // Pode adicionar um log ou notificação, mas não derruba a sessão forçadamente
+                notify('Sua sessão expirou. Por favor, faça login novamente.', 'error');
+                // Tenta derrubar a sessão local (mas o Directus deve cuidar do token)
+                window.logout();
             }
         };
 
@@ -1621,8 +1624,8 @@
         
         // NOVO (TAREFA 2): Modal e Upgrade Functions
         window.openPlanModal = function() {
-            document.getElementById('plans-modal').classList.remove('hidden');
-            document.getElementById('plans-modal').classList.add('flex');
+            // Ação Alterada: Redireciona para o link de planos
+            window.open('https://entregas.elobrindes.com.br/planos.html', '_blank');
         }
 
         window.requestUpgrade = function(nomePlano) {
