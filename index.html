@@ -1755,7 +1755,8 @@
         }
         
         // ===================================================================
-        // FUNÇÃO SUBSTITUÍDA: window.approveBatch (CORRIGIDA V7)
+        // FUNÇÃO SUBSTITUÍDA: window.approveBatch (CORRIGIDA V2 - MAIS ROBUSTA)
+        // ** Reforça o fallback para evitar o erro 400 no Directus. **
         // ===================================================================
         window.approveBatch = async function(loteId) {
             if(!confirm(`Deseja APROVAR o Lote #${loteId} e todos os seus itens?`)) return;
@@ -1767,14 +1768,13 @@
             });
             
             try {
-                // 1. Busca todas as solicitações (itens) do lote, incluindo produto_id
+                // 1. Busca todas as solicitações (itens) do lote
                 const solicitacoes = await client.request(readItems('solicitacoes', {
                     filter: { lote_id: { _eq: loteId } },
-                    // CRUCIAL: Trazer o produto_id. ID, Nome e Observações
                     fields: ['id', 'quantidade', 'observacoes', 'produto_id.id', 'produto_id.nome']
                 }));
                 
-                if (solicitacoes.length === 0) throw new Error('Lote sem itens de solicitação.');
+                if (solicitacoes.length === 0) throw new Error('Lote sem itens de solicitação. Ação cancelada.');
                 
                 const totalQuantity = solicitacoes.reduce((sum, s) => sum + s.quantidade, 0);
                 const firstObs = solicitacoes[0].observacoes || '';
@@ -1782,23 +1782,30 @@
                 // Variáveis para a baixa
                 let estoqueId;
                 let loteEstoqueId = 0; // Assume lote geral (ID 0) por padrão
+                let produtoCatalogoId;
                 
-                // 2. Tenta encontrar a tag de referência [CORREÇÃO 2 - PASSO 1]
-                const refMatch = firstObs.match(/\[REF_LOTE:(\d+)\|(\d+)\]/); 
+                // 2. Tenta encontrar a tag de referência
+                const refMatch = firstObs.match(/\[REF_LOTE:([a-zA-Z0-9-]+)\|(\d+)\]/); 
                 
                 if (refMatch) {
                     // CENA 1: TAG ENCONTRADA
-                    estoqueId = refMatch[1];
-                    loteEstoqueId = refMatch[2]; 
-                    console.log('Baixa de Estoque: Usando IDs da tag [REF_LOTE].');
+                    estoqueId = refMatch[1]; // MANTÉM COMO STRING (UUID), removemos o parseInt
+                    loteEstoqueId = parseInt(refMatch[2]); // O segundo ID continua sendo número
+                    
+                    console.log(`Baixa de Estoque: Usando IDs da tag [REF_LOTE]. EstoqueID: ${estoqueId}, LoteEstoqueID: ${loteEstoqueId}.`);
+                    
+                    // (Opcional) Tenta obter o produtoCatalogoId do primeiro item
+                    const produtoRef = solicitacoes[0].produto_id;
+                    produtoCatalogoId = typeof produtoRef === 'object' ? produtoRef.id : produtoRef;
+
 
                 } else {
-                    // CENA 2: TAG AUSENTE (FALLBACK) [CORREÇÃO 2 - PASSO 2]
-                    console.log('Baixa de Estoque: Tag [REF_LOTE] ausente. Usando fallback por Produto ID.');
+                    // CENA 2: TAG AUSENTE (FALLBACK) - BUSCA PELO ID DO PRODUTO (MAIS CRÍTICO)
+                    console.log('Baixa de Estoque: Tag [REF_LOTE] ausente. Usando fallback por Produto ID. (Atenção: Risco de erro se houver múltiplos estoques!)');
                     
-                    // A. Tenta obter o ID do Produto do Catálogo
-                    const produtoCatalogoRef = solicitacoes[0].produto_id;
-                    const produtoCatalogoId = typeof produtoCatalogoRef === 'object' ? produtoCatalogoRef.id : produtoCatalogoRef;
+                    // A. Obtém o ID do Produto do Catálogo
+                    const produtoRef = solicitacoes[0].produto_id;
+                    produtoCatalogoId = typeof produtoRef === 'object' ? produtoRef.id : produtoRef;
                     
                     if (!produtoCatalogoId) throw new Error('Produto ID não encontrado na solicitação para fallback.');
 
@@ -1807,34 +1814,37 @@
                         filter: { 
                             _and: [
                                 { produto_id: { _eq: produtoCatalogoId } },
-                                { organization_id: { _eq: window.currentOrgId } } // CRÍTICO: Segurança
+                                { organization_id: { _eq: window.currentOrgId } } 
                             ]
                         },
                         fields: ['id', 'quantidade_disponivel'],
-                        limit: 1 // Só precisamos do primeiro (estoque principal)
+                        limit: 1 
                     }));
 
                     if (estoqueResult.length === 0) {
-                        throw new Error('Item de estoque não encontrado para o Produto ID: ' + produtoCatalogoId);
+                        throw new Error(`Item de estoque (ID: ${produtoCatalogoId}) não encontrado para a empresa.`);
                     }
                     
                     estoqueId = estoqueResult[0].id; // ID do Estoque_Cliente
-                    loteEstoqueId = 0; // Assumimos que é estoque geral (sem sub-lote)
+                    loteEstoqueId = 0; // Assumimos que é estoque geral
                 }
-
+                
+                if (!estoqueId) {
+                     throw new Error('Não foi possível determinar o ID do item de estoque para a baixa.');
+                }
+                
                 // 3. Busca o estoque atual (usando o ID determinado)
                 const estoquePai = await client.request(readItem('estoque_cliente', estoqueId, { fields: ['id', 'quantidade_disponivel'] }));
                 const qtdAtualPai = estoquePai.quantidade_disponivel;
                 const novaQtdPai = qtdAtualPai - totalQuantity;
 
                 if (novaQtdPai < 0) {
-                     // ERRO CRÍTICO: Não há estoque. Não aprova!
                     notify(`BAIXA NEGADA: Saldo insuficiente. Necessário: ${totalQuantity}. Disponível: ${qtdAtualPai}.`, 'error');
-                    window.loadApprovals(); // Recarrega para restaurar botões
+                    window.loadApprovals(); 
                     return; 
                 }
 
-                // 4. PREPARA A BAIXA DE ESTOQUE
+                // 4. PREPARA E EXECUTA A BAIXA DE ESTOQUE
                 const updatePromises = [];
                 
                 // 4.1. Baixa no Estoque Pai (Estoque_Cliente)
@@ -1843,16 +1853,26 @@
                 })));
 
                 // 4.2. Baixa no Estoque Filho (Estoque_Lotes) se for um lote específico (loteEstoqueId > 0)
-                if (parseInt(loteEstoqueId) > 0) {
+                if (loteEstoqueId > 0) {
                     const loteItemArray = await client.request(readItems('estoque_lotes', {
                          filter: { id: { _eq: loteEstoqueId } }, fields: ['quantidade'] 
                     }));
-                    const qtdAtualLote = loteItemArray[0]?.quantidade || 0;
-                    const novaQtdLote = qtdAtualLote - totalQuantity;
+                    
+                    if (loteItemArray.length === 0) {
+                         console.warn(`Alerta: Lote Estoque ID ${loteEstoqueId} não encontrado. Pulando a baixa no lote específico.`);
+                    } else {
+                        const qtdAtualLote = loteItemArray[0].quantidade || 0;
+                        const novaQtdLote = qtdAtualLote - totalQuantity;
 
-                    updatePromises.push(client.request(updateItem('estoque_lotes', loteEstoqueId, { 
-                        quantidade: novaQtdLote 
-                    })));
+                        if (novaQtdLote < 0) {
+                            // Este caso é improvável se o estoque pai for verificado, mas é um bom failsafe
+                            throw new Error(`Baixa no Lote Estoque ID ${loteEstoqueId} resultaria em saldo negativo. Ação abortada.`);
+                        }
+
+                        updatePromises.push(client.request(updateItem('estoque_lotes', loteEstoqueId, { 
+                            quantidade: novaQtdLote 
+                        })));
+                    }
                 }
 
                 // EXECUTA A BAIXA CRÍTICA
@@ -1860,47 +1880,40 @@
                 
                 // 5. ATUALIZA STATUS (Lote e Solicitações)
                 const updateLotePromise = client.request(updateItem('lotes_envio', loteId, { status: 'pendente' }));
-                const updateSolicitacoesPromise = client.request(updateItems('solicitacoes', { 
-                    filter: { lote_id: { _eq: loteId } }, 
-                    data: { status: 'pendente' } 
-                }));
-
-                await Promise.all([updateLotePromise, updateSolicitacoesPromise]);
+                
+                // CORREÇÃO DE SEGURANÇA: Garante que o Lote ID não seja Null/Undefined para o updateItems
+                if (loteId) {
+                    const updateSolicitacoesPromise = client.request(updateItems('solicitacoes', { 
+                        filter: { lote_id: { _eq: loteId } }, 
+                        data: { status: 'pendente' } 
+                    }));
+                    await Promise.all([updateLotePromise, updateSolicitacoesPromise]);
+                } else {
+                     await updateLotePromise;
+                }
 
                 notify(`Lote #${loteId} APROVADO e estoque baixado com sucesso!`, 'success');
                 window.loadApprovals(); 
                 
-                // ===================================================================
-                // CORREÇÃO: ATUALIZAÇÃO VISUAL APÓS APROVAÇÃO (INÍCIO)
-                // ===================================================================
-                // 6. Recarrega os dados do estoque na memória e na tela
-                await window.loadDependencies(); // Força o download dos dados de estoque atualizados
-                window.loadInventory();         // Recarrega o grid do Meu Estoque
-                window.loadDashboard();         // Recarrega o dashboard (gráficos e contadores)
-                // ===================================================================
-                // CORREÇÃO: ATUALIZAÇÃO VISUAL APÓS APROVAÇÃO (FIM)
-                // ===================================================================
+                // 6. ATUALIZAÇÃO VISUAL (CRÍTICO)
+                await window.loadDependencies(); 
+                window.loadInventory();         
+                window.loadDashboard();         
 
             } catch (e) {
-                console.error("Erro ao aprovar lote:", e);
+                console.error("Erro CRÍTICO ao aprovar lote:", e);
                 let msg = e.message || "Erro desconhecido";
-                if(e.errors && e.errors.length > 0) msg = e.errors[0].message;
                 
-                // ===================================================================
-                // CORREÇÃO: REMOÇÃO DO TRECHO QUE MASCARAVA O ERRO
-                // Removido: if (msg.includes("Invalid payload") && msg.includes("keys")) { ... }
-                // ===================================================================
-
-                // Adicionando um tratamento específico para o erro de não-localização
-                if (msg.includes('Item de estoque não encontrado')) {
-                     notify(`Erro de Aprovação: ${msg}. Verifique se o produto ainda está no seu estoque.`, 'error');
-                } else if (msg.includes('Tentativa de Baixa Imediata Recusada: Saldo insuficiente')) {
-                    // Trata o erro de saldo de forma mais clara
-                     notify(msg, 'error');
-                } else {
-                     notify('Erro ao aprovar lote: ' + msg, 'error');
+                // Tenta extrair a mensagem de erro do Directus
+                if(e.errors && e.errors.length > 0) {
+                    msg = e.errors[0].message;
+                } else if (e.message && e.message.includes("400")) {
+                     msg = "Erro de validação (400). Dados incorretos enviados ao servidor.";
                 }
+
+                notify('Erro ao aprovar lote: ' + msg, 'error');
                 
+                // Tenta restaurar os botões, pois a falha ocorreu antes da atualização de status
                 window.loadApprovals(); 
             }
         }
@@ -2626,7 +2639,8 @@
         }
         
         // ***************************************************************
-        // FUNÇÃO REESCRITA: window.finalizeShipments (CORREÇÃO 1 - LÓGICA CONDICIONAL DE BAIXA)
+        // FUNÇÃO REESCRITA: window.finalizeShipments (CORREÇÃO - LÓGICA CONDICIONAL DE BAIXA)
+        // ** Essencial para a TAG [REF_LOTE] no cenário de aprovação **
         // ***************************************************************
         window.finalizeShipments = async function() {
             // 1. Validações de Saldo (Dupla checagem de segurança)
@@ -2667,7 +2681,7 @@
                 
                 if (!produtoId) throw new Error('Produto de estoque não encontrado ou ID inválido.');
                 
-                // 3. DEFINE STATUS E LÓGICA DE NEGÓCIO (CORREÇÃO 1)
+                // 3. DEFINE STATUS E LÓGICA DE NEGÓCIO
                 const exigeAprovacao = window.currentOrgConfig?.exige_aprovacao === true;
                 const ehGestor = window.currentUser?.eh_gestor === true;
                 
@@ -2710,7 +2724,7 @@
                     await Promise.all(updatePromises);
                 } else {
                     // Lógica de Aprovação (Se o status for 'aguardando_aprovacao')
-                    // CRUCIAL: Salvar a referência do estoque para a baixa futura (CORREÇÃO 1)
+                    // CRUCIAL: Salvar a referência do estoque para a baixa futura
                     const loteEstoqueId = loteId || 0; // Se não tem loteId, usamos 0
                     refLoteTag = `[REF_LOTE:${estoqueId}|${loteEstoqueId}]`; 
                     console.log(`Lote criado com status 'aguardando_aprovacao'. Tag de referência: ${refLoteTag}`);
@@ -2776,17 +2790,9 @@
                 window.selectedShipments = []; 
                 window.router('pedidos'); 
                 
-                // O bloco try/catch da função window.approveBatch foi corrigido, 
-                // e como o seu prompt mencionou que a função finalizeShipments já tinha a lógica de atualização no final,
-                // vou mantê-la fora do setTimeout para que as chamadas no Directus sejam concluídas.
-
-                // O código original tinha:
-                // setTimeout(() => { window.loadDependencies(); }, 500);
-                // Vou manter o setTimeout, mas ele deve chamar as funções que realmente recarregam os dados na interface:
+                // Força recarregamento de dados
                 setTimeout(() => {
-                    // Estas funções recarregam os dados globais e a interface, garantindo que
-                    // o Meu Estoque e o Dashboard reflitam a baixa/aprovação (se for o caso).
-                    window.loadDependencies(); // Recarrega o array inventoryItems
+                    window.loadDependencies(); 
                     window.loadInventory();
                     window.loadDashboard();
                 }, 500);
@@ -3453,7 +3459,8 @@
 
         
         // ***************************************************************
-        // FUNÇÃO REESCRITA: window.createBatchFromImport (CORREÇÃO 1 - LÓGICA CONDICIONAL DE BAIXA)
+        // FUNÇÃO REESCRITA: window.createBatchFromImport (CORREÇÃO - LÓGICA CONDICIONAL DE BAIXA)
+        // ** Essencial para a TAG [REF_LOTE] no cenário de aprovação **
         // ***************************************************************
         window.createBatchFromImport = async function() {
             const nomeLote = document.getElementById('import-lote-nome')?.value;
@@ -3500,7 +3507,7 @@
                      throw new Error(`Saldo insuficiente no estoque geral. Total necessário: ${totalQuantityToShip}. Disponível: ${estoqueItem.quantidade_disponivel}.`);
                 }
                 
-                // NOVA LÓGICA DE NEGÓCIO: Define o status e a baixa (CORREÇÃO 1)
+                // NOVA LÓGICA DE NEGÓCIO: Define o status e a baixa 
                 const exigeAprovacao = window.currentOrgConfig?.exige_aprovacao === true;
                 const ehGestor = window.currentUser?.eh_gestor === true;
                 
@@ -3521,7 +3528,7 @@
                     
                     // Sem baixa em estoque_lotes para importação em massa (presume-se estoque geral)
                 } else {
-                    // Cenário A: Aprovação Necessária - Salvar Referência (CORREÇÃO 1)
+                    // Cenário A: Aprovação Necessária - Salvar Referência
                     refLoteTag = `[REF_LOTE:${estoqueId}|0]`; // Lote ID do estoque = 0 (Estoque Geral)
                     console.log(`Lote criado com status 'aguardando_aprovacao'. Tag de referência: ${refLoteTag}`);
                 }
