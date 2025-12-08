@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elo Admin | Central de Comando</title>
+    <title>Elo Admin | Central de Operações</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -16,11 +18,11 @@
                 extend: {
                     colors: {
                         brand: {
-                            dark: '#0a0a0a',
+                            dark: '#050505',
+                            card: '#121212',
                             wine: '#E31937',
-                            light: '#E5E7EB',   
-                            card: '#171717',
-                            hover: '#C2132F'
+                            hover: '#C2132F',
+                            surface: '#1E1E1E'
                         }
                     },
                     fontFamily: { sans: ['Inter', 'sans-serif'] }
@@ -28,612 +30,877 @@
             }
         }
     </script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #000000; color: #E5E7EB; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #050505; color: #E5E7EB; }
         
         .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #E31937; border-radius: 50%; width: 24px; height: 24px; animation: spin 0.8s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        .glass-panel { background: rgba(20, 20, 20, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-        .glass-input { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.3s ease; }
-        .glass-input:focus { background: rgba(255, 255, 255, 0.08); border-color: #E31937; outline: none; box-shadow: 0 0 0 2px rgba(227, 25, 55, 0.2); }
+        .glass-panel { background: rgba(30, 30, 30, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .glass-input { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.2s; }
+        .glass-input:focus { border-color: #E31937; outline: none; background: rgba(0, 0, 0, 0.5); }
         
-        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #000; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: #E31937; }
-        .modal-enter { animation: modalIn 0.3s ease-out forwards; }
-        @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; } 
+        ::-webkit-scrollbar-track { background: #050505; } 
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; } 
+        ::-webkit-scrollbar-thumb:hover { background: #E31937; }
 
-        /* Estilos */
-        .pcp-tab { @apply px-4 py-2 rounded-lg text-xs font-bold uppercase transition border border-white/10 bg-white/5 text-gray-400 hover:bg-white/10 cursor-pointer; }
-        .pcp-tab.active { @apply bg-brand-wine text-white border-brand-wine; }
-        .org-list-item { @apply w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all text-xs cursor-pointer; }
-        .org-list-item.selected-org { @apply text-white bg-white/10 border-l-4 border-green-500 font-bold; }
+        .nav-item { @apply flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-400 rounded-lg transition-all hover:bg-white/5 hover:text-white cursor-pointer; }
+        .nav-item.active { @apply bg-brand-wine/10 text-brand-wine border border-brand-wine/20; }
+        
+        .status-badge { @apply px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider border; }
+        .status-pendente { @apply bg-yellow-500/10 text-yellow-500 border-yellow-500/20; }
+        .status-aguardando_aprovacao { @apply bg-purple-500/10 text-purple-500 border-purple-500/20; }
+        .status-processando { @apply bg-blue-500/10 text-blue-500 border-blue-500/20; }
+        .status-enviado { @apply bg-green-500/10 text-green-500 border-green-500/20; }
+        .status-cancelado { @apply bg-red-500/10 text-red-500 border-red-500/20; }
+        .status-concluido { @apply bg-gray-500/10 text-gray-400 border-gray-500/20; }
+
+        .table-header { @apply px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider bg-white/5 border-b border-white/5; }
+        .table-cell { @apply px-6 py-4 whitespace-nowrap text-sm text-gray-300 border-b border-white/5; }
+        .table-row:hover { @apply bg-white/5 transition-colors; }
     </style>
 </head>
-<body class="h-screen flex overflow-hidden selection:bg-brand-wine selection:text-white">
+<body class="h-screen flex overflow-hidden">
 
-    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-black">
-        <div class="absolute inset-0 z-0"><img src="fundo1.png" class="w-full h-full object-cover opacity-40" onerror="this.style.display='none'"></div>
-        <div class="glass-panel p-10 rounded-2xl w-full max-w-md mx-4 relative z-10 border-l-4 border-brand-wine animate-[fadeIn_0.5s_ease-out]">
-            <div class="text-center mb-10">
-                <img src="logo.png" class="h-20 mx-auto object-contain mb-4" onerror="this.style.display='none'">
-                <h1 class="text-3xl font-bold text-white tracking-tight">ELO ADMIN</h1>
-                <p class="text-gray-400 text-sm mt-2 uppercase tracking-widest text-[10px]">Central de Controle</p>
+    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#050505]">
+        <div class="glass-panel p-10 rounded-2xl w-full max-w-sm mx-4 border-t-4 border-brand-wine shadow-2xl">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/10">
+                    <!-- Placeholder Logo -->
+                    <i class="ph-fill ph-cube text-brand-wine text-3xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-white tracking-tight">Portal Admin</h1>
+                <p class="text-gray-500 text-xs mt-1">Gestão Logística & Comercial</p>
             </div>
-            <form id="form-login" class="space-y-5">
-                <div class="space-y-1"><label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">E-mail</label><input type="email" id="email" required class="w-full glass-input rounded-lg px-4 py-3"></div>
-                <div class="space-y-1"><label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">Senha</label><input type="password" id="password" required class="w-full glass-input rounded-lg px-4 py-3"></div>
-                <button type="submit" class="w-full bg-brand-wine hover:bg-brand-hover text-white font-semibold py-4 rounded-lg transition-all duration-300 shadow-lg mt-4 flex items-center justify-center group">
-                    <span id="btn-login-text" class="tracking-wide">ACESSAR SISTEMA</span>
-                    <div id="btn-login-loader" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin hidden ml-2"></div>
+            <form id="form-login" class="space-y-4">
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-gray-500 ml-1">E-mail Corporativo</label>
+                    <input type="email" id="email" required class="w-full glass-input rounded-lg px-4 py-3 mt-1">
+                </div>
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-gray-500 ml-1">Senha</label>
+                    <input type="password" id="password" required class="w-full glass-input rounded-lg px-4 py-3 mt-1">
+                </div>
+                <button type="submit" class="w-full bg-brand-wine hover:bg-brand-hover text-white font-bold py-3.5 rounded-lg transition-all shadow-lg hover:shadow-brand-wine/20 mt-2">
+                    ACESSAR SISTEMA
                 </button>
             </form>
         </div>
     </div>
 
-    <div id="admin-screen" class="hidden w-full h-full flex relative bg-[url('fundo1.png')] bg-cover bg-fixed">
-        <div class="absolute inset-0 bg-black/90 z-0"></div>
+    <div id="app-screen" class="hidden w-full h-full flex">
         
-        <aside class="w-72 glass-panel border-r-0 border-r-white/5 flex flex-col z-20">
-            <div class="h-24 py-6 flex flex-col items-center justify-center px-8 border-b border-white/5"><img src="logo.png" class="h-12 w-auto max-w-full object-contain drop-shadow-lg transition-transform hover:scale-105"></div>
-            
-            <div class="p-4 flex-1 overflow-y-auto">
-                <div id="representative-orgs" class="space-y-2 hidden">
-                    <p class="px-4 text-[10px] uppercase text-gray-500 font-bold tracking-widest mb-2 mt-2 flex items-center gap-1"><i class="ph ph-briefcase text-sm"></i> Empresas Atribuídas</p>
-                    <div id="org-list-container" class="space-y-1"></div>
-                    <div class="py-2"></div>
-                </div>
-
-                <nav class="space-y-2" id="sidebar-menu">
-                    <p class="px-4 text-[10px] uppercase text-gray-500 font-bold tracking-widest mb-2">Setores</p>
-                    <button id="menu-orcamentos" onclick="switchSector('orcamentos')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-currency-dollar text-xl group-hover:text-brand-wine"></i><span class="font-medium">Orçamentos</span></button>
-                    <button id="menu-financeiro" onclick="switchSector('financeiro')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-receipt text-xl group-hover:text-green-400"></i><span class="font-medium">Financeiro</span></button>
-                    <button id="menu-mkt" onclick="switchSector('mkt')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-paint-brush text-xl group-hover:text-purple-400"></i><span class="font-medium">Marketing</span></button>
-                    <button id="menu-logistica" onclick="switchSector('logistica')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-truck text-xl group-hover:text-blue-400"></i><span class="font-medium">Logística</span></button>
-                    <button id="menu-pcp" onclick="switchSector('pcp')" class="w-full flex items-center gap-3 px-4 py-4 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent rounded-xl transition-all group"><i class="ph ph-sliders text-xl group-hover:text-orange-400"></i><span class="font-medium">PCP / Admin</span></button>
-                </nav>
+        <aside class="w-64 bg-brand-dark border-r border-white/5 flex flex-col z-20">
+            <div class="h-20 flex items-center px-6 border-b border-white/5 gap-3">
+                <div class="w-8 h-8 rounded bg-brand-wine flex items-center justify-center text-white"><i class="ph-bold ph-cube"></i></div>
+                <span class="font-bold text-white tracking-tight">ELO ADMIN</span>
             </div>
             
+            <div class="p-4 flex-1 overflow-y-auto space-y-6">
+                <div>
+                    <p class="px-4 text-[10px] uppercase text-gray-600 font-bold tracking-widest mb-2">Operação</p>
+                    <nav class="space-y-1">
+                        <button onclick="router('logistica')" id="nav-logistica" class="nav-item">
+                            <i class="ph ph-truck text-lg text-blue-400"></i><span>Expedição / Lotes</span>
+                        </button>
+                        <button onclick="router('orcamentos')" id="nav-orcamentos" class="nav-item">
+                            <i class="ph ph-currency-dollar text-lg text-green-400"></i><span>Comercial / Reposição</span>
+                        </button>
+                    </nav>
+                </div>
+
+                <div>
+                    <p class="px-4 text-[10px] uppercase text-gray-600 font-bold tracking-widest mb-2">Gestão</p>
+                    <nav class="space-y-1">
+                        <button onclick="router('clientes')" id="nav-clientes" class="nav-item">
+                            <i class="ph ph-buildings text-lg text-purple-400"></i><span>Clientes e Planos</span>
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
             <div class="p-4 border-t border-white/5">
-                <div class="flex items-center gap-3 px-2 mb-3"><div class="w-8 h-8 rounded-full bg-brand-wine flex items-center justify-center text-white font-bold shadow-lg"><i class="ph-fill ph-user"></i></div><div class="overflow-hidden"><p class="text-xs font-bold text-white truncate" id="user-name-display">Usuario</p><p class="text-[10px] text-gray-400 truncate uppercase font-bold" id="user-role-display">Cargo</p></div></div>
-                <button onclick="logout()" class="w-full flex items-center gap-2 text-gray-500 hover:text-red-400 text-sm font-medium px-2 cursor-pointer transition"><i class="ph ph-sign-out text-lg"></i> Encerrar Sessão</button>
+                <div class="flex items-center gap-3 mb-4 px-2">
+                    <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-400"><i class="ph-fill ph-user"></i></div>
+                    <div class="overflow-hidden">
+                        <p class="text-xs font-bold text-white truncate" id="user-name">Usuário</p>
+                        <p class="text-[10px] text-gray-500 truncate" id="user-role">Cargo</p>
+                    </div>
+                </div>
+                <button onclick="logout()" class="w-full flex items-center justify-center gap-2 text-red-400 hover:text-red-300 hover:bg-red-900/10 py-2 rounded-lg text-xs font-bold transition">
+                    <i class="ph ph-sign-out"></i> SAIR
+                </button>
             </div>
         </aside>
 
-        <main class="flex-1 flex flex-col relative overflow-hidden z-10">
-            <header class="h-24 flex items-center justify-between px-10">
+        <main class="flex-1 flex flex-col relative bg-[#090909] overflow-hidden">
+            <header class="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-brand-dark/50 backdrop-blur-md z-10">
                 <div>
-                    <h2 class="text-3xl font-bold text-white tracking-tight" id="page-title">Dashboard</h2>
-                    <p class="text-gray-400 text-sm mt-1" id="page-subtitle">Selecione um setor para começar.</p>
-                    <p class="text-xs text-brand-wine mt-1" id="current-org-display"></p>
+                    <h2 id="page-title" class="text-xl font-bold text-white">Dashboard</h2>
+                    <p id="page-subtitle" class="text-xs text-gray-500">Visão Geral</p>
                 </div>
-                
-                <div class="flex items-center gap-4">
-                    <div class="relative"><input type="text" placeholder="Buscar ID (#123)..." onkeyup="window.searchTasks(this.value)" class="glass-input rounded-lg pl-10 pr-4 py-2 text-sm w-48 focus:w-64 transition-all"><i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-gray-400"></i></div>
-                    <button onclick="loadTasks()" class="p-3 glass-panel rounded-xl hover:bg-white/10 text-white transition border border-white/10 group"><i class="ph ph-arrows-clockwise text-xl group-hover:rotate-180 transition-transform duration-500"></i></button>
+                <div class="flex items-center gap-3">
+                    <button onclick="window.refreshView()" class="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-white transition"><i class="ph-bold ph-arrows-clockwise"></i></button>
                 </div>
             </header>
-            
-            <div id="common-tabs" class="px-10 pb-4 flex gap-6 border-b border-white/5">
-                <button id="tab-pending" onclick="switchTab('pending')" class="tab-active text-sm pb-2 transition cursor-pointer">Em Andamento</button>
-                <button id="tab-completed" onclick="switchTab('completed')" class="tab-inactive text-sm pb-2 transition cursor-pointer">Histórico</button>
-            </div>
 
-            <div id="pcp-controls" class="px-10 py-6 hidden flex flex-col gap-4 border-b border-white/5 bg-black/20">
-                <div class="flex items-center justify-between">
-                    <h4 class="text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2"><i class="ph-fill ph-database text-brand-wine"></i> Gestão de Dados</h4>
-                    <button onclick="window.openRegistryModal(window.currentPcpCollection, null)" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 shadow-lg transition"><i class="ph-bold ph-plus"></i> Adicionar Novo</button>
-                </div>
-                <div class="flex gap-2 overflow-x-auto pb-2">
-                    <button onclick="switchPcpCollection('solicitacoes')" class="pcp-tab active" id="btn-pcp-solicitacoes">Solicitações</button>
-                    <button onclick="switchPcpCollection('organizacoes')" class="pcp-tab" id="btn-pcp-organizacoes">Organizações</button>
-                    <button onclick="switchPcpCollection('produtos_catalogo')" class="pcp-tab" id="btn-pcp-produtos">Produtos</button>
-                    <button onclick="switchPcpCollection('estoque_cliente')" class="pcp-tab" id="btn-pcp-estoque">Estoque</button>
-                    <button onclick="switchPcpCollection('estoque_lotes')" class="pcp-tab" id="btn-pcp-lotes">Lotes</button>
-                    <button onclick="switchPcpCollection('directus_users')" class="pcp-tab" id="btn-pcp-users">Usuários</button>
-                    <button onclick="switchPcpCollection('enderecos_entrega')" class="pcp-tab" id="btn-pcp-ends">Endereços</button>
-                </div>
-            </div>
+            <div id="content-area" class="flex-1 overflow-y-auto p-8 relative">
+                
+                <div id="view-logistica" class="view-section hidden">
+                    <div class="flex gap-4 mb-6">
+                        <div class="flex-1 glass-panel p-4 rounded-xl border-l-4 border-yellow-500/50">
+                            <p class="text-xs text-gray-400 uppercase font-bold">Lotes Pendentes</p>
+                            <p class="text-2xl font-bold text-white" id="stat-log-pendente">-</p>
+                        </div>
+                        <div class="flex-1 glass-panel p-4 rounded-xl border-l-4 border-green-500/50">
+                            <p class="text-xs text-gray-400 uppercase font-bold">Lotes Enviados (Hoje)</p>
+                            <p class="text-2xl font-bold text-white" id="stat-log-enviado">-</p>
+                        </div>
+                    </div>
 
-            <div class="flex-1 overflow-y-auto p-10">
-                <div id="task-list" class="grid grid-cols-1 gap-4 max-w-5xl mx-auto pb-20">
-                    <div class="glass-panel p-10 rounded-2xl text-center text-gray-500 flex flex-col items-center justify-center h-64 border border-dashed border-white/10"><i class="ph ph-stack text-4xl mb-4 opacity-30"></i><p>Aguardando...</p></div>
+                    <div class="glass-panel rounded-xl overflow-hidden border border-white/5">
+                        <div class="px-6 py-4 border-b border-white/5 flex justify-between items-center">
+                            <h3 class="font-bold text-white">Fila de Expedição (Por Lote)</h3>
+                            <input type="text" placeholder="Filtrar..." onkeyup="filterTable('logistica-table', this.value)" class="glass-input px-3 py-1.5 rounded text-xs w-48">
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full" id="logistica-table">
+                                <thead>
+                                    <tr>
+                                        <th class="table-header">ID Lote</th>
+                                        <th class="table-header">Cliente</th>
+                                        <th class="table-header">Data Criação</th>
+                                        <th class="table-header text-center">Itens</th>
+                                        <th class="table-header">Status</th>
+                                        <th class="table-header text-right">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logistica-tbody" class="divide-y divide-white/5"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
+
+                <div id="view-orcamentos" class="view-section hidden">
+                    <div class="glass-panel rounded-xl overflow-hidden border border-white/5">
+                        <div class="px-6 py-4 border-b border-white/5 flex justify-between items-center">
+                            <h3 class="font-bold text-white">Solicitações de Compra / Reposição</h3>
+                            <input type="text" placeholder="Buscar..." onkeyup="filterTable('orcamentos-table', this.value)" class="glass-input px-3 py-1.5 rounded text-xs w-48">
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full" id="orcamentos-table">
+                                <thead>
+                                    <tr>
+                                        <th class="table-header">ID</th>
+                                        <th class="table-header">Cliente</th>
+                                        <th class="table-header">Produto</th>
+                                        <th class="table-header">Qtd</th>
+                                        <th class="table-header">Valor Total</th>
+                                        <th class="table-header">Status</th>
+                                        <th class="table-header text-right">Gerenciar</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="orcamentos-tbody" class="divide-y divide-white/5"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-clientes" class="view-section hidden">
+                    <div id="clientes-grid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+                </div>
+                
+                 <div id="view-cliente-detalhe" class="view-section hidden">
+                    <button onclick="router('clientes')" class="mb-4 flex items-center gap-2 text-gray-400 hover:text-white text-sm font-bold transition"><i class="ph-bold ph-arrow-left"></i> Voltar para Lista</button>
+                    <div class="glass-panel p-6 rounded-xl mb-6 border-t-4 border-brand-wine">
+                        <h3 class="text-2xl font-bold text-white mb-1" id="detalhe-cliente-nome">Razão Social</h3>
+                        <p class="text-sm text-gray-500 mb-6" id="detalhe-cliente-cnpj">CNPJ</p>
+                        
+                        <div class="flex border-b border-white/10 mb-6">
+                            <button onclick="switchClientTab('config')" class="px-4 py-2 text-sm font-bold text-white border-b-2 border-brand-wine client-tab-btn" data-tab="config">Configuração & Plano</button>
+                            <button onclick="switchClientTab('estoque')" class="px-4 py-2 text-sm font-bold text-gray-500 hover:text-white transition client-tab-btn" data-tab="estoque">Estoque</button>
+                            <button onclick="switchClientTab('users')" class="px-4 py-2 text-sm font-bold text-gray-500 hover:text-white transition client-tab-btn" data-tab="users">Usuários</button>
+                        </div>
+                        
+                        <div id="client-tab-config" class="client-tab-content"></div>
+                        <div id="client-tab-estoque" class="client-tab-content hidden">
+                            <div id="client-estoque-list" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+                        </div>
+                         <div id="client-tab-users" class="client-tab-content hidden">
+                            <div id="client-users-list" class="space-y-2"></div>
+                        </div>
+                    </div>
+                 </div>
+
             </div>
         </main>
     </div>
 
-    <div id="action-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/90 backdrop-blur-sm">
-        <div class="glass-panel p-8 rounded-2xl w-full max-w-lg mx-4 relative modal-enter border border-white/10 shadow-2xl">
-            <button onclick="closeModal('action-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white transition"><i class="ph ph-x text-xl"></i></button>
-            <div class="mb-8">
-                <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-brand-wine shadow-[0_0_10px_#E31937]"></span><span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest" id="modal-type">AÇÃO</span></div>
-                <h3 class="text-2xl font-bold text-white" id="modal-title">Processar</h3>
+    <!-- Modais -->
+    <div id="modal-lote" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/90 backdrop-blur-sm">
+        <div class="glass-panel p-0 rounded-xl w-full max-w-4xl mx-4 flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-white/10 flex justify-between items-center">
+                <div>
+                    <h3 class="text-xl font-bold text-white">Processar Lote #<span id="modal-lote-id"></span></h3>
+                    <p class="text-xs text-gray-500" id="modal-lote-info">Conferência de itens e despacho</p>
+                </div>
+                <button onclick="closeModal('modal-lote')" class="text-gray-400 hover:text-white"><i class="ph-bold ph-x text-xl"></i></button>
             </div>
-            <div id="modal-form-content" class="space-y-5 mb-8"></div>
-            <button id="btn-save-action" class="w-full bg-brand-wine hover:bg-brand-hover text-white font-bold py-4 rounded-xl shadow-lg transition transform hover:scale-[1.01]">Confirmar</button>
+            
+            <div class="p-6 overflow-y-auto flex-1 bg-[#0c0c0c]">
+                <div class="flex gap-4 mb-6">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Rastreio em Massa (Opcional)</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="bulk-rastreio" placeholder="Cole o código para aplicar em todos" class="flex-1 glass-input px-3 py-2 rounded text-sm">
+                            <button onclick="applyBulkTracking()" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded text-xs font-bold text-white">APLICAR</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-white/5 text-gray-400 text-xs uppercase">
+                        <tr>
+                            <th class="p-3">Destinatário / Endereço</th>
+                            <th class="p-3">Produto</th>
+                            <th class="p-3 w-40">Rastreio Individual</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modal-lote-items" class="divide-y divide-white/5 text-gray-300"></tbody>
+                </table>
+            </div>
+
+            <div class="p-6 border-t border-white/10 bg-brand-surface flex justify-end gap-3">
+                <button onclick="closeModal('modal-lote')" class="px-4 py-3 rounded-lg text-gray-400 hover:text-white font-bold text-sm">Cancelar</button>
+                <button onclick="dispatchBatch()" class="px-6 py-3 bg-green-600 hover:bg-green-500 text-white rounded-lg font-bold text-sm shadow-lg flex items-center gap-2">
+                    <i class="ph-bold ph-paper-plane-tilt"></i> MARCAR COMO ENVIADO
+                </button>
+            </div>
         </div>
     </div>
 
-    <div id="registry-modal" class="fixed inset-0 z-[200] hidden items-center justify-center bg-black/95 backdrop-blur-sm">
-        <div class="glass-panel p-8 rounded-2xl w-full max-w-md mx-4 relative modal-enter border border-white/10 max-h-[90vh] overflow-y-auto">
-            <button onclick="closeModal('registry-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="ph ph-x text-xl"></i></button>
-            <h3 class="text-xl font-bold text-white mb-6" id="registry-title">Gerenciar Registro</h3>
-            <div id="registry-form-content" class="space-y-4 mb-6"></div>
-            <div class="flex gap-3">
-                <button id="btn-delete-registry" class="flex-1 bg-red-900/50 hover:bg-red-900 text-red-200 font-bold py-3 rounded-xl transition border border-red-900 hidden">Excluir</button>
-                <button id="btn-save-registry" class="flex-[2] bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl shadow-lg transition">Salvar</button>
+    <div id="modal-comercial" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/90 backdrop-blur-sm">
+        <div class="glass-panel p-8 rounded-xl w-full max-w-lg mx-4">
+            <h3 class="text-xl font-bold text-white mb-6">Gerenciar Solicitação #<span id="modal-comercial-id"></span></h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Valor Total (R$)</label>
+                    <input type="number" id="input-valor" class="w-full glass-input px-4 py-3 rounded-lg text-lg font-bold text-green-400">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
+                    <select id="input-status" class="w-full glass-input px-4 py-3 rounded-lg bg-[#1a1a1a]">
+                        <option value="pendente">Pendente</option>
+                        <option value="cotado">Cotado (Aguardando Cliente)</option>
+                        <option value="aprovado">Aprovado (Em Produção)</option>
+                        <option value="concluido">Concluído (Entregue)</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+                
+                <div id="stock-injection-alert" class="hidden p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                    <p class="text-sm text-yellow-500 font-bold flex items-center gap-2"><i class="ph-fill ph-warning"></i> Atenção</p>
+                    <p class="text-xs text-gray-300 mt-1">Ao marcar como <strong>Concluído</strong>, o sistema irá adicionar a quantidade automaticamente ao estoque do cliente.</p>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end gap-3">
+                <button onclick="closeModal('modal-comercial')" class="px-4 py-2 text-gray-400 font-bold">Cancelar</button>
+                <button onclick="saveCommercial()" class="px-6 py-3 bg-brand-wine hover:bg-brand-hover text-white rounded-lg font-bold">Salvar Alterações</button>
             </div>
         </div>
     </div>
+    
+    <div id="modal-estoque" class="fixed inset-0 z-[110] hidden items-center justify-center bg-black/90 backdrop-blur-sm">
+        <div class="glass-panel p-8 rounded-xl w-full max-w-md mx-4 relative">
+             <button onclick="closeModal('modal-estoque')" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="ph-bold ph-x text-lg"></i></button>
+             <h3 class="text-lg font-bold text-white mb-4">Ajuste Manual de Estoque</h3>
+             <p class="text-xs text-gray-500 mb-4" id="modal-estoque-produto">Produto...</p>
+             
+             <div class="space-y-3" id="modal-estoque-list"></div>
+             
+             <div class="mt-6 pt-4 border-t border-white/10">
+                 <button onclick="closeModal('modal-estoque'); window.openClientDetails(window.currentOrgId, 'estoque')" class="w-full bg-white/10 hover:bg-white/20 text-white py-2 rounded font-bold">Fechar</button>
+             </div>
+        </div>
+    </div>
 
+    <!-- SDK e Lógica da Aplicação -->
     <script type="module">
-        import { createDirectus, authentication, rest, readItems, updateItem, createItem, deleteItem, readMe, readRoles, readUsers, createUser, updateUser, deleteUser, uploadFiles } from 'https://esm.sh/@directus/sdk@13.0.0';
+        import { createDirectus, authentication, rest, readItems, updateItem, createItem, readMe, updateMe, uploadFiles, updateItems, readUsers } from 'https://esm.sh/@directus/sdk@13.0.0';
 
-        const API_URL = 'https://admin-entregas.elobrindes.com.br/';
+        const API_URL = 'https://admin-entregas.elobrindes.com.br';
         const client = createDirectus(API_URL).with(authentication()).with(rest());
 
-        let currentUserId = null;
-        let currentUserRole = '';
-        let currentSector = ''; 
-        let currentTaskId = null;
-        let currentTab = 'pending';
-        let allTasksCache = [];
-        let searchTerm = '';
-        
-        window.isRepresentative = false;
-        window.organizations = []; 
-        window.currentOrgId = null; 
-        window.currentOrgName = 'Todos os Clientes'; 
-        window.currentPcpCollection = 'solicitacoes'; 
-        
-        window.allOrgsCache = [];
-        window.allProductsCache = [];
-        window.allRolesCache = [];
-        window.allUsersCache = [];
+        window.currentOrgId = null;
+        window.activeBatchId = null;
+        window.activeRequestId = null;
+        window.planosCache = [];
+        window.currentBatchItems = [];
 
-        // === 1. LOGIN ===
+        // === AUTH & INIT ===
         document.getElementById('form-login').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btnText = document.getElementById('btn-login-text');
-            const loader = document.getElementById('btn-login-loader');
-            btnText.classList.add('hidden'); loader.classList.remove('hidden');
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<div class="loader w-5 h-5 border-white mx-auto"></div>';
+            btn.disabled = true;
 
             try {
                 await client.login(document.getElementById('email').value, document.getElementById('password').value);
-                const me = await client.request(readMe({ fields: ['role', 'first_name', 'last_name', 'id'] }));
-                const roleData = await client.request(readRoles({ filter: { id: { _eq: me.role } } }));
-                
-                currentUserId = me.id;
-                currentUserRole = roleData[0]?.name || 'Visitante'; 
-                const userName = `${me.first_name} ${me.last_name || ''}`;
-
-                if (!currentUserRole.includes('Elo -') && currentUserRole !== 'Administrator') throw new Error('Acesso restrito.');
-
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('admin-screen').classList.remove('hidden');
-                document.getElementById('admin-screen').classList.add('flex');
-                document.getElementById('user-name-display').innerText = userName;
-                document.getElementById('user-role-display').innerText = currentUserRole.replace('Elo - ', '');
-
-                setupMenuAccess(currentUserRole);
-
+                await initApp();
             } catch (err) {
-                notify(err.message, 'error');
-                btnText.classList.remove('hidden'); loader.classList.add('hidden');
+                console.error(err);
+                notify('Credenciais inválidas ou erro de conexão.', 'error');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         });
 
-        // CACHE DE DADOS
-        async function cacheNecessaryData() {
+        async function initApp() {
             try {
-                window.allOrgsCache = await client.request(readItems('organizacoes', { fields: ['id', 'razao_social'], limit: -1 })).catch(() => []);
-                window.allProductsCache = await client.request(readItems('produtos_catalogo', { fields: ['id', 'nome', 'sku'], limit: -1 })).catch(() => []);
-                window.allRolesCache = await client.request(readRoles({ fields: ['id', 'name'], limit: -1 })).catch(() => []);
-                window.allUsersCache = await client.request(readUsers({ fields: ['id', 'first_name', 'last_name'], limit: -1 })).catch(() => []);
-            } catch (e) {
-                console.warn("Aviso: Dados de cache incompletos (Verifique permissões).", e);
-            }
-        }
-
-        async function setupMenuAccess(role) {
-            const menus = ['orcamentos', 'financeiro', 'mkt', 'logistica', 'pcp'];
-            const accessMap = {
-                'Elo - Orçamentos': ['orcamentos'], 'Elo - Financeiro': ['financeiro'], 'Elo - Marketing': ['mkt'], 
-                'Elo - Logística': ['logistica'], 'Elo - PCP': ['orcamentos', 'financeiro', 'mkt', 'logistica', 'pcp'], 
-                'Administrator': ['orcamentos', 'financeiro', 'mkt', 'logistica', 'pcp'],
-                'Elo - Representante': ['orcamentos', 'financeiro', 'mkt', 'logistica'] 
-            };
-            
-            menus.forEach(m => document.getElementById(`menu-${m}`).classList.add('hidden')); 
-            
-            const allowed = accessMap[role] || [];
-            allowed.forEach(m => document.getElementById(`menu-${m}`).classList.remove('hidden'));
-
-            if (role === 'Elo - Representante') {
-                window.isRepresentative = true;
-                await loadOrganizationsAndSwitch(); 
-            } else {
-                if(allowed.length > 0) {
-                    if(role === 'Elo - PCP' || role === 'Administrator') {
-                        await cacheNecessaryData();
-                        switchSector('pcp');
-                    } else {
-                        switchSector(allowed[0]);
-                    }
-                }
-            }
-        }
-        
-        window.loadOrganizationsAndSwitch = async function() {
-            if (!window.isRepresentative || !currentUserId) return;
-            try {
-                const orgs = await client.request(readItems('organizacoes', { 
-                    filter: { representante_id: { _eq: currentUserId } }, fields: ['id', 'razao_social']
-                }));
-                window.organizations = orgs;
-                const container = document.getElementById('org-list-container');
-                const menuBlock = document.getElementById('representative-orgs');
-                if (orgs.length > 0) {
-                    menuBlock.classList.remove('hidden');
-                    let html = `<button id="org-all" onclick="window.setOrganization(null, 'Todos os Clientes')" class="org-list-item selected-org"><i class="ph ph-users text-green-500"></i> Todos os Clientes</button>`;
-                    html += orgs.map(org => `<button id="org-${org.id}" onclick="window.setOrganization('${org.id}', '${org.razao_social}')" class="org-list-item"><i class="ph ph-storefront"></i> ${org.razao_social}</button>`).join('');
-                    container.innerHTML = html;
-                    switchSector('orcamentos');
-                } else {
-                    menuBlock.classList.add('hidden');
-                    switchSector('orcamentos');
-                }
-            } catch (e) { console.error(e); }
-        }
-        
-        window.setOrganization = function(orgId, orgName) {
-            window.currentOrgId = orgId;
-            window.currentOrgName = orgName;
-            document.getElementById('current-org-display').innerText = orgId ? `Cliente Selecionado: ${orgName}` : '';
-            document.querySelectorAll('.org-list-item').forEach(btn => btn.classList.remove('selected-org'));
-            if (orgId) document.getElementById(`org-${orgId}`).classList.add('selected-org');
-            else document.getElementById('org-all').classList.add('selected-org');
-            loadTasks();
-        }
-
-        window.switchSector = function(sector) {
-            currentSector = sector;
-            document.querySelectorAll('nav button').forEach(b => {
-                b.classList.remove('bg-white/10', 'text-white', 'border-l-4', 'border-brand-wine');
-                b.classList.add('text-gray-400', 'border-transparent');
-            });
-            const activeBtn = document.getElementById(`menu-${sector}`);
-            if(activeBtn) {
-                activeBtn.classList.remove('text-gray-400', 'border-transparent');
-                activeBtn.classList.add('bg-white/10', 'text-white', 'border-l-4', 'border-brand-wine');
-            }
-            const titles = { 'orcamentos': 'Orçamentos', 'financeiro': 'Financeiro', 'mkt': 'Marketing', 'logistica': 'Logística', 'pcp': 'Gestão PCP' };
-            document.getElementById('page-title').innerText = titles[sector];
-
-            if (sector === 'pcp') {
-                document.getElementById('pcp-controls').classList.remove('hidden');
-                document.getElementById('common-tabs').classList.add('hidden');
-                switchPcpCollection('solicitacoes'); 
-            } else {
-                document.getElementById('pcp-controls').classList.add('hidden');
-                document.getElementById('common-tabs').classList.remove('hidden');
-                window.currentPcpCollection = 'solicitacoes'; 
-                loadTasks();
-            }
-        }
-
-        window.switchPcpCollection = function(collection) {
-            window.currentPcpCollection = collection;
-            document.querySelectorAll('.pcp-tab').forEach(b => b.classList.remove('active'));
-            const btnId = { 'solicitacoes': 'btn-pcp-solicitacoes', 'organizacoes': 'btn-pcp-organizacoes', 'produtos_catalogo': 'btn-pcp-produtos', 'estoque_cliente': 'btn-pcp-estoque', 'estoque_lotes': 'btn-pcp-lotes', 'directus_users': 'btn-pcp-users', 'enderecos_entrega': 'btn-pcp-ends' }[collection];
-            if(document.getElementById(btnId)) document.getElementById(btnId).classList.add('active');
-            loadTasks();
-        }
-
-        window.switchTab = function(tab) {
-            currentTab = tab;
-            document.getElementById('tab-pending').className = tab==='pending'?'tab-active text-sm pb-2 transition cursor-pointer':'tab-inactive text-sm pb-2 cursor-pointer';
-            document.getElementById('tab-completed').className = tab==='completed'?'tab-active text-sm pb-2 transition cursor-pointer':'tab-inactive text-sm pb-2 cursor-pointer';
-            loadTasks();
-        }
-
-        window.searchTasks = function(val) {
-            searchTerm = val.toLowerCase();
-            renderList();
-        }
-
-        // === 5. LOAD TASKS (CORRIGIDO ORDENAÇÃO) ===
-        window.loadTasks = async function() {
-            const container = document.getElementById('task-list');
-            container.innerHTML = '<div class="text-center py-20"><div class="loader border-brand-wine mx-auto mb-4"></div></div>';
-
-            try {
-                let data = [];
-                const col = window.currentPcpCollection;
-                const baseFilter = window.currentOrgId ? { organization_id: { _eq: window.currentOrgId } } : {};
+                const me = await client.request(readMe({ fields: ['first_name', 'last_name', 'role.name'] }));
+                document.getElementById('user-name').innerText = `${me.first_name} ${me.last_name || ''}`;
                 
-                let fields = ['*'];
-                let sortParam = ['id']; // Default sort para evitar erro em tabelas sem data_criacao
+                try {
+                    window.planosCache = await client.request(readItems('planos_assinatura'));
+                } catch(e) { console.warn('Planos load failed', e); }
 
-                if (col === 'solicitacoes') {
-                    fields = ['*', 'produto_id.nome', 'endereco_id.*'];
-                    sortParam = ['-data_criacao']; // Só solicitacoes tem data_criacao garantida
-                } 
-                else if (col === 'estoque_cliente') fields = ['*', 'organization_id.razao_social', 'produto_id.nome']; 
-                else if (col === 'estoque_lotes') fields = ['*', 'estoque_pai_id.produto_id.nome']; 
-                else if (col === 'directus_users') fields = ['first_name', 'last_name', 'email', 'role.name', 'id', 'organization_id.razao_social']; 
-                else if (col === 'enderecos_entrega') {
-                    fields = ['*', 'organization_id.razao_social']; 
-                    sortParam = ['apelido_local'];
-                }
-                else if (col === 'organizacoes') sortParam = ['razao_social'];
-                else if (col === 'produtos_catalogo') sortParam = ['nome'];
-
-                if (col === 'directus_users') {
-                    const userFilter = window.currentOrgId ? { organization_id: { _eq: window.currentOrgId } } : {};
-                    data = await client.request(readUsers({ fields: fields, filter: userFilter })).catch(e => []);
-                } else {
-                    // Usa a ordenação correta para cada tabela
-                    data = await client.request(readItems(col, { sort: sortParam, fields: fields, filter: baseFilter, limit: 100 })).catch(e => {
-                        console.warn("Erro ao ler items:", e);
-                        return []; 
-                    });
-                }
-
-                allTasksCache = data || []; 
-                renderList();
-
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
+                router('logistica');
             } catch (e) {
-                container.innerHTML = `<div class="p-4 text-red-400 text-center text-xs">Erro inesperado: ${e.message}</div>`;
+                console.error(e);
+                notify('Erro ao iniciar aplicação.', 'error');
             }
         }
 
-        function renderList() {
-            const container = document.getElementById('task-list');
-            let items = allTasksCache || [];
+        window.router = function(view) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            const activeNav = document.getElementById(`nav-${view}`);
+            if(activeNav) activeNav.classList.add('active');
 
-            if(searchTerm) items = items.filter(i => JSON.stringify(i).toLowerCase().includes(searchTerm));
-
-            if (window.currentPcpCollection === 'solicitacoes' && currentSector !== 'pcp') {
-                const sectorFilters = {
-                    'orcamentos': { active: ['pendente', 'cotado', 'aguardando_aprovacao'], history: ['aguardando_pagamento', 'faturamento', 'aprovacao_arte', 'liberado_logistica', 'enviado', 'concluido', 'cancelado'] },
-                    'financeiro': { active: ['aguardando_pagamento', 'faturamento'], history: ['liberado_logistica', 'enviado', 'concluido', 'cancelado'] },
-                    'mkt': { active: ['aprovacao_arte'], history: ['aguardando_pagamento', 'faturamento', 'liberado_logistica', 'enviado', 'concluido', 'cancelado'] },
-                    'logistica': { active: ['liberado_logistica', 'enviado'], history: ['concluido', 'cancelado'] }
-                };
-                const filters = sectorFilters[currentSector];
-                if (filters) {
-                    items = items.filter(t => {
-                        if (t.tipo === 'SOLICITACAO_COMPRA' && t.status === 'aguardando_aprovacao') return false; 
-                        if (currentTab === 'pending') return filters.active.includes(t.status);
-                        if (currentTab === 'completed') return filters.history.includes(t.status);
-                        return false;
-                    });
-                }
-            } else if (window.currentPcpCollection === 'solicitacoes' && currentSector === 'pcp') {
-                 if (currentTab === 'pending') items = items.filter(t => !['concluido', 'cancelado'].includes(t.status));
-                 else if (currentTab === 'completed') items = items.filter(t => ['concluido', 'cancelado'].includes(t.status));
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            
+            if(view === 'logistica') {
+                document.getElementById('view-logistica').classList.remove('hidden');
+                document.getElementById('page-title').innerText = 'Painel Logístico';
+                document.getElementById('page-subtitle').innerText = 'Expedição de Lotes e Rastreamento';
+                loadLogistica();
+            } else if(view === 'orcamentos') {
+                document.getElementById('view-orcamentos').classList.remove('hidden');
+                document.getElementById('page-title').innerText = 'Comercial';
+                document.getElementById('page-subtitle').innerText = 'Gestão de Orçamentos e Reposição';
+                loadOrcamentos();
+            } else if(view === 'clientes') {
+                document.getElementById('view-clientes').classList.remove('hidden');
+                document.getElementById('page-title').innerText = 'Carteira de Clientes';
+                document.getElementById('page-subtitle').innerText = 'Gestão de Planos e Usuários';
+                loadClientes();
             }
+        }
 
-            if (items.length === 0) {
-                container.innerHTML = `<div class="glass-panel p-8 rounded-xl text-center border border-white/5"><p class="text-gray-500 text-sm">Vazio.</p></div>`;
+        window.refreshView = function() {
+            const activeNav = document.querySelector('.nav-item.active');
+            if(activeNav) {
+                const onclickVal = activeNav.getAttribute('onclick'); 
+                const view = onclickVal.match(/'([^']+)'/)[1];
+                router(view);
+            } else if (!document.getElementById('view-cliente-detalhe').classList.contains('hidden')) {
+                window.openClientDetails(window.currentOrgId, 'config');
+            }
+        }
+
+        // === LOGÍSTICA (LOTES) ===
+        async function loadLogistica() {
+            const tbody = document.getElementById('logistica-tbody');
+            tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center"><div class="loader border-brand-wine mx-auto"></div></td></tr>';
+            
+            try {
+                const lotes = await client.request(readItems('lotes_envio', {
+                    filter: { status: { _in: ['pendente', 'processando', 'aguardando_aprovacao'] } },
+                    sort: ['data_criacao'],
+                    fields: ['*', 'organization_id.razao_social']
+                }));
+
+                document.getElementById('stat-log-pendente').innerText = lotes.length;
+                document.getElementById('stat-log-enviado').innerText = '-';
+
+                if(lotes.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500">Nenhum lote pendente na fila.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = lotes.map(lote => {
+                    const date = new Date(lote.data_criacao).toLocaleDateString('pt-BR');
+                    return `
+                        <tr class="table-row">
+                            <td class="table-cell font-mono text-brand-wine font-bold">#${lote.id}</td>
+                            <td class="table-cell font-bold text-white">${lote.organization_id?.razao_social || 'Cliente'}</td>
+                            <td class="table-cell">${date}</td>
+                            <td class="table-cell text-center font-bold">${lote.quantidade_total}</td>
+                            <td class="table-cell"><span class="status-badge status-${lote.status}">${lote.status}</span></td>
+                            <td class="table-cell text-right">
+                                <button onclick="openLoteModal('${lote.id}')" class="bg-brand-wine hover:bg-brand-hover text-white px-3 py-1.5 rounded text-xs font-bold transition shadow">
+                                    PROCESSAR
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+            } catch(e) { console.error(e); notify('Erro ao carregar logística.', 'error'); }
+        }
+
+        // --- CORREÇÃO ERRO 2: Modal de Lote Vazio ---
+        window.openLoteModal = async function(loteIdRaw) {
+            // Força a conversão para inteiro para garantir compatibilidade com o filtro do Directus
+            const loteId = parseInt(loteIdRaw, 10);
+            window.activeBatchId = loteId;
+            
+            const modal = document.getElementById('modal-lote');
+            const tbody = document.getElementById('modal-lote-items');
+            
+            document.getElementById('modal-lote-id').innerText = loteId;
+            document.getElementById('bulk-rastreio').value = '';
+            
+            tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando itens...</td></tr>';
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+
+            try {
+                console.log(`Buscando itens para lote_id: ${loteId} (Tipo: ${typeof loteId})`);
+
+                // Solicita explicitamente todos os relacionamentos
+                const items = await client.request(readItems('solicitacoes', {
+                    filter: { lote_id: { _eq: loteId } }, 
+                    fields: ['*', 'produto_id.nome', 'endereco_manual', 'endereco_id.*']
+                }));
+                window.currentBatchItems = items;
+
+                if (items.length === 0) {
+                     tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-yellow-500">Nenhum item encontrado neste lote.</td></tr>';
+                     return;
+                }
+
+                tbody.innerHTML = items.map((item, index) => {
+                    let end = item.endereco_manual || 'Endereço Indefinido';
+                    if(item.endereco_id && typeof item.endereco_id === 'object') {
+                        const e = item.endereco_id;
+                        end = `${e.logradouro}, ${e.numero} - ${e.cidade}/${e.estado} (${e.apelido_local || 'S/N'})`;
+                    }
+                    
+                    return `
+                        <tr class="hover:bg-white/5 border-b border-white/5">
+                            <td class="p-3">
+                                <p class="text-xs text-gray-400 truncate max-w-[300px]" title="${end}">${end}</p>
+                            </td>
+                            <td class="p-3 text-xs text-white font-bold">${item.produto_id?.nome} (x${item.quantidade})</td>
+                            <td class="p-3">
+                                <input type="text" data-id="${item.id}" value="${item.codigo_rastreio || ''}" placeholder="Cód. Rastreio" class="tracking-input glass-input w-full px-2 py-1 rounded text-xs">
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch(e) { 
+                console.error("Erro ao abrir modal de lote:", e);
+                tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-red-500">Erro ao carregar itens: ${e.message}</td></tr>`;
+                notify('Erro ao carregar itens do lote', 'error');
+            }
+        }
+
+        window.applyBulkTracking = function() {
+            const code = document.getElementById('bulk-rastreio').value;
+            if(!code) {
+                notify('Digite um código de rastreio para aplicar.', 'warning');
+                return;
+            }
+            document.querySelectorAll('.tracking-input').forEach(input => input.value = code);
+            notify('Código aplicado a todos os itens!');
+        }
+
+        window.dispatchBatch = async function() {
+            if(!confirm('Confirmar despacho deste lote? Isso notificará o cliente.')) return;
+            
+            const btn = document.querySelector('#modal-lote button[onclick="dispatchBatch()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Enviando...';
+            btn.disabled = true;
+
+            const inputs = document.querySelectorAll('.tracking-input');
+            const updates = [];
+            
+            inputs.forEach(input => {
+                const cod = input.value.trim();
+                updates.push({ 
+                    id: input.getAttribute('data-id'), 
+                    codigo_rastreio: cod || null, 
+                    status: 'enviado', 
+                    data_envio: new Date().toISOString() 
+                });
+            });
+
+            try {
+                await client.request(updateItems('solicitacoes', updates));
+                await client.request(updateItem('lotes_envio', window.activeBatchId, { status: 'enviado' }));
+                
+                notify('Lote despachado com sucesso!', 'success');
+                closeModal('modal-lote');
+                loadLogistica(); 
+            } catch(e) {
+                notify('Erro ao despachar: ' + e.message, 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // === COMERCIAL (ORÇAMENTOS) ===
+        async function loadOrcamentos() {
+            const tbody = document.getElementById('orcamentos-tbody');
+            tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center"><div class="loader border-brand-wine mx-auto"></div></td></tr>';
+            
+            try {
+                const reqs = await client.request(readItems('solicitacoes', {
+                    filter: { tipo: { _eq: 'SOLICITACAO_COMPRA' } },
+                    sort: ['-data_criacao'],
+                    fields: ['*', 'produto_id.nome', 'organization_id.razao_social']
+                }));
+
+                if(reqs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-gray-500">Nenhuma solicitação comercial.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = reqs.map(r => {
+                    const val = r.valor_total ? `R$ ${r.valor_total}` : '-';
+                    return `
+                        <tr class="table-row">
+                            <td class="table-cell">#${r.id}</td>
+                            <td class="table-cell font-bold text-white">${r.organization_id?.razao_social}</td>
+                            <td class="table-cell">${r.produto_id?.nome}</td>
+                            <td class="table-cell text-center font-mono">${r.quantidade}</td>
+                            <td class="table-cell text-green-400 font-bold">${val}</td>
+                            <td class="table-cell"><span class="status-badge status-${r.status}">${r.status}</span></td>
+                            <td class="table-cell text-right">
+                                <button onclick="openCommercialModal('${r.id}')" class="text-gray-400 hover:text-white p-2 bg-white/5 rounded transition"><i class="ph-bold ph-pencil-simple"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+            } catch(e) { console.error(e); }
+        }
+
+        window.openCommercialModal = async function(id) {
+            window.activeRequestId = id;
+            const modal = document.getElementById('modal-comercial');
+            const alertBox = document.getElementById('stock-injection-alert');
+            
+            document.getElementById('modal-comercial-id').innerText = id;
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            
+            const item = await client.request(readItems('solicitacoes', { filter: { id: { _eq: id } } })).then(r => r[0]);
+            
+            document.getElementById('input-valor').value = item.valor_total || '';
+            document.getElementById('input-status').value = item.status;
+
+            document.getElementById('input-status').onchange = function() {
+                if(this.value === 'concluido' && item.status !== 'concluido') alertBox.classList.remove('hidden');
+                else alertBox.classList.add('hidden');
+            }
+        }
+
+        window.saveCommercial = async function() {
+            const id = window.activeRequestId;
+            const newVal = document.getElementById('input-valor').value;
+            const newStatus = document.getElementById('input-status').value;
+            
+            try {
+                await client.request(updateItem('solicitacoes', id, {
+                    valor_total: newVal,
+                    status: newStatus
+                }));
+
+                if(newStatus === 'concluido') {
+                    const item = await client.request(readItems('solicitacoes', { filter: { id: { _eq: id } } })).then(r => r[0]);
+                    
+                    const stockItems = await client.request(readItems('estoque_cliente', {
+                        filter: { 
+                            _and: [
+                                { organization_id: { _eq: item.organization_id } },
+                                { produto_id: { _eq: item.produto_id } }
+                            ]
+                        }
+                    }));
+
+                    if(stockItems.length > 0) {
+                        const stock = stockItems[0];
+                        await client.request(updateItem('estoque_cliente', stock.id, {
+                            quantidade_disponivel: stock.quantidade_disponivel + item.quantidade
+                        }));
+                    } else {
+                        await client.request(createItem('estoque_cliente', {
+                            organization_id: item.organization_id,
+                            produto_id: item.produto_id,
+                            quantidade_disponivel: item.quantidade
+                        }));
+                    }
+                    notify('Estoque creditado automaticamente!', 'success');
+                } else {
+                    notify('Solicitação atualizada.', 'success');
+                }
+                
+                closeModal('modal-comercial');
+                loadOrcamentos();
+            } catch(e) {
+                notify('Erro: ' + e.message, 'error');
+            }
+        }
+
+        // === CLIENTES ===
+        async function loadClientes() {
+            const grid = document.getElementById('clientes-grid');
+            grid.innerHTML = '<div class="col-span-4 text-center"><div class="loader border-brand-wine mx-auto"></div></div>';
+            
+            try {
+                const orgs = await client.request(readItems('organizacoes', { fields: ['*', 'plano_id.nome'] }));
+                grid.innerHTML = orgs.map(org => `
+                    <div onclick="openClientDetails('${org.id}')" class="glass-panel p-5 rounded-xl border-l-4 border-brand-wine cursor-pointer hover:bg-white/5 transition">
+                        <h3 class="font-bold text-white text-lg">${org.razao_social}</h3>
+                        <p class="text-xs text-gray-500 mb-4">${org.cnpj || 'Sem CNPJ'}</p>
+                        <div class="flex justify-between items-center border-t border-white/10 pt-3">
+                            <span class="text-xs font-bold text-green-400"><i class="ph-fill ph-crown"></i> ${org.plano_id?.nome || 'Sem Plano'}</span>
+                            <i class="ph-bold ph-arrow-right text-gray-500"></i>
+                        </div>
+                    </div>
+                `).join('');
+            } catch(e) { console.error(e); }
+        }
+
+        window.openClientDetails = async function(id, tab = 'config') {
+            window.currentOrgId = id;
+            document.getElementById('view-clientes').classList.add('hidden');
+            document.getElementById('view-cliente-detalhe').classList.remove('hidden');
+            
+            const org = await client.request(readItems('organizacoes', { filter: { id: { _eq: id } }, fields: ['razao_social', 'cnpj'] })).then(r => r[0]);
+            document.getElementById('detalhe-cliente-nome').innerText = org.razao_social;
+            document.getElementById('detalhe-cliente-cnpj').innerText = org.cnpj;
+
+            switchClientTab(tab);
+        }
+
+        window.switchClientTab = async function(tab) {
+            document.querySelectorAll('.client-tab-btn').forEach(b => {
+                b.classList.remove('border-b-2', 'border-brand-wine', 'text-white');
+                b.classList.add('text-gray-500');
+                if(b.getAttribute('data-tab') === tab) {
+                    b.classList.add('border-b-2', 'border-brand-wine', 'text-white');
+                    b.classList.remove('text-gray-500');
+                }
+            });
+
+            document.querySelectorAll('.client-tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`client-tab-${tab}`).classList.remove('hidden');
+
+            if(tab === 'config') loadClientConfig();
+            if(tab === 'estoque') loadClientEstoque();
+            if(tab === 'users') loadClientUsers();
+        }
+
+        async function loadClientConfig() {
+            const container = document.getElementById('client-tab-config');
+            const org = await client.request(readItems('organizacoes', { filter: { id: { _eq: window.currentOrgId } } })).then(r => r[0]);
+            
+            const currentPlanId = org.plano_id && typeof org.plano_id === 'object' ? org.plano_id.id : org.plano_id;
+            const planosOpts = window.planosCache.map(p => 
+                `<option value="${p.id}" ${currentPlanId === p.id ? 'selected' : ''}>${p.nome}</option>`
+            ).join('');
+
+            container.innerHTML = `
+                <div class="glass-panel p-6 rounded-xl max-w-2xl">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="text-[10px] uppercase font-bold text-gray-500">Razão Social</label>
+                            <input type="text" id="conf-razao" value="${org.razao_social}" class="w-full glass-input p-2 rounded mt-1">
+                        </div>
+                        <div>
+                            <label class="text-[10px] uppercase font-bold text-gray-500">CNPJ</label>
+                            <input type="text" id="conf-cnpj" value="${org.cnpj}" class="w-full glass-input p-2 rounded mt-1">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="text-[10px] uppercase font-bold text-gray-500">Plano</label>
+                        <select id="conf-plano" class="w-full glass-input p-2 rounded mt-1 bg-[#1a1a1a]">
+                            <option value="">Sem Plano</option>
+                            ${planosOpts}
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2 mb-6">
+                        <input type="checkbox" id="conf-aprovacao" ${org.exige_aprovacao ? 'checked' : ''} class="rounded bg-white/10 border-white/20 text-brand-wine">
+                        <label class="text-sm text-gray-300">Exige aprovação de gestor?</label>
+                    </div>
+                    <button onclick="saveClientConfig()" class="bg-brand-wine text-white px-4 py-2 rounded font-bold text-sm">Salvar Alterações</button>
+                </div>
+            `;
+        }
+        
+        window.saveClientConfig = async function() {
+            try {
+                await client.request(updateItem('organizacoes', window.currentOrgId, {
+                    razao_social: document.getElementById('conf-razao').value,
+                    cnpj: document.getElementById('conf-cnpj').value,
+                    plano_id: document.getElementById('conf-plano').value || null,
+                    exige_aprovacao: document.getElementById('conf-aprovacao').checked
+                }));
+                notify('Salvo com sucesso!', 'success');
+            } catch(e) { notify('Erro ao salvar.', 'error'); }
+        }
+
+        async function loadClientEstoque() {
+            const container = document.getElementById('client-estoque-list');
+            container.innerHTML = '<div class="loader border-white"></div>';
+            
+            const items = await client.request(readItems('estoque_cliente', {
+                filter: { organization_id: { _eq: window.currentOrgId } },
+                fields: ['*', 'produto_id.nome', 'estoque_lotes.*']
+            }));
+
+            if(items.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 col-span-3">Sem estoque.</p>';
                 return;
             }
 
-            if (window.currentPcpCollection === 'solicitacoes') {
-                container.innerHTML = items.map(i => renderSolicitacaoCard(i)).join('');
-            } else {
-                container.innerHTML = items.map(i => renderGenericCard(i)).join('');
-            }
-        }
-
-        function renderSolicitacaoCard(task) {
-            const produto = task.produto_id?.nome || 'Produto Indefinido';
-            const tipo = task.tipo ? task.tipo.replace('SOLICITACAO_', '') : 'N/A';
-            const clickAction = currentSector === 'pcp' ? `window.openRegistryModal('solicitacoes', '${task.id}')` : `window.openProcessModal('${task.id}')`;
-            const dtUpdate = task.date_updated ? new Date(task.date_updated).toLocaleString('pt-BR') : '-';
-            const valDisplay = task.valor_total ? ` • R$ ${task.valor_total}` : '';
-
-            let detailsHtml = '';
-            const endObject = task.endereco_id && typeof task.endereco_id === 'object' ? task.endereco_id : task;
-            
-            if (endObject.logradouro || task.endereco_manual || task.endereco) {
-                let endStr = task.endereco_manual || task.endereco;
-                if (!endStr) {
-                     endStr = endObject.apelido_local || 'Local Definido';
-                     if (endObject.logradouro) endStr = `${endObject.logradouro}, ${endObject.numero || 'S/N'}`;
-                }
-                detailsHtml += `<div class="mt-2 p-2 bg-black/20 rounded border border-white/5 text-[11px] text-gray-300"><i class="ph-bold ph-map-pin text-brand-wine mr-1"></i> <span class="font-bold">Entrega:</span> ${endStr}</div>`;
-            }
-            if (task.observacoes) detailsHtml += `<div class="mt-1 text-[10px] text-gray-400 italic border-l-2 border-gray-700 pl-2 ml-1">Obs: " ${task.observacoes} "</div>`;
-            if (task.data_necessidade) detailsHtml += `<div class="mt-1 text-[10px] text-blue-300 font-bold ml-1">📅 Prazo: ${new Date(task.data_necessidade).toLocaleDateString('pt-BR')}</div>`;
-
-            return `
-                <div class="glass-panel p-5 rounded-xl hover:bg-white/5 border-l-4 border-brand-wine flex justify-between items-start gap-4">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2 mb-1"><span class="text-[10px] bg-white/10 px-2 rounded text-gray-300">${tipo}</span><span class="text-xs text-gray-500">#${task.id}</span></div>
-                        <h3 class="font-bold text-white text-base">${produto}</h3>
-                        <p class="text-xs text-gray-400 mt-1">Qtd: ${task.quantidade || 0} • Status: ${task.status}</p>
-                        ${detailsHtml}
-                        <p class="text-[10px] text-gray-500 mt-2 font-mono border-t border-white/5 pt-1">Ult. Ação: ${dtUpdate}${valDisplay}</p>
+            container.innerHTML = items.map(item => `
+                <div class="glass-panel p-4 rounded-xl border border-white/5">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-bold text-white text-sm truncate w-3/4">${item.produto_id?.nome}</h4>
+                        <button onclick="openEditStock('${item.id}')" class="text-gray-400 hover:text-brand-wine"><i class="ph-bold ph-pencil-simple"></i></button>
                     </div>
-                    <button onclick="${clickAction}" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded text-xs font-bold self-center">Gerenciar</button>
-                </div>`;
+                    <p class="text-2xl font-bold text-white mb-1">${item.quantidade_disponivel}</p>
+                    <p class="text-[10px] text-gray-500 uppercase">Saldo Geral</p>
+                </div>
+            `).join('');
         }
-
-        function renderGenericCard(item) {
-            let title = item.nome || item.razao_social || item.apelido_local || ((item.first_name||'') + ' ' + (item.last_name||'')) || 'Sem Nome';
-            let sub = item.sku || item.cnpj || item.email || item.descricao || ('ID: ' + item.id);
-            
-            if (window.currentPcpCollection === 'estoque_cliente') {
-                title = item.produto_id?.nome || 'Produto Indefinido';
-                sub = `Org: ${item.organization_id?.razao_social || 'N/A'} • Qtd: ${item.quantidade_disponivel}`;
-            } else if (window.currentPcpCollection === 'estoque_lotes') {
-                title = item.descricao || 'Lote sem descrição';
-                sub = `Produto Pai: ${item.estoque_pai_id?.produto_id?.nome || 'N/A'} • Qtd: ${item.quantidade}`;
-            } else if (window.currentPcpCollection === 'directus_users') {
-                title = `${item.first_name || ''} ${item.last_name || ''}`;
-                sub = `Role: ${item.role?.name || 'N/A'} • Org: ${item.organization_id?.razao_social || 'N/A'}`;
-            }
-
-            return `
-                <div class="glass-panel p-4 rounded-xl hover:bg-white/5 border border-white/5 flex justify-between items-center gap-4">
-                    <div class="overflow-hidden">
-                        <h3 class="text-sm font-bold text-white truncate">${title}</h3>
-                        <p class="text-xs text-gray-500 truncate">${sub}</p>
-                    </div>
-                    <button onclick="window.openRegistryModal('${window.currentPcpCollection}', '${item.id}')" class="p-2 bg-white/5 hover:bg-white/20 text-white rounded transition"><i class="ph-bold ph-pencil-simple"></i></button>
-                </div>`;
-        }
-
-        // === 7. MODAL DE PROCESSO ===
-        window.openProcessModal = async function(id) {
-            const modal = document.getElementById('action-modal');
-            const content = document.getElementById('modal-form-content');
-            const btn = document.getElementById('btn-save-action');
-            currentTaskId = id;
-            content.innerHTML = '<div class="loader border-white mx-auto"></div>';
-            modal.classList.remove('hidden'); modal.classList.add('flex');
-
-            try {
-                const item = await client.request(readItems('solicitacoes', { filter: { id: { _eq: id } } }));
-                const task = item[0];
-                let html = '';
-
-                if (currentSector === 'orcamentos') {
-                    html += createInput('Obs', 'observacoes', 'text', task.observacoes);
-                    html += createInput('Custo Interno', 'custo_interno', 'number', task.custo_interno);
-                    html += createInput('Valor', 'valor_total', 'number', task.valor_total);
-                    html += createSelect('Status', 'status', [{v:'pendente',l:'Pendente'},{v:'cotado',l:'Cotado'},{v:'aguardando_pagamento',l:'Aprovado'}], task.status);
-                } else if (currentSector === 'financeiro') {
-                    html += `<p class="text-white text-sm mb-2">Valor: <strong class="text-green-400">R$ ${task.valor_total || '0,00'}</strong></p>`;
-                    html += `<div class="mb-2"><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Upload Etiqueta</label><input type="file" id="file_upload_envio" class="w-full glass-input rounded-xl px-4 py-3 text-sm text-gray-400">${task.comprovante_envio ? '<p class="text-[10px] text-green-400 mt-1">✓ Arquivo já existe.</p>' : ''}</div>`;
-                    html += createSelect('Status', 'status', [{v:'aguardando_pagamento',l:'Aguardando'},{v:'liberado_logistica',l:'Pago / Liberar'}], task.status);
-                } else if (currentSector === 'logistica') {
-                    html += createInput('Rastreio', 'codigo_rastreio', 'text', task.codigo_rastreio);
-                    html += createSelect('Status', 'status', [{v:'liberado_logistica',l:'Em Separação'},{v:'enviado',l:'Enviado'}], task.status);
-                } else if (currentSector === 'mkt') {
-                     html += createSelect('Status', 'status', [{v:'aprovacao_arte',l:'Em Aprovação'},{v:'pendente',l:'Devolver p/ Orçamento'}], task.status);
-                }
-                content.innerHTML = html;
-
-                btn.onclick = async () => {
-                    const payload = {};
-                    content.querySelectorAll('input:not([type="file"]), select').forEach(el => { if(el.id) payload[el.id] = el.type === 'number' ? (el.value === '' ? null : parseFloat(el.value)) : el.value; });
-                    try {
-                        const fileInput = document.getElementById('file_upload_envio');
-                        if (fileInput && fileInput.files.length > 0) {
-                            const formData = new FormData(); formData.append('file', fileInput.files[0]);
-                            const uploadResult = await client.request(uploadFiles(formData));
-                            payload.comprovante_envio = uploadResult.id || uploadResult.data?.id;
-                        }
-                        await client.request(updateItem('solicitacoes', currentTaskId, payload));
-                        notify('Atualizado!'); closeModal('action-modal'); loadTasks();
-                    } catch(e) { notify('Erro: ' + e.message, 'error'); }
-                }
-            } catch(e) { content.innerHTML = 'Erro ao carregar dados.'; }
-        }
-
-        // === 8. MODAL DE REGISTRO (PCP) ===
-        window.openRegistryModal = async function(collection, id) {
-            const modal = document.getElementById('registry-modal');
-            const content = document.getElementById('registry-form-content');
-            const btnSave = document.getElementById('btn-save-registry');
-            const btnDel = document.getElementById('btn-delete-registry');
-            
-            modal.classList.remove('hidden'); modal.classList.add('flex');
-            btnDel.classList.toggle('hidden', !id);
-            document.getElementById('registry-title').innerText = id ? 'Editar Registro' : 'Novo Registro';
-            content.innerHTML = '<div class="loader border-white mx-auto"></div>';
-
-            try {
-                if (currentSector === 'pcp' && window.allOrgsCache.length === 0) await cacheNecessaryData();
-
-                let data = {};
-                if(id) {
-                     if(collection === 'directus_users') data = await client.request(readUsers({ filter: { id: { _eq: id } }, fields: ['*', 'organization_id', 'role'] })).then(r => r[0]);
-                     else if(collection === 'estoque_cliente') data = await client.request(readItems(collection, { filter: { id: { _eq: id } }, fields: ['*', 'organization_id', 'produto_id'] })).then(r => r[0]);
-                     else data = await client.request(readItems(collection, { filter: { id: { _eq: id } } })).then(r => r[0]);
-                }
-
-                let html = '';
-                if(collection === 'organizacoes') {
-                    html += createInput('Razão Social', 'razao_social', 'text', data.razao_social);
-                    html += createInput('CNPJ', 'cnpj', 'text', data.cnpj);
-                    html += createSelectFromCache('Representante', 'representante_id', window.allUsersCache, 'id', ['first_name', 'last_name'], data.representante_id);
-                } else if(collection === 'estoque_cliente') {
-                    html += createSelectFromCache('Produto', 'produto_id', window.allProductsCache, 'id', ['nome', 'sku'], data.produto_id);
-                    html += createSelectFromCache('Organização', 'organization_id', window.allOrgsCache, 'id', ['razao_social'], data.organization_id);
-                    html += createInput('Qtd', 'quantidade_disponivel', 'number', data.quantidade_disponivel);
-                } else if(collection === 'directus_users') {
-                    html += createInput('Nome', 'first_name', 'text', data.first_name);
-                    html += createInput('Email', 'email', 'text', data.email);
-                    if(!id) html += createInput('Senha', 'password', 'password');
-                    html += createSelectFromCache('Role', 'role', window.allRolesCache, 'id', ['name'], data.role);
-                    html += createSelectFromCache('Organização', 'organization_id', window.allOrgsCache, 'id', ['razao_social'], data.organization_id);
-                } else if(collection === 'solicitacoes') {
-                    html += createInput('Qtd', 'quantidade', 'number', data.quantidade);
-                    html += createInput('Obs', 'observacoes', 'text', data.observacoes);
-                    html += createInput('Valor', 'valor_total', 'number', data.valor_total);
-                    html += createSelect('Status', 'status', [{v:'pendente',l:'Pendente'},{v:'cotado',l:'Cotado'},{v:'enviado',l:'Enviado'}, {v:'aguardando_pagamento',l:'Aguardando Pagamento'}], data.status);
-                    if(!id) {
-                        html += createInput('ID Org', 'organization_id', 'text');
-                        html += createSelect('Tipo', 'tipo', [{v:'SOLICITACAO_ENVIO',l:'Envio'}, {v:'SOLICITACAO_COMPRA',l:'Compra'}]);
-                    }
-                } else {
-                    html += `<p class="text-gray-400 text-sm">Edição genérica indisponível para esta coleção.</p>`;
-                }
-                
-                content.innerHTML = html;
-
-                btnSave.onclick = async () => {
-                    const payload = {};
-                    content.querySelectorAll('input, select').forEach(el => { if(el.id) payload[el.id] = el.type === 'number' ? (el.value === '' ? null : parseFloat(el.value)) : el.value; });
-                    try {
-                        btnSave.innerText = '...';
-                        if(id) {
-                            if(collection === 'directus_users') await client.request(updateUser(id, payload));
-                            else await client.request(updateItem(collection, id, payload));
-                        } else {
-                             if(collection === 'directus_users') await client.request(createUser(payload));
-                             else await client.request(createItem(collection, payload));
-                        }
-                        notify('Salvo!'); closeModal('registry-modal'); loadTasks();
-                    } catch(e) { notify('Erro: '+e.message, 'error'); } finally { btnSave.innerText = 'Salvar'; }
-                }
-                
-                btnDel.onclick = async () => {
-                    if(!confirm('Excluir?')) return;
-                    try {
-                        if(collection === 'directus_users') await client.request(deleteUser(id));
-                        else await client.request(deleteItem(collection, id));
-                        notify('Excluído.'); closeModal('registry-modal'); loadTasks();
-                    } catch(e) { notify('Erro ao excluir.', 'error'); }
-                }
-
-            } catch(e) { content.innerHTML = 'Erro de carregamento (Verifique permissões).'; }
-        }
-
-        function createInput(label, id, type, value = '') { return `<div><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">${label}</label><input id="${id}" type="${type}" value="${value||''}" class="w-full glass-input rounded-xl px-4 py-3 text-sm"></div>`; }
-        function createSelect(label, id, opts, selected) { const html = opts.map(o => `<option value="${o.v}" ${o.v===selected?'selected':''} class="bg-black text-gray-300">${o.l}</option>`).join(''); return `<div><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">${label}</label><select id="${id}" class="w-full glass-input rounded-xl px-4 py-3 text-sm bg-[#1a1a1a]">${html}</select></div>`; }
         
-        function createSelectFromCache(label, id, dataCache, valueKey, displayKeys, selectedValue) {
-            let optionsHtml = '<option value="">-- Selecione --</option>';
-            const actualVal = (typeof selectedValue === 'object' && selectedValue) ? selectedValue[valueKey] : selectedValue;
-            dataCache.forEach(item => {
-                const displayText = displayKeys.map(key => item[key]).filter(Boolean).join(' - ');
-                const selected = (item[valueKey] == actualVal) ? 'selected' : '';
-                optionsHtml += `<option value="${item[valueKey]}" ${selected}>${displayText}</option>`;
-            });
-            return `<div><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">${label}</label><select id="${id}" class="w-full glass-input rounded-xl px-4 py-3 text-sm bg-[#1a1a1a]">${optionsHtml}</select></div>`;
+        window.openEditStock = async function(stockId) {
+            const modal = document.getElementById('modal-estoque');
+            const list = document.getElementById('modal-estoque-list');
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            list.innerHTML = '<div class="loader"></div>';
+            
+            try {
+                const item = await client.request(readItems('estoque_cliente', {
+                    filter: { id: { _eq: stockId } },
+                    fields: ['*', 'produto_id.nome', 'estoque_lotes.*']
+                })).then(r => r[0]);
+
+                document.getElementById('modal-estoque-produto').innerText = item.produto_id?.nome;
+
+                let html = `
+                    <div class="bg-white/5 p-3 rounded flex gap-2 items-center mb-4">
+                        <div class="flex-1">
+                            <label class="text-[10px] uppercase font-bold text-gray-500">Saldo Geral (Pai)</label>
+                            <input type="number" id="stock-parent-qty" value="${item.quantidade_disponivel}" class="w-full glass-input p-1 rounded">
+                        </div>
+                        <button onclick="updateStockParent('${item.id}')" class="text-green-500 hover:bg-white/10 p-2 rounded"><i class="ph-bold ph-check"></i></button>
+                    </div>
+                    <p class="text-xs font-bold text-gray-500 uppercase mb-2">Variações (Lotes)</p>
+                `;
+                
+                if(item.estoque_lotes && item.estoque_lotes.length > 0) {
+                    html += item.estoque_lotes.map(l => `
+                        <div class="flex gap-2 items-center border-b border-white/5 pb-2">
+                            <span class="text-sm text-gray-300 flex-1 truncate">${l.descricao}</span>
+                            <input type="number" id="lote-qty-${l.id}" value="${l.quantidade}" class="w-20 glass-input p-1 rounded text-center text-sm">
+                            <button onclick="updateStockLote('${l.id}')" class="text-blue-500 hover:text-white"><i class="ph-bold ph-floppy-disk"></i></button>
+                        </div>
+                    `).join('');
+                } else {
+                    html += '<p class="text-xs text-gray-600 italic">Sem variações cadastradas.</p>';
+                }
+                list.innerHTML = html;
+            } catch(e) { console.error(e); }
         }
 
-        window.closeModal = function(id) { const m = document.getElementById(id) || document.getElementById('action-modal'); m.classList.add('hidden'); m.classList.remove('flex'); }
-        window.logout = async () => { try { await client.logout(); } catch (e) {} finally { localStorage.clear(); window.location.reload(); } }
-        function notify(msg, type = 'success') { Toastify({ text: msg, duration: 3000, style: { background: type==='success'?"#10B981":"#EF4444" } }).showToast(); }
+        window.updateStockParent = async function(id) {
+            const qty = document.getElementById('stock-parent-qty').value;
+            await client.request(updateItem('estoque_cliente', id, { quantidade_disponivel: parseInt(qty) }));
+            notify('Saldo geral atualizado!', 'success');
+        }
+        
+        window.updateStockLote = async function(loteId) {
+            const qty = document.getElementById(`lote-qty-${loteId}`).value;
+            await client.request(updateItem('estoque_lotes', loteId, { quantidade: parseInt(qty) }));
+            notify('Variação atualizada!', 'success');
+        }
+
+        // --- CORREÇÃO ERRO 1: Crash na listagem de usuários ---
+        async function loadClientUsers() {
+            const container = document.getElementById('client-users-list');
+            container.innerHTML = '<div class="loader border-brand-wine"></div>';
+
+            try {
+                // CORREÇÃO: Usando readUsers() em vez de readItems('directus_users')
+                // Solicitando explicitamente role.name para exibição correta
+                const users = await client.request(readUsers({
+                    filter: { organization_id: { _eq: window.currentOrgId } },
+                    fields: ['*', 'role.name']
+                }));
+                
+                if(users.length === 0) {
+                     container.innerHTML = '<p class="text-gray-500">Nenhum usuário cadastrado nesta organização.</p>';
+                     return;
+                }
+                
+                container.innerHTML = users.map(u => {
+                    const roleName = (u.role && u.role.name) ? u.role.name : 'Usuário';
+                    return `
+                    <div class="glass-panel p-3 rounded flex justify-between items-center">
+                        <div>
+                            <p class="text-sm font-bold text-white">${u.first_name} ${u.last_name || ''}</p>
+                            <p class="text-xs text-gray-500">${u.email}</p>
+                        </div>
+                        <span class="text-xs bg-white/10 px-2 py-1 rounded text-gray-300">${roleName}</span>
+                    </div>
+                `}).join('');
+            } catch(e) {
+                console.error("Erro crítico ao listar usuários:", e);
+                container.innerHTML = '<p class="text-red-500">Erro ao carregar usuários. Verifique as permissões de API.</p>';
+                notify('Erro ao carregar usuários.', 'error');
+            }
+        }
+
+        // UTILS
+        window.closeModal = function(id) {
+            document.getElementById(id).classList.add('hidden');
+            document.getElementById(id).classList.remove('flex');
+        }
+        
+        window.filterTable = function(tableId, term) {
+            const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+            term = term.toLowerCase();
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        }
+        
+        window.logout = async () => {
+             try { await client.logout(); } catch(e){}
+             localStorage.clear();
+             window.location.reload();
+        }
+        
+        function notify(msg, type='success') {
+            Toastify({ text: msg, duration: 3000, style: { background: type === 'success' ? '#10B981' : '#EF4444' } }).showToast();
+        }
+
     </script>
 </body>
 </html>
