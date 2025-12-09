@@ -1258,21 +1258,23 @@
             btn.innerHTML = '<div class="loader border-white w-5 h-5"></div>';
             btn.disabled = true;
             
-            // NOVO (TAREFA 2): Alerta final de limite antes de enviar (HARD BLOCK)
-            const totalItemsQuote = window.quoteCart.reduce((sum, item) => sum + item.qtd, 0);
+            // --- BLOCO REMOVIDO PARA PARAR DE REDIRECIONAR ---
+            /* const totalItemsQuote = window.quoteCart.reduce((sum, item) => sum + item.qtd, 0);
             const newTotalItems = window.usageStats.itens + totalItemsQuote;
             const maxItems = window.currentPlanLimits.itens;
 
             if (maxItems > 0 && newTotalItems > maxItems) {
                 notify(`Bloqueio: Sua solicitação excederá o limite de itens do plano (${maxItems.toLocaleString()} unidades). Contate o suporte para Upgrade.`, 'error');
-                window.openPlanModal(); // Abre o modal de planos
+                window.openPlanModal(); 
                 btn.innerHTML = 'Finalizar Orçamento';
                 btn.disabled = false;
                 return; 
             }
+            */
+            // --------------------------------------------------
 
             try {
-                // NOVA LÓGICA DE NEGÓCIO: Define o status com base na necessidade de aprovação da ORG e no perfil do USUÁRIO.
+                // Define o status com base na necessidade de aprovação
                 const exigeAprovacao = window.currentOrgConfig?.exige_aprovacao === true;
                 const ehGestor = window.currentUser?.eh_gestor === true;
                 const initialStatus = (!exigeAprovacao || ehGestor) ? 'pendente' : 'aguardando_aprovacao';
@@ -1280,7 +1282,7 @@
                 const promises = window.quoteCart.map(item => {
                     return client.request(createItem('solicitacoes', { 
                         tipo: 'SOLICITACAO_COMPRA', 
-                        status: initialStatus, // Status definido pela nova lógica
+                        status: initialStatus,
                         quantidade: item.qtd, 
                         produto_id: item.id, 
                         observacoes: `${item.obs} | Data Ideal: ${item.data}`, 
@@ -1299,7 +1301,7 @@
                 window.quoteCart = []; 
                 window.renderQuoteCart();
                 window.router('pedidos'); 
-                // NOVO: Chama a função para garantir a visualização da aba correta
+                
                 if (typeof window.setHistoryTab === 'function') {
                     window.setHistoryTab('reposicoes');
                 }
