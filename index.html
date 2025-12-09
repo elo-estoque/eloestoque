@@ -2646,10 +2646,11 @@
         // ** Essencial para a TAG [REF_LOTE] no cenário de aprovação **
         // ***************************************************************
         window.finalizeShipments = async function() {
-            // 1. Validações de Saldo (Dupla checagem de segurança)
+            // 1. Validações Visuais (Para feedback rápido ao usuário)
             const total = window.selectedShipments.reduce((sum, s) => sum + (parseInt(s.quantity) || 0), 0);
             const saldoMax = parseInt(document.getElementById('modal-saldo-total')?.innerText || '0') || 0;
             
+            // Nota: O bloqueio real de saldo é feito no Python, aqui é apenas visual
             if (total > saldoMax) {
                 notify(`Erro: Saldo insuficiente. Total solicitado: ${total}. Disponível: ${saldoMax}.`, 'error');
                 return;
@@ -2657,160 +2658,85 @@
             
             const btn = document.getElementById('btn-confirm-send');
             if(!btn) return;
-
             const originalText = btn.innerHTML;
             
             btn.disabled = true; 
-            btn.innerHTML = '<div class="loader border-white w-5 h-5"></div> <span class="ml-2">Enviando Lote...</span>';
+            btn.innerHTML = '<div class="loader border-white w-5 h-5"></div> <span class="ml-2">Processando Seguro...</span>';
             
-            const produtoSelect = document.getElementById('pedido-produto').value;
-            
-            let estoqueId = produtoSelect.includes('|') ? produtoSelect.split('|')[0] : produtoSelect;
-            let loteId = produtoSelect.includes('|') ? produtoSelect.split('|')[2] : null; // Pega o ID do lote (se existir)
-            
-            const dataPostagem = document.getElementById('pedido-data').value;
-            const detalheVariacao = window.selectedBatchDescription ? `[${window.selectedBatchDescription}] ` : '';
-
             try {
-                // 2. BUSCA ITENS
-                // Item de Estoque Pai
-                const itemEstoqueArray = await client.request(readItems('estoque_cliente', { 
-                    filter: { id: { _eq: estoqueId } }, 
-                    fields: ['id', 'produto_id.id', 'produto_id.nome', 'quantidade_disponivel']
-                }));
-                const itemEstoque = itemEstoqueArray[0];
-                const produtoId = itemEstoque?.produto_id.id;
-                const produtoNome = itemEstoque.produto_id.nome || 'Produto';
+                // 2. Prepara os dados
+                const produtoSelect = document.getElementById('pedido-produto').value;
+                const dataPostagem = document.getElementById('pedido-data').value;
                 
-                if (!produtoId) throw new Error('Produto de estoque não encontrado ou ID inválido.');
-                
-                // 3. DEFINE STATUS E LÓGICA DE NEGÓCIO
-                const exigeAprovacao = window.currentOrgConfig?.exige_aprovacao === true;
-                const ehGestor = window.currentUser?.eh_gestor === true;
-                
-                // Define o status final (aguardando_aprovacao OU pendente)
-                const finalStatus = (!exigeAprovacao || ehGestor) ? 'pendente' : 'aguardando_aprovacao';
-                
-                const isImmediateStockUpdate = finalStatus === 'pendente'; 
-                
-                let novaQtdEstoque = itemEstoque.quantidade_disponivel;
-                let refLoteTag = '';
-                
-                // Lógica de Baixa Imediata (Se o status for 'pendente')
-                if (isImmediateStockUpdate) {
-                    const updatePromises = [];
-                    novaQtdEstoque = itemEstoque.quantidade_disponivel - total;
-                    
-                    if (novaQtdEstoque < 0) {
-                         throw new Error(`Tentativa de Baixa Imediata Recusada: Saldo insuficiente. Disponível: ${itemEstoque.quantidade_disponivel}.`);
-                    }
+                // Extrai IDs (Formato: "EstoqueID|Descricao|LoteID" ou apenas "EstoqueID")
+                let estoqueId = produtoSelect.includes('|') ? produtoSelect.split('|')[0] : produtoSelect;
+                let loteId = produtoSelect.includes('|') ? produtoSelect.split('|')[2] : null;
+                let loteDesc = produtoSelect.includes('|') ? produtoSelect.split('|')[1] : null;
 
-                    // 3.1. Baixa no Estoque Pai (Estoque_Cliente)
-                    updatePromises.push(client.request(updateItem('estoque_cliente', estoqueId, { 
-                        quantidade_disponivel: novaQtdEstoque 
-                    })));
+                // Encontra o ID Numérico do Produto (Catalogo) baseado no ID do Estoque (UUID)
+                // Isso é necessário porque a API Python espera produto_id (int)
+                const stockItem = window.inventoryItems.find(i => i.id === estoqueId);
+                const produtoCatalogoId = stockItem ? stockItem.produto_id.id : null;
 
-                    // 3.2. Baixa no Estoque Filho (Estoque_Lotes) se for um lote específico
-                    if (loteId) {
-                        const loteItemArray = await client.request(readItems('estoque_lotes', {
-                             filter: { id: { _eq: loteId } }, fields: ['quantidade'] 
-                        }));
-                        const qtdAtualLote = loteItemArray[0]?.quantidade || 0;
-                        const novaQtdLote = qtdAtualLote - total;
+                if (!produtoCatalogoId) throw new Error("Produto não identificado no catálogo.");
 
-                        updatePromises.push(client.request(updateItem('estoque_lotes', loteId, { 
-                            quantidade: novaQtdLote 
-                        })));
-                    }
-
-                    // Executa as baixas antes de criar as solicitações
-                    await Promise.all(updatePromises);
-                } else {
-                    // Lógica de Aprovação (Se o status for 'aguardando_aprovacao')
-                    // CRUCIAL: Salvar a referência do estoque para a baixa futura
-                    const loteEstoqueId = loteId || 0; // Se não tem loteId, usamos 0
-                    refLoteTag = `[REF_LOTE:${estoqueId}|${loteEstoqueId}]`; 
-                    console.log(`Lote criado com status 'aguardando_aprovacao'. Tag de referência: ${refLoteTag}`);
-                }
-
-                
-                // 4. CRIA O REGISTRO PAI NA TABELA lotes_envio
-                const nomeLote = `Envio - ${produtoNome} - ${new Date().toLocaleString('pt-BR')}`;
-                const lotePayload = { 
-                    nome_lote: nomeLote, 
-                    status: finalStatus,
-                    quantidade_total: total, 
-                    organization_id: window.currentOrgId, 
-                    data_criacao: new Date().toISOString() 
+                // 3. Monta o Payload para o Python
+                const payload = {
+                    organization_id: window.currentOrgId,
+                    user_id: window.currentUser.id,
+                    data_postagem: dataPostagem,
+                    itens: window.selectedShipments.map(s => ({
+                        produto_id: produtoCatalogoId,      // ID Inteiro do Produto
+                        quantidade: parseInt(s.quantity),
+                        endereco_id: s.addressId,           // ID do Endereço
+                        estoque_pai_id: estoqueId,          // UUID do Estoque Cliente (Pai)
+                        lote_estoque_id: loteId ? parseInt(loteId) : null, // ID do Lote (Filho) se houver
+                        lote_descricao: loteDesc            // Descrição textual para log
+                    }))
                 };
-                
-                const loteCriado = await client.request(createItem('lotes_envio', lotePayload));
-                const novoLoteId = loteCriado.id;
 
-                // 5. PREPARA E EXECUTA AS SOLICITAÇÕES FILHAS
-                const solicitacoesPromises = window.selectedShipments.map(shipment => {
-                    return client.request(createItem('solicitacoes', { 
-                        tipo: 'SOLICITACAO_ENVIO', 
-                        status: finalStatus,
-                        quantidade: parseInt(shipment.quantity),
-                        produto_id: produtoId,
-                        endereco_id: shipment.addressId,
-                        lote_id: novoLoteId,
-                        organization_id: window.currentOrgId, 
-                        // Inclui a TAG OCULTA aqui para referência futura
-                        observacoes: `${refLoteTag} ${detalheVariacao}Saída Solicitada em Lote #${novoLoteId}. Data Postagem: ${dataPostagem}. Destinatário: ${shipment.addressAC}`,
-                        endereco_manual: shipment.addressFull
-                    }));
+                // 4. CHAMA A API PYTHON SEGURA
+                // Usa a mesma base URL que você já configurou para importação de planilhas
+                const API_PYTHON_URL = 'https://api-entregas.elobrindes.com.br/api/finalizar_envio';
+
+                const response = await fetch(API_PYTHON_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
                 });
-                
-                await Promise.all(solicitacoesPromises);
 
-                // 6. ATUALIZAÇÃO LOCAL (para coerência visual do saldo sem recarregar)
-                if (isImmediateStockUpdate) {
-                    const localStockItem = window.inventoryItems.find(i => i.id === estoqueId);
-                    if (localStockItem) {
-                        localStockItem.quantidade_disponivel = novaQtdEstoque;
-                        
-                        if (loteId && localStockItem.estoque_lotes) {
-                            const lote = localStockItem.estoque_lotes.find(l => String(l.id) === loteId);
-                            if (lote) {
-                                lote.quantidade -= total;
-                            }
-                        }
-                    }
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({ detail: 'Erro desconhecido na API' }));
+                    throw new Error(err.detail || "Falha ao processar envio.");
                 }
-                
+
+                const data = await response.json();
+
+                // 5. Sucesso
                 const lotConfigModal = document.getElementById('lot-config-modal');
                 if(lotConfigModal) lotConfigModal.classList.add('hidden');
                 
-                if(finalStatus === 'aguardando_aprovacao') {
-                    notify(`${solicitacoesPromises.length} Solicitações enviadas para aprovação do gestor. (Lote #${novoLoteId})`, 'success');
-                } else {
-                    notify(`${solicitacoesPromises.length} Solicitações de envio realizadas com sucesso! (Lote #${novoLoteId})`, 'success'); 
-                }
+                notify(`Sucesso! Lote #${data.lote_id} criado via Processamento Seguro.`, 'success');
                 
                 // Limpa e Redireciona
                 window.selectedShipments = []; 
                 window.router('pedidos'); 
                 
-                // Força recarregamento de dados
+                // Recarrega dados
                 setTimeout(() => {
                     window.loadDependencies(); 
                     window.loadInventory();
                     window.loadDashboard();
                 }, 500);
-                
+
             } catch (e) {
-                console.error("Erro no envio em lote:", e);
-                let msg = e.message || "Erro desconhecido ao enviar lote.";
-                if(e.errors && e.errors.length > 0) msg = e.errors[0].message;
-                notify('Erro: ' + msg, 'error');
+                console.error("Erro no envio:", e);
+                notify('Erro: ' + e.message, 'error');
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         }
-
 
         document.getElementById('form-password').addEventListener('submit', async (e) => { e.preventDefault(); const newPass = document.getElementById('new-password').value; try { await client.request(updateMe({ password: newPass })); notify('Senha atualizada!'); document.getElementById('settings-modal').classList.add('hidden'); } catch (e) { notify('Erro ao trocar senha.', 'error'); } });
 
