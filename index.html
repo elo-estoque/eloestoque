@@ -1764,164 +1764,48 @@
         // ** Reforça o fallback para evitar o erro 400 no Directus. **
         // ===================================================================
         window.approveBatch = async function(loteId) {
-            if(!confirm(`Deseja APROVAR o Lote #${loteId} e todos os seus itens?`)) return;
+    if(!confirm(`Deseja APROVAR o Lote #${loteId} e processar a baixa de estoque?`)) return;
 
-            const buttons = document.querySelectorAll(`button[onclick*="approveBatch('${loteId}')"], button[onclick*="rejectBatch('${loteId}')"]`);
-            buttons.forEach(btn => {
-                btn.disabled = true;
-                btn.innerHTML = '<div class="loader border-white w-4 h-4"></div>';
-            });
-            
-            try {
-                // 1. Busca todas as solicitações (itens) do lote
-                const solicitacoes = await client.request(readItems('solicitacoes', {
-                    filter: { lote_id: { _eq: loteId } },
-                    fields: ['id', 'quantidade', 'observacoes', 'produto_id.id', 'produto_id.nome']
-                }));
-                
-                if (solicitacoes.length === 0) throw new Error('Lote sem itens de solicitação. Ação cancelada.');
-                
-                const totalQuantity = solicitacoes.reduce((sum, s) => sum + s.quantidade, 0);
-                const firstObs = solicitacoes[0].observacoes || '';
-                
-                // Variáveis para a baixa
-                let estoqueId;
-                let loteEstoqueId = 0; // Assume lote geral (ID 0) por padrão
-                let produtoCatalogoId;
-                
-                // 2. Tenta encontrar a tag de referência
-                const refMatch = firstObs.match(/\[REF_LOTE:([a-zA-Z0-9-]+)\|(\d+)\]/); 
-                
-                if (refMatch) {
-                    // CENA 1: TAG ENCONTRADA
-                    estoqueId = refMatch[1]; // MANTÉM COMO STRING (UUID), removemos o parseInt
-                    loteEstoqueId = parseInt(refMatch[2]); // O segundo ID continua sendo número
-                    
-                    console.log(`Baixa de Estoque: Usando IDs da tag [REF_LOTE]. EstoqueID: ${estoqueId}, LoteEstoqueID: ${loteEstoqueId}.`);
-                    
-                    // (Opcional) Tenta obter o produtoCatalogoId do primeiro item
-                    const produtoRef = solicitacoes[0].produto_id;
-                    produtoCatalogoId = typeof produtoRef === 'object' ? produtoRef.id : produtoRef;
+    // Trava os botões para evitar duplo clique e dá feedback visual
+    const buttons = document.querySelectorAll(`button[onclick*="approveBatch('${loteId}')"], button[onclick*="rejectBatch('${loteId}')"]`);
+    buttons.forEach(btn => {
+        btn.disabled = true;
+        btn.innerHTML = '<div class="loader border-white w-4 h-4"></div>';
+    });
+    
+    try {
+        // CHAMADA SEGURA AO PYTHON (O Back-end faz a conta e usa o token de Admin)
+        const response = await fetch('https://api-entregas.elobrindes.com.br/api/aprovar_lote', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                lote_id: parseInt(loteId),
+                user_id: window.currentUser.id // Apenas para log, a segurança é garantida pelo servidor
+            })
+        });
 
-
-                } else {
-                    // CENA 2: TAG AUSENTE (FALLBACK) - BUSCA PELO ID DO PRODUTO (MAIS CRÍTICO)
-                    console.log('Baixa de Estoque: Tag [REF_LOTE] ausente. Usando fallback por Produto ID. (Atenção: Risco de erro se houver múltiplos estoques!)');
-                    
-                    // A. Obtém o ID do Produto do Catálogo
-                    const produtoRef = solicitacoes[0].produto_id;
-                    produtoCatalogoId = typeof produtoRef === 'object' ? produtoRef.id : produtoRef;
-                    
-                    if (!produtoCatalogoId) throw new Error('Produto ID não encontrado na solicitação para fallback.');
-
-                    // B. Busca na tabela estoque_cliente pelo produto_id E organization_id
-                    const estoqueResult = await client.request(readItems('estoque_cliente', { 
-                        filter: { 
-                            _and: [
-                                { produto_id: { _eq: produtoCatalogoId } },
-                                { organization_id: { _eq: window.currentOrgId } } 
-                            ]
-                        },
-                        fields: ['id', 'quantidade_disponivel'],
-                        limit: 1 
-                    }));
-
-                    if (estoqueResult.length === 0) {
-                        throw new Error(`Item de estoque (ID: ${produtoCatalogoId}) não encontrado para a empresa.`);
-                    }
-                    
-                    estoqueId = estoqueResult[0].id; // ID do Estoque_Cliente
-                    loteEstoqueId = 0; // Assumimos que é estoque geral
-                }
-                
-                if (!estoqueId) {
-                     throw new Error('Não foi possível determinar o ID do item de estoque para a baixa.');
-                }
-                
-                // 3. Busca o estoque atual (usando o ID determinado)
-                const estoquePai = await client.request(readItem('estoque_cliente', estoqueId, { fields: ['id', 'quantidade_disponivel'] }));
-                const qtdAtualPai = estoquePai.quantidade_disponivel;
-                const novaQtdPai = qtdAtualPai - totalQuantity;
-
-                if (novaQtdPai < 0) {
-                    notify(`BAIXA NEGADA: Saldo insuficiente. Necessário: ${totalQuantity}. Disponível: ${qtdAtualPai}.`, 'error');
-                    window.loadApprovals(); 
-                    return; 
-                }
-
-                // 4. PREPARA E EXECUTA A BAIXA DE ESTOQUE
-                const updatePromises = [];
-                
-                // 4.1. Baixa no Estoque Pai (Estoque_Cliente)
-                updatePromises.push(client.request(updateItem('estoque_cliente', estoqueId, { 
-                    quantidade_disponivel: novaQtdPai 
-                })));
-
-                // 4.2. Baixa no Estoque Filho (Estoque_Lotes) se for um lote específico (loteEstoqueId > 0)
-                if (loteEstoqueId > 0) {
-                    const loteItemArray = await client.request(readItems('estoque_lotes', {
-                         filter: { id: { _eq: loteEstoqueId } }, fields: ['quantidade'] 
-                    }));
-                    
-                    if (loteItemArray.length === 0) {
-                         console.warn(`Alerta: Lote Estoque ID ${loteEstoqueId} não encontrado. Pulando a baixa no lote específico.`);
-                    } else {
-                        const qtdAtualLote = loteItemArray[0].quantidade || 0;
-                        const novaQtdLote = qtdAtualLote - totalQuantity;
-
-                        if (novaQtdLote < 0) {
-                            // Este caso é improvável se o estoque pai for verificado, mas é um bom failsafe
-                            throw new Error(`Baixa no Lote Estoque ID ${loteEstoqueId} resultaria em saldo negativo. Ação abortada.`);
-                        }
-
-                        updatePromises.push(client.request(updateItem('estoque_lotes', loteEstoqueId, { 
-                            quantidade: novaQtdLote 
-                        })));
-                    }
-                }
-
-                // EXECUTA A BAIXA CRÍTICA
-                await Promise.all(updatePromises);
-                
-                // 5. ATUALIZA STATUS (Lote e Solicitações)
-                const updateLotePromise = client.request(updateItem('lotes_envio', loteId, { status: 'pendente' }));
-                
-                // CORREÇÃO DE SEGURANÇA: Garante que o Lote ID não seja Null/Undefined para o updateItems
-                if (loteId) {
-                    const updateSolicitacoesPromise = client.request(updateItems('solicitacoes', { 
-                        filter: { lote_id: { _eq: loteId } }, 
-                        data: { status: 'pendente' } 
-                    }));
-                    await Promise.all([updateLotePromise, updateSolicitacoesPromise]);
-                } else {
-                     await updateLotePromise;
-                }
-
-                notify(`Lote #${loteId} APROVADO e estoque baixado com sucesso!`, 'success');
-                window.loadApprovals(); 
-                
-                // 6. ATUALIZAÇÃO VISUAL (CRÍTICO)
-                await window.loadDependencies(); 
-                window.loadInventory();         
-                window.loadDashboard();         
-
-            } catch (e) {
-                console.error("Erro CRÍTICO ao aprovar lote:", e);
-                let msg = e.message || "Erro desconhecido";
-                
-                // Tenta extrair a mensagem de erro do Directus
-                if(e.errors && e.errors.length > 0) {
-                    msg = e.errors[0].message;
-                } else if (e.message && e.message.includes("400")) {
-                     msg = "Erro de validação (400). Dados incorretos enviados ao servidor.";
-                }
-
-                notify('Erro ao aprovar lote: ' + msg, 'error');
-                
-                // Tenta restaurar os botões, pois a falha ocorreu antes da atualização de status
-                window.loadApprovals(); 
-            }
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || "Erro ao processar aprovação.");
         }
+
+        const data = await response.json();
+        notify(data.message, 'success');
+        
+        // Atualiza as tabelas e dashboard para refletir o novo saldo
+        await window.loadApprovals();
+        if(typeof window.loadInventory === 'function') window.loadInventory(); 
+        if(typeof window.loadDashboard === 'function') window.loadDashboard();
+
+    } catch (e) {
+        console.error("Erro na aprovação:", e);
+        notify('Erro: ' + e.message, 'error');
+        window.loadApprovals(); // Destrava os botões recarregando a lista
+    }
+}
+
         
         // === NOVA FUNÇÃO: REJEITAR LOTE EM MASSA ===
         window.rejectBatch = async function(loteId) {
